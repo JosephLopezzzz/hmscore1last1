@@ -109,8 +109,7 @@ function updateHousekeepingTask(int $taskId, string $status, ?string $assignedTo
                 UPDATE rooms 
                 SET status = 'Vacant', 
                     housekeeping_status = 'clean',
-                    guest_name = NULL,
-                    updated_at = NOW()
+                    guest_name = NULL
                 WHERE id = :room_id
             ");
             $roomStmt->execute([':room_id' => $task['room_id']]);
@@ -121,8 +120,7 @@ function updateHousekeepingTask(int $taskId, string $status, ?string $assignedTo
             $roomStmt = $pdo->prepare("
                 UPDATE rooms 
                 SET status = 'Cleaning',
-                    housekeeping_status = 'cleaning',
-                    updated_at = NOW()
+                    housekeeping_status = 'cleaning'
                 WHERE id = :room_id
             ");
             $roomStmt->execute([':room_id' => $task['room_id']]);
