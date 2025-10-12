@@ -18,40 +18,56 @@ try {
         throw new Exception('Database connection failed');
     }
 
-    // Get query parameters
+    // Get room type from query parameters
     $roomType = $_GET['type'] ?? '';
-    $floor = $_GET['floor'] ?? null;
-    $checkIn = $_GET['checkIn'] ?? '';
-    $checkOut = $_GET['checkOut'] ?? '';
-    $showAll = isset($_GET['showAll']) && $_GET['showAll'] === '1';
-
-    // Validate required parameters
-    if (empty($roomType) || empty($checkIn) || empty($checkOut)) {
-        throw new Exception('Missing required parameters');
+    
+    // Validate required parameter
+    if (empty($roomType)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Room type is required']);
+        exit;
     }
     
-    // Convert floor to integer if provided
-    $floor = $floor !== null ? (int)$floor : null;
-
-    // Determine floors based on room type
-    $floors = [];
-    switch ($roomType) {
-        case 'general':
-            $floors = [1, 2, 3];
-            break;
-        case 'deluxe':
-            $floors = [4];
-            break;
-        case 'executive':
-        case 'luxury':
-            $floors = [5];
-            break;
-        default:
-            throw new Exception('Invalid room type');
-    }
-
-    // Convert dates to proper format for SQL
-    $checkInDate = date('Y-m-d', strtotime($checkIn));
+    // Get available rooms of the specified type that are currently vacant
+    $stmt = $pdo->prepare("
+        SELECT 
+            id, 
+            room_number,
+            floor_number,
+            rate,
+            max_guests,
+            status
+        FROM rooms 
+        WHERE room_type = :roomType 
+        AND status = 'Vacant'
+        ORDER BY room_number ASC
+    
+    ");
+    
+    $stmt->execute([':roomType' => $roomType]);
+    $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Return the list of available rooms
+    echo json_encode([
+        'success' => true,
+        'data' => array_map(function($room) {
+            return [
+                'id' => $room['id'],
+                'room_number' => $room['room_number'],
+                'floor_number' => $room['floor_number'],
+                'rate' => (float)$room['rate'],
+                'max_guests' => (int)$room['max_guests']
+            ];
+        }, $rooms)
+    ]);
+    
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage()
+    ]);
+}
     $checkOutDate = date('Y-m-d', strtotime($checkOut));
 
     // Build the base query
@@ -84,9 +100,14 @@ try {
             r.room_type = :roomType
     ";
     
-    // Add floor filter if specified
+    // Add floor filter if specified, otherwise use the default floors for the room type
     if ($floor !== null) {
         $query .= " AND r.floor_number = :floor";
+    } else {
+        // If no floor specified, only show rooms on the default floors for this room type
+        $floors = $roomTypeFloors[$roomType];
+        $placeholders = rtrim(str_repeat('?,', count($floors)), ',');
+        $query .= " AND r.floor_number IN ($placeholders)";
     }
     
     // Only show available rooms if not showing all
@@ -103,12 +124,17 @@ try {
     // Bind parameters
     $params = [
         ':roomType' => $roomType,
-        ':checkIn' => $checkIn,
-        ':checkOut' => $checkOut
+        ':checkIn' => $checkInDate,
+        ':checkOut' => $checkOutDate
     ];
     
     if ($floor !== null) {
         $params[':floor'] = $floor;
+    } else {
+        // Bind floor parameters if using IN clause
+        foreach ($floors as $i => $f) {
+            $params["floor$i"] = $f;
+        }
     }
     
     $stmt->execute($params);

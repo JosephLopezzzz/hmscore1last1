@@ -170,41 +170,51 @@
                 </div>
               </div>
               
-              <div>
-                <label class="block text-sm font-medium mb-1">Room Type <span class="text-red-500">*</span></label>
-                <select id="roomType" required class="w-full rounded-md border px-3 py-2 text-sm">
-                  <option value="">Select room type...</option>
-                  <option value="general">General (Floors 1-3) - ₱300/8hrs</option>
-                  <option value="deluxe">Deluxe (Floor 4) - ₱400/8hrs</option>
-                  <option value="executive">Executive (Floor 5) - ₱500/8hrs</option>
-                  <option value="luxury">Luxury (Floor 5) - ₱600/8hrs</option>
-                </select>
+              <div class="space-y-2">
+                <div>
+                  <label for="roomType" class="block text-sm font-medium text-gray-700">Room Type <span class="text-red-500">*</span></label>
+                  <select id="roomType" name="room_type" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
+                    <option value="">-- Select Room Type --</option>
+                    <?php
+                    // Fetch available room types from the database
+                    $pdo = getPdo();
+                    $stmt = $pdo->query("
+                        SELECT DISTINCT room_type, rate 
+                        FROM rooms 
+                        WHERE status = 'Vacant' 
+                        GROUP BY room_type, rate
+                        ORDER BY room_type
+                    
+                    ");
+                    while ($roomType = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                        $rate = number_format($roomType['rate'], 2);
+                        $maxGuests = [
+                            'Single' => 1,
+                            'Double' => 2,
+                            'Twin' => 2,
+                            'Deluxe' => 2,
+                            'Suite' => 4,
+                            'Family' => 4,
+                            'Executive' => 2
+                        ][$roomType['room_type']] ?? 2;
+                        echo "<option value='{$roomType['room_type']}' data-rate='{$roomType['rate']}'>";
+                        echo "{$roomType['room_type']} ({$maxGuests} " . ($maxGuests === 1 ? 'person' : 'people') . ") - ₱$rate";
+                        echo "</option>";
+                    }
+                    ?>
+                  </select>
+                </div>
+                <!-- Room number will be automatically assigned -->
+                <input type="hidden" id="roomNumber" name="room_number" value="">
+                <div id="amenitiesContainer" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-md hidden">
+                  <p class="font-medium mb-1">Room Amenities:</p>
+                  <ul id="amenitiesList" class="list-disc pl-5 space-y-1"></ul>
+                </div>
               </div>
               
               <div>
-                <label class="block text-sm font-medium mb-1">Floor <span class="text-red-500">*</span></label>
-                <select id="floorSelect" required class="w-full rounded-md border px-3 py-2 text-sm" disabled>
-                  <option value="">Select room type first</option>
-                </select>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium mb-1">Room Number <span class="text-red-500">*</span></label>
-                <select id="roomNumber" required class="w-full rounded-md border px-3 py-2 text-sm" disabled>
-                  <option value="">Select floor first</option>
-                </select>
-                <p id="roomStatus" class="text-xs text-muted-foreground mt-1"></p>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium mb-1">Occupancy (1-3) <span class="text-red-500">*</span></label>
-                <input type="number" id="occupancy" min="1" max="3" value="1" required 
-                       class="w-full rounded-md border px-3 py-2 text-sm">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium mb-1">Special Requests</label>
-                <textarea id="specialRequests" rows="2" class="w-full rounded-md border px-3 py-2 text-sm"></textarea>
+                <label class="block text-sm font-medium mb-1">Notes</label>
+                <textarea id="notes" name="notes" rows="3" class="w-full rounded-md border px-3 py-2 text-sm"></textarea>
               </div>
             </div>
             
@@ -212,25 +222,73 @@
             <div class="space-y-4">
               <h3 class="text-lg font-semibold border-b pb-2">Guest Information</h3>
               
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-3 gap-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">First Name <span class="text-red-500">*</span></label>
-                  <input type="text" id="firstName" required class="w-full rounded-md border px-3 py-2 text-sm">
+                  <input type="text" id="firstName" 
+                         class="w-full rounded-md border px-3 py-2 text-sm"
+                         pattern="[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+" 
+                         title="Please enter a valid name (letters, spaces, hyphens, and apostrophes only)"
+                         oninput="this.value = this.value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s'-]/g, '')">
+                  <p class="text-xs text-gray-500 mt-1">Letters and spaces only</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">M.I.</label>
+                  <input type="text" id="middleInitial" maxlength="1" 
+                         class="w-full rounded-md border px-3 py-2 text-sm uppercase" 
+                         placeholder="X"
+                         pattern="[A-Za-z]?"
+                         title="Please enter a single letter">
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-1">Last Name <span class="text-red-500">*</span></label>
-                  <input type="text" id="lastName" required class="w-full rounded-md border px-3 py-2 text-sm">
+                  <input type="text" id="lastName" 
+                         class="w-full rounded-md border px-3 py-2 text-sm"
+                         pattern="[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+" 
+                         title="Please enter a valid name (letters, spaces, hyphens, and apostrophes only)"
+                         oninput="this.value = this.value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s'-]/g, '')">
                 </div>
               </div>
               
               <div>
-                <label class="block text-sm font-medium mb-1">Email</label>
-                <input type="email" id="email" class="w-full rounded-md border px-3 py-2 text-sm">
+                <label class="block text-sm font-medium mb-1">Email <span class="text-red-500">*</span></label>
+                <input type="email" id="email" 
+                       class="w-full rounded-md border px-3 py-2 text-sm"
+                       pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
+                       title="Please enter a valid email address">
+                <p class="text-xs text-gray-500 mt-1">e.g., example@domain.com</p>
               </div>
               
-              <div>
-                <label class="block text-sm font-medium mb-1">Phone</label>
-                <input type="tel" id="phone" class="w-full rounded-md border px-3 py-2 text-sm">
+              <div class="grid grid-cols-4 gap-2">
+                <div class="col-span-1">
+                  <label class="block text-sm font-medium mb-1">Country Code</label>
+                  <select id="countryCode" class="w-full rounded-md border px-2 py-2 text-sm">
+                    <option value="+63" selected>PH (+63)</option>
+                    <option value="+1">US/CA (+1)</option>
+                    <option value="+44">UK (+44)</option>
+                    <option value="+61">AU (+61)</option>
+                    <option value="+65">SG (+65)</option>
+                    <option value="+60">MY (+60)</option>
+                    <option value="+81">JP (+81)</option>
+                    <option value="+82">KR (+82)</option>
+                    <option value="+86">CN (+86)</option>
+                    <option value="+91">IN (+91)</option>
+                  </select>
+                </div>
+                <div class="col-span-3">
+                  <label class="block text-sm font-medium mb-1">Phone <span class="text-red-500">*</span></label>
+                  <div class="flex">
+                    <span id="countryCodeDisplay" class="inline-flex items-center px-3 rounded-l-md border border-r-0 text-gray-500 bg-gray-50 text-sm">
+                      +63
+                    </span>
+                    <input type="tel" id="phone" required
+                           class="flex-1 min-w-0 block w-full rounded-none rounded-r-md border px-3 py-2 text-sm"
+                           pattern="[0-9]{10,15}"
+                           title="Please enter a valid phone number (10-15 digits)"
+                           placeholder="9123456789">
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">e.g., 9123456789 (no spaces or special characters)</p>
+                </div>
               </div>
               
               <div>
@@ -245,15 +303,15 @@
                 </div>
                 
                 <div class="mb-4">
-                  <label class="block text-sm font-medium mb-2">Invoice Method</label>
-                  <div class="flex space-x-6">
-                    <label class="inline-flex items-center">
-                      <input type="radio" name="invoiceMethod" value="email" class="form-radio">
-                      <span class="ml-2">Email</span>
+                  <label class="block text-sm font-medium mb-2">Invoice Options</label>
+                  <div class="space-y-2">
+                    <label class="flex items-center">
+                      <input type="checkbox" name="invoiceMethod" value="print" checked class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                      <span class="ml-2">Print Invoice</span>
                     </label>
-                    <label class="inline-flex items-center">
-                      <input type="radio" name="invoiceMethod" value="print" checked class="form-radio">
-                      <span class="ml-2">Print</span>
+                    <label class="flex items-center">
+                      <input type="checkbox" name="invoiceMethod" value="email" class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                      <span class="ml-2">Email Invoice</span>
                     </label>
                   </div>
                 </div>
@@ -310,33 +368,244 @@
       const checkOutTime = document.getElementById("checkOutTime");
       const totalAmount = document.getElementById("totalAmount");
 
-      // Room type configuration
-      const roomConfig = {
-        'general': {
-          floors: [1, 2, 3],
-          rate: 300,
-          roomsPerFloor: 5,
-          startNumber: 100
-        },
-        'deluxe': {
-          floors: [4],
-          rate: 400,
-          roomsPerFloor: 5,
-          startNumber: 400
-        },
-        'executive': {
-          floors: [5],
-          rate: 500,
-          roomsPerFloor: 3,
-          startNumber: 500
-        },
-        'luxury': {
-          floors: [5],
-          rate: 600,
-          roomsPerFloor: 2,
-          startNumber: 580
+      // Room type rates and max guests mapping - will be populated dynamically
+      const roomTypeInfo = {};
+      
+      // Initialize room type info from the select options
+      document.addEventListener('DOMContentLoaded', function() {
+        const roomTypeSelect = document.getElementById('roomType');
+        if (roomTypeSelect) {
+          Array.from(roomTypeSelect.options).forEach(option => {
+            if (option.value) {
+              const rate = parseFloat(option.dataset.rate) || 0;
+              const maxGuests = option.text.match(/\((\d+)/);
+              roomTypeInfo[option.value] = {
+                rate: rate,
+                maxGuests: maxGuests ? parseInt(maxGuests[1]) : 2
+              };
+            }
+          });
         }
+      });
+
+      // Room type to amenities mapping based on the database
+      const roomTypeAmenities = {
+        'Single': ['WiFi', 'TV', 'Mini Fridge'],
+        'Double': ['WiFi', 'TV', 'Mini Fridge', 'Coffee Maker'],
+        'Twin': ['WiFi', 'TV', 'Mini Fridge', '2 Single Beds'],
+        'Triple': ['WiFi', 'TV', 'Mini Fridge', 'Extra Bed'],
+        'Quad': ['WiFi', 'TV', 'Mini Fridge', '4 Single Beds'],
+        'Family': ['WiFi', 'Smart TV', 'Mini Bar', '2 Bedrooms', 'Sofa Bed'],
+        'Deluxe': ['WiFi', 'Smart TV', 'Mini Bar', 'Balcony', 'Coffee Maker'],
+        'Junior Suite': ['WiFi', 'Smart TV', 'Mini Bar', 'Balcony', 'Jacuzzi', 'Living Area'],
+        'Executive Suite': ['WiFi', 'Smart TV', 'Full Bar', 'Balcony', 'Jacuzzi', 'Separate Living Room', 'Work Desk'],
+        'Family Suite': ['WiFi', 'Smart TV', 'Full Bar', '2 Bedrooms', '2 Bathrooms', 'Living Room', 'Kitchenette'],
+        'Luxury Suite': ['WiFi', '65" Smart TV', 'Premium Bar', 'Panoramic Balcony', 'Jacuzzi', 'Steam Shower', 'Living Room', 'Dining Area'],
+        'Presidential Suite': ['WiFi', 'Multiple Smart TVs', 'Premium Bar', 'Wrap-around Balcony', 'Jacuzzi', 'Steam Shower', '2 Bedrooms', 'Full Kitchen', 'Dining Room', 'Office']
       };
+
+      // Update phone display when country code changes
+      document.getElementById('countryCode').addEventListener('change', function() {
+        document.getElementById('countryCodeDisplay').textContent = this.value;
+      });
+
+      // Phone number formatting
+      document.getElementById('phone').addEventListener('input', function(e) {
+        // Remove any non-digit characters
+        this.value = this.value.replace(/\D/g, '');
+      });
+
+      // Form validation
+      function validateForm() {
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const roomType = document.getElementById('roomType').value;
+        const checkInDate = document.getElementById('checkInDate').value;
+        const checkOutDate = document.getElementById('checkOutDate').value;
+        
+        // Check required fields
+        if (!firstName || !lastName) {
+          showToast('❌ Please enter both first and last name');
+          return false;
+        }
+        
+        // Name validation
+        const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/;
+        if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+          showToast('❌ Please enter valid names (letters and spaces only)');
+          return false;
+        }
+        
+        // Email validation
+        if (!email) {
+          showToast('❌ Email is required');
+          return false;
+        }
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showToast('❌ Please enter a valid email address');
+          return false;
+        }
+        
+        // Phone validation (if provided)
+        if (phone) {
+          const phoneRegex = /^\d{10,15}$/;
+          if (!phoneRegex.test(phone)) {
+            showToast('❌ Please enter a valid phone number (10-15 digits)');
+            return false;
+          }
+        }
+        
+        // Room type validation
+        if (!roomType) {
+          showToast('❌ Please select a room type');
+          return false;
+        }
+        
+        // Date validation
+        if (!checkInDate || !checkOutDate) {
+          showToast('❌ Please select both check-in and check-out dates');
+          return false;
+        }
+        
+        return true;
+      }
+
+      // Function to disable booked time slots
+      async function updateTimePickerAvailability() {
+        const roomType = document.getElementById('roomType').value;
+        const checkInDate = document.getElementById('checkInDate').value;
+        const checkOutDate = document.getElementById('checkOutDate').value;
+        
+        if (!roomType || !checkInDate) return;
+        
+        try {
+          // Fetch booked time slots for the selected room type and date
+          const response = await fetch(`/hmscore1last1/inn-nexus-main/api/get-booked-times.php?room_type=${encodeURIComponent(roomType)}&date=${checkInDate}`);
+          const data = await response.json();
+          
+          if (data.status === 'success') {
+            const timeInput = document.getElementById('checkInTime');
+            const options = timeInput.querySelectorAll('option');
+            
+            // Reset all options
+            options.forEach(option => {
+              option.disabled = false;
+              option.style.color = '';
+            });
+            
+            // Disable booked time slots
+            data.booked_slots.forEach(slot => {
+              const startTime = new Date(`1970-01-01T${slot.start}Z`);
+              const endTime = new Date(`1970-01-01T${slot.end}Z`);
+              
+              options.forEach(option => {
+                if (option.value) {
+                  const [hours, minutes] = option.value.split(':').map(Number);
+                  const optionTime = new Date(1970, 0, 1, hours, minutes);
+                  
+                  if (optionTime >= startTime && optionTime < endTime) {
+                    option.disabled = true;
+                    option.style.color = '#999';
+                  }
+                }
+              });
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching booked times:', error);
+        }
+      }
+
+      // Function to update room details when type changes
+      async function updateRoomDetails(roomType) {
+        if (!roomType) return;
+        
+        try {
+          // Fetch room details for the selected type
+          const response = await fetch(`/hmscore1last1/inn-nexus-main/api/get-available-rooms.php?type=${encodeURIComponent(roomType)}`);
+          const rooms = await response.json();
+          
+          if (rooms.data && rooms.data.length > 0) {
+            // Use the first available room
+            const room = rooms.data[0];
+            document.getElementById('roomNumber').value = room.room_number;
+          } else {
+            document.getElementById('roomNumber').value = '';
+            showToast('❌ No rooms available for the selected type');
+          }
+        } catch (error) {
+          console.error('Error fetching room details:', error);
+          document.getElementById('roomNumber').value = '';
+        }
+      }
+      
+      // Room type change handler
+      roomTypeSelect.addEventListener('change', function() {
+        const roomType = this.value;
+        const guestsInput = document.getElementById('guests');
+        const amenitiesContainer = document.getElementById('amenitiesContainer');
+        const amenitiesList = document.getElementById('amenitiesList');
+        
+        if (roomType && roomTypeInfo[roomType]) {
+          const roomInfo = roomTypeInfo[roomType];
+          
+          // Update max guests
+          if (guestsInput) {
+            guestsInput.max = roomInfo.maxGuests;
+            if (parseInt(guestsInput.value) > roomInfo.maxGuests) {
+              guestsInput.value = roomInfo.maxGuests;
+            }
+          }
+          
+          // Update room rate display
+          const roomRateElement = document.getElementById('roomRate');
+          if (roomRateElement) {
+            roomRateElement.textContent = `₱${roomInfo.rate.toFixed(2)}`;
+          }
+          
+          // Update amenities display
+          if (roomTypeAmenities[roomType]) {
+            amenitiesList.innerHTML = '';
+            roomTypeAmenities[roomType].forEach(amenity => {
+              const li = document.createElement('li');
+              li.textContent = amenity;
+              amenitiesList.appendChild(li);
+            });
+            amenitiesContainer.classList.remove('hidden');
+          } else {
+            amenitiesContainer.classList.add('hidden');
+          }
+          
+          // Update total amount
+          updateTotalAmount();
+        } else {
+          amenitiesContainer.classList.add('hidden');
+        }
+      });
+
+      // Generate time options for time inputs
+      function generateTimeOptions() {
+        const times = [];
+        for (let hour = 0; hour < 24; hour++) {
+          for (let minute = 0; minute < 60; minute += 30) { // 30-minute intervals
+            const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            times.push(`<option value="${timeString}">${timeString}</option>`);
+          }
+        }
+        return times.join('');
+      }
+
+      // Initialize time inputs with options
+      document.addEventListener('DOMContentLoaded', () => {
+        const timeInputs = document.querySelectorAll('input[type="time"]');
+        timeInputs.forEach(input => {
+          input.innerHTML = generateTimeOptions();
+        });
+      });
 
       // Open modal
       openModalBtn.addEventListener("click", () => {
@@ -350,15 +619,20 @@
         tomorrow.setDate(tomorrow.getDate() + 1);
         checkOutDate.min = tomorrow.toISOString().split('T')[0];
         checkOutDate.value = tomorrow.toISOString().split('T')[0];
+        
+        // Update time picker availability when modal opens
+        updateTimePickerAvailability();
       });
+      
+      // Update time picker when room type or date changes
+      document.getElementById('roomType').addEventListener('change', updateTimePickerAvailability);
+      document.getElementById('checkInDate').addEventListener('change', updateTimePickerAvailability);
 
       // Close modal functions
       function closeModal() {
         modal.classList.add("hidden");
         modal.classList.remove("flex");
         reservationForm.reset();
-        roomNumberSelect.innerHTML = '<option value="">Select room type first</option>';
-        roomNumberSelect.disabled = true;
         totalAmount.textContent = '₱0.00';
       }
 
@@ -376,132 +650,6 @@
       document.addEventListener("keydown", (e) => {
         if (e.key === "Escape" && !modal.classList.contains("hidden")) {
           closeModal();
-        }
-      });
-
-      // Update floor options when room type changes
-      roomTypeSelect.addEventListener('change', function() {
-        const roomType = this.value;
-        const floorSelect = document.getElementById('floorSelect');
-        const roomNumberSelect = document.getElementById('roomNumber');
-        
-        // Reset and disable dependent fields
-        floorSelect.innerHTML = '<option value="">Select floor...</option>';
-        floorSelect.disabled = !roomType;
-        
-        roomNumberSelect.innerHTML = '<option value="">Select floor first</option>';
-        roomNumberSelect.disabled = true;
-        
-        if (!roomType) return;
-        
-        // Populate floor options based on room type
-        roomConfig[roomType].floors.forEach(floor => {
-          const option = document.createElement('option');
-          option.value = floor;
-          option.textContent = `Floor ${floor}`;
-          floorSelect.appendChild(option);
-        });
-        
-        // Update total amount when room type changes
-        updateTotalAmount();
-      });
-      
-      // Load all rooms when floor is selected, showing status for each
-      document.getElementById('floorSelect').addEventListener('change', async function() {
-        const floor = this.value;
-        const roomType = roomTypeSelect.value;
-        const roomNumberSelect = document.getElementById('roomNumber');
-        const roomStatus = document.getElementById('roomStatus');
-        
-        roomNumberSelect.innerHTML = '<option value="">Loading rooms...</option>';
-        roomNumberSelect.disabled = true;
-        roomStatus.textContent = '';
-        
-        if (!floor || !roomType) {
-          roomNumberSelect.innerHTML = '<option value="">Select floor first</option>';
-          return;
-        }
-        
-        try {
-          // Fetch all rooms for the floor, including occupied and maintenance
-          const response = await fetch(`api/get-available-rooms.php?type=${roomType}&floor=${floor}&checkIn=${checkInDate.value}&checkOut=${checkOutDate.value}&showAll=1`);
-          const rooms = await response.json();
-          
-          roomNumberSelect.innerHTML = '';
-          
-          if (rooms.length === 0) {
-            roomNumberSelect.innerHTML = '<option value="">No rooms on this floor</option>';
-            roomStatus.textContent = 'No rooms found on this floor.';
-            return;
-          }
-          
-          // Group rooms by status
-          const availableRooms = [];
-          const occupiedRooms = [];
-          const maintenanceRooms = [];
-          
-          rooms.forEach(room => {
-            const option = document.createElement('option');
-            option.value = room.number;
-            option.textContent = `Room ${room.number}`;
-            
-            // Set status and disable if not available
-            if (room.status === 'available') {
-              availableRooms.push(option);
-            } else if (room.status === 'occupied') {
-              option.disabled = true;
-              option.textContent += ' (Occupied)';
-              occupiedRooms.push(option);
-            } else if (room.status === 'maintenance') {
-              option.disabled = true;
-              option.textContent += ' (Maintenance)';
-              maintenanceRooms.push(option);
-            }
-          });
-          
-          // Add available rooms first
-          if (availableRooms.length > 0) {
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = 'Available Rooms';
-            availableRooms.forEach(option => optgroup.appendChild(option));
-            roomNumberSelect.appendChild(optgroup);
-          }
-          
-          // Add occupied rooms with disabled optgroup
-          if (occupiedRooms.length > 0) {
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = 'Currently Occupied';
-            optgroup.disabled = true;
-            occupiedRooms.forEach(option => optgroup.appendChild(option));
-            roomNumberSelect.appendChild(optgroup);
-          }
-          
-          // Add maintenance rooms with disabled optgroup
-          if (maintenanceRooms.length > 0) {
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = 'Under Maintenance';
-            optgroup.disabled = true;
-            maintenanceRooms.forEach(option => optgroup.appendChild(option));
-            roomNumberSelect.appendChild(optgroup);
-          }
-          
-          // Enable the select if there are available rooms
-          roomNumberSelect.disabled = availableRooms.length === 0;
-          
-          // Update status message
-          if (availableRooms.length === 0) {
-            roomStatus.textContent = 'No available rooms on this floor for the selected dates.';
-            roomStatus.className = 'text-xs text-destructive mt-1';
-          } else {
-            roomStatus.textContent = `${availableRooms.length} room(s) available`;
-            roomStatus.className = 'text-xs text-success mt-1';
-          }
-          
-        } catch (error) {
-          console.error('Error loading rooms:', error);
-          roomNumberSelect.innerHTML = '<option value="">Error loading rooms</option>';
-          roomStatus.textContent = 'Error loading room availability. Please try again.';
-          roomStatus.className = 'text-xs text-destructive mt-1';
         }
       });
 
@@ -531,7 +679,7 @@
         const roomType = roomTypeSelect.value;
         if (!roomType) return;
 
-        const rate = roomConfig[roomType]?.rate || 0;
+        const rate = roomTypeInfo[roomType].rate;
         
         // Calculate hours between check-in and check-out
         if (checkInDate.value && checkOutDate.value && checkInTime.value && checkOutTime.value) {
@@ -553,38 +701,93 @@
         totalAmount.textContent = `₱${rate.toFixed(2)}`;
       }
 
-      // Handle form submission
-      reservationForm.addEventListener("submit", async (e) => {
+      // Form submission
+      document.getElementById('reservationForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Get form data
-        const formData = {
-          firstName: document.getElementById('firstName').value.trim(),
-          lastName: document.getElementById('lastName').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
-          birthdate: document.getElementById('birthdate').value,
-          checkInDate: checkInDate.value,
-          checkInTime: checkInTime.value,
-          checkOutDate: checkOutDate.value,
-          checkOutTime: checkOutTime.value,
-          roomType: roomTypeSelect.value,
-          roomNumber: roomNumberSelect.value,
-          occupancy: document.getElementById('occupancy').value,
-          specialRequests: document.getElementById('specialRequests').value,
-          invoiceMethod: document.querySelector('input[name="invoiceMethod"]:checked').value,
-          paymentSource: document.querySelector('input[name="paymentSource"]:checked').value,
-          totalAmount: totalAmount.textContent.replace('₱', '')
-        };
-
-        // Basic validation
-        if (!formData.roomNumber) {
-          alert('Please select a room number');
+        // Validate form
+        if (!validateForm()) {
+          return false;
+        }
+        
+        // Get form values
+        const firstName = document.getElementById('firstName').value.trim();
+        const middleInitial = document.getElementById('middleInitial').value.trim().toUpperCase();
+        const lastName = document.getElementById('lastName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const countryCode = document.getElementById('countryCode').value;
+        const phone = countryCode + document.getElementById('phone').value.trim();
+        const birthdate = document.getElementById('birthdate').value;
+        const roomType = document.getElementById('roomType').value;
+        const checkInDate = document.getElementById('checkInDate').value;
+        const checkInTime = document.getElementById('checkInTime').value;
+        const checkOutDate = document.getElementById('checkOutDate').value;
+        const checkOutTime = document.getElementById('checkOutTime').value;
+        const notes = document.getElementById('notes').value;
+        const paymentMethod = document.querySelector('input[name="paymentSource"]:checked').value;
+        
+        // Get selected invoice methods (checkboxes)
+        const invoiceMethods = [];
+        document.querySelectorAll('input[name="invoiceMethod"]:checked').forEach(checkbox => {
+          invoiceMethods.push(checkbox.value);
+        });
+        
+        const totalAmount = parseFloat(document.getElementById('totalAmount').textContent.replace(/[^0-9.-]+/g, '')) || 0;
+        
+        if (!email) {
+          showToast('❌ Email is required');
           return;
         }
+        
+        if (!roomType) {
+          showToast('❌ Please select a room type');
+          return;
+        }
+        
+        if (!checkInDate || !checkOutDate) {
+          showToast('❌ Please select both check-in and check-out dates');
+          return;
+        }
+        
+        // Format guest name with middle initial if provided
+        const guestName = middleInitial 
+          ? `${firstName} ${middleInitial}. ${lastName}`
+          : `${firstName} ${lastName}`;
+        
+        // Room number will be automatically assigned by the server
+        const guests = document.getElementById('guests')?.value || 1; // Default to 1 guest
+        
+        // Prepare form data for submission - matching API expected format
+        const formData = {
+          firstName: firstName,
+          lastName: lastName,
+          checkInDate: checkInDate,
+          checkInTime: checkInTime,
+          checkOutDate: checkOutDate,
+          checkOutTime: checkOutTime,
+          roomType: roomType,
+          // Room number will be assigned by the server
+          occupancy: guests,
+          totalAmount: totalAmount,
+          email: email,
+          phone: phone,
+          notes: notes || '',
+          paymentMethod: paymentMethod,
+          invoiceMethod: invoiceMethods.join(','),
+          status: 'confirmed',
+          amenities: roomTypeAmenities[roomType] ? roomTypeAmenities[roomType].join(',') : ''
+        };
 
-        // In a real app, this would make an AJAX request to save the reservation
         try {
+          // Calculate number of nights for the stay
+          const checkIn = new Date(formData.checkin);
+          const checkOut = new Date(formData.checkout);
+          const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+          
+          // Add nights to form data
+          formData.nights = nights;
+          
+          // Make API request to save the reservation
           const response = await fetch('api/create-reservation.php', {
             method: 'POST',
             headers: {

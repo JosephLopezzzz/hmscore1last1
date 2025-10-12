@@ -23,9 +23,11 @@ try {
     // Validate required fields
     $required = [
         'firstName', 'lastName', 'checkInDate', 'checkInTime', 
-        'checkOutDate', 'checkOutTime', 'roomType', 'roomNumber',
-        'occupancy', 'totalAmount'
+        'checkOutDate', 'checkOutTime', 'roomType',
+        'totalAmount'
     ];
+    
+    // Room number will be assigned automatically
     
     foreach ($required as $field) {
         if (empty($input[$field])) {
@@ -42,71 +44,91 @@ try {
     $pdo->beginTransaction();
 
     try {
-        // Format dates
-        $checkIn = $input['checkInDate'] . ' ' . $input['checkInTime'] . ':00';
-        $checkOut = $input['checkOutDate'] . ' ' . $input['checkOutTime'] . ':00';
+        // Format dates for database
+        $checkInDate = $input['checkInDate'] . ' ' . $input['checkInTime'] . ':00';
+        $checkOutDate = $input['checkOutDate'] . ' ' . $input['checkOutTime'] . ':00';
         
-        // Get room ID and verify availability
+        // Debug: Log the date values
+        error_log("Check-in Date: " . $checkInDate);
+        error_log("Check-out Date: " . $checkOutDate);
+        
+        // Find first available room of the selected type
         $stmt = $pdo->prepare("
-            SELECT id, room_number, room_type, price_per_night, max_occupancy 
+            SELECT id, room_number, room_type, rate as price_per_night 
             FROM rooms 
-            WHERE room_number = ? AND status = 'available'
+            WHERE room_type = ? AND status = 'Vacant'
+            ORDER BY room_number ASC
+            LIMIT 1
+        
         ");
-        $stmt->execute([$input['roomNumber']]);
+        $stmt->execute([$input['roomType']]);
         $room = $stmt->fetch(PDO::FETCH_ASSOC);
-
+        
         if (!$room) {
-            throw new Exception('Selected room is not available');
+            throw new Exception('No available rooms of the selected type. Please try a different room type.');
         }
+        
+        // Use the found room
+        $input['roomNumber'] = $room['room_number'];
 
-        // Verify room type matches
-        if ($room['room_type'] !== $input['roomType']) {
-            throw new Exception('Room type does not match selection');
-        }
+        // Room capacity check removed
 
-        // Verify occupancy
-        if ($input['occupancy'] > $room['max_occupancy']) {
-            throw new Exception('Occupancy exceeds room capacity');
-        }
-
-        // Check for overlapping reservations
+        // Check for overlapping reservations for the selected room
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as count 
-            FROM reservations 
-            WHERE room_number = ? 
-            AND status NOT IN ('cancelled', 'completed')
+            FROM reservations r
+            JOIN rooms rm ON r.room_number = rm.room_number
+            WHERE rm.room_type = ? 
+            AND r.status NOT IN ('Cancelled', 'Checked Out')
             AND (
-                (check_in_date <= ? AND check_out_date >= ?)
-                OR (check_in_date <= ? AND check_out_date >= ?)
-                OR (check_in_date >= ? AND check_out_date <= ?)
+                (r.check_in_date <= ? AND r.check_out_date >= ?)
+                OR (r.check_in_date <= ? AND r.check_out_date >= ?)
+                OR (r.check_in_date >= ? AND r.check_out_date <= ?)
             )
+            AND rm.id = ?
+        
+        
         ");
         
         $stmt->execute([
-            $input['roomNumber'],
-            $checkIn, $checkIn,
-            $checkOut, $checkOut,
-            $checkIn, $checkOut
+            $input['roomType'],
+$checkInDate, $checkInDate,
+            $checkOutDate, $checkOutDate,
+            $checkInDate, $checkOutDate,
+            $room['id']
         ]);
         
         if ($stmt->fetch()['count'] > 0) {
-            throw new Exception('Selected dates are not available for this room');
+            // If the room is already booked, find another available room
+            $pdo->rollBack();
+            throw new Exception('The selected room is no longer available. Please try again.');
         }
 
-        // Create guest record
+        // Create or update guest record
         $stmt = $pdo->prepare("
             INSERT INTO guests (
-                first_name, last_name, email, phone, birthdate, 
-                address, city, country, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, '', '', '', NOW(), NOW())
+                first_name, last_name, email, phone, date_of_birth, 
+                city, country, created_at, updated_at
+            ) VALUES (:first_name, :last_name, :email, :phone, :date_of_birth, :city, :country, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE
+                first_name = VALUES(first_name),
+                last_name = VALUES(last_name),
+                email = VALUES(email),
+                phone = VALUES(phone),
+                date_of_birth = VALUES(date_of_birth),
+                city = VALUES(city),
+                country = VALUES(country),
+                updated_at = NOW()
         ");
         
         $stmt->execute([
-            $input['firstName'],
-            $input['lastName'],
-            $input['email'] ?? null,
-            $input['phone'] ?? null,
-            !empty($input['birthdate']) ? $input['birthdate'] : null
+            'first_name' => $input['firstName'],
+            'last_name' => $input['lastName'],
+            'email' => $input['email'] ?? null,
+            'phone' => $input['phone'] ?? null,
+            'date_of_birth' => !empty($input['birthdate']) ? $input['birthdate'] : null,
+            'city' => $input['city'] ?? null,
+            'country' => $input['country'] ?? null
         ]);
         
         $guestId = $pdo->lastInsertId();
@@ -114,36 +136,55 @@ try {
         // Create reservation
         $stmt = $pdo->prepare("
             INSERT INTO reservations (
-                guest_id, room_id, room_number, guest_name, 
+                guest_id, room_id, room_number, 
                 check_in_date, check_out_date, status, 
                 total_amount, paid_amount, balance, 
-                occupancy, special_requests, notes,
-                invoice_method, payment_source, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, 0, ?, ?, ?, '', ?, ?, NOW(), NOW())
+                special_requests, notes,
+                invoice_method, payment_source, created_at, updated_at,
+                first_name, last_name, email, phone, birthdate, room_type
+            ) VALUES (
+                :guest_id, :room_id, :room_number,
+                :check_in_date, :check_out_date, 'Confirmed',
+                :total_amount, 0, :total_amount,
+                :special_requests, :notes,
+                :invoice_method, :payment_source, NOW(), NOW(),
+                :first_name, :last_name, :email, :phone, :birthdate, :room_type
+            )
+        
+        
         ");
         
-        $guestName = trim($input['firstName'] . ' ' . $input['lastName']);
-        $balance = (float)$input['totalAmount'];
-        
         $stmt->execute([
-            $guestId,
-            $room['id'],
-            $input['roomNumber'],
-            $guestName,
-            $checkIn,
-            $checkOut,
-            $input['totalAmount'],
-            $balance,
-            $input['occupancy'],
-            $input['specialRequests'] ?? '',
-            $input['invoiceMethod'] ?? 'print',
-            $input['paymentSource'] ?? 'cash'
+            ':guest_id' => $guestId,
+            ':room_id' => $room['id'],
+            ':room_number' => $room['room_number'],
+            ':check_in_date' => $checkInDate,
+            ':check_out_date' => $checkOutDate,
+            ':total_amount' => (float)$input['totalAmount'],
+            ':special_requests' => $input['specialRequests'] ?? '',
+            ':notes' => $input['notes'] ?? '',
+            // Use first selected invoice method or default to 'print'
+            ':invoice_method' => !empty($input['invoiceMethod']) ? explode(',', $input['invoiceMethod'])[0] : 'print',
+            ':payment_source' => $input['paymentSource'] ?? 'cash',
+            ':first_name' => $input['firstName'],
+            ':last_name' => $input['lastName'],
+            ':email' => $input['email'] ?? null,
+            ':phone' => $input['phone'] ?? null,
+            ':birthdate' => !empty($input['birthdate']) ? $input['birthdate'] : null,
+            ':room_type' => $input['roomType']
         ]);
         
         $reservationId = $pdo->lastInsertId();
 
-        // Update room status
-        $stmt = $pdo->prepare("UPDATE rooms SET status = 'occupied' WHERE id = ?");
+        // Update room status to reserved
+        $stmt = $pdo->prepare("
+            UPDATE rooms 
+            SET status = 'Reserved', 
+                updated_at = NOW() 
+            WHERE id = ?
+        
+        
+        ");
         $stmt->execute([$room['id']]);
 
         // Commit transaction
