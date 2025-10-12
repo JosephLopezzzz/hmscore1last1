@@ -69,6 +69,28 @@
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border-left: 4px solid #60a5fa;
       }
+      .dark .floor-header .text-gray-800 {
+        color: #e2e8f0 !important;
+      }
+      .dark .floor-header .text-gray-600 {
+        color: #cbd5e1 !important;
+      }
+      .dark .floor-header .bg-green-100 {
+        background-color: #065f46 !important;
+        color: #d1fae5 !important;
+      }
+      .dark .floor-header .bg-red-100 {
+        background-color: #7f1d1d !important;
+        color: #fecaca !important;
+      }
+      .dark .floor-header .bg-orange-100 {
+        background-color: #78350f !important;
+        color: #fed7aa !important;
+      }
+      .dark .floor-header .bg-gray-100 {
+        background-color: #374151 !important;
+        color: #e5e7eb !important;
+      }
       .legend-dot {
         width: 12px;
         height: 12px;
