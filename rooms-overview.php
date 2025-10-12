@@ -143,10 +143,10 @@
 
     <!-- Room Detail Modal -->
     <div id="roomModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-      <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div class="bg-card text-card-foreground rounded-lg p-6 w-full max-w-md mx-4 shadow-xl border border-border">
         <div class="flex items-center justify-between mb-4">
-          <h2 id="modalRoomNumber" class="text-xl font-bold">Room 101</h2>
-          <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+          <h2 id="modalRoomNumber" class="text-xl font-bold text-foreground">Room 101</h2>
+          <button id="closeModal" class="text-muted-foreground hover:text-foreground">
             <i data-lucide="x" class="h-5 w-5"></i>
           </button>
         </div>
@@ -161,7 +161,7 @@
           <button id="modalActionPrimary" class="flex-1 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
             View / Assign
           </button>
-          <button id="modalActionSecondary" class="flex-1 rounded-md border px-4 py-2 text-sm hover:bg-muted">
+          <button id="modalActionSecondary" class="flex-1 rounded-md border border-border px-4 py-2 text-sm hover:bg-muted text-foreground">
             Close
           </button>
         </div>
@@ -379,8 +379,8 @@
         statusSelector.id = 'statusSelector';
         statusSelector.className = 'mt-4 p-4 bg-muted/30 rounded-lg';
         statusSelector.innerHTML = `
-          <label class="block text-sm font-medium mb-2">Change Status:</label>
-          <select id="newStatus" class="w-full px-3 py-2 rounded-md border bg-background">
+          <label class="block text-sm font-medium mb-2 text-foreground">Change Status:</label>
+          <select id="newStatus" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground">
             ${statusOptions.map(opt => `
               <option value="${opt.value}" ${opt.value === room.status ? 'selected' : ''}>
                 ${opt.label}
@@ -388,9 +388,9 @@
             `).join('')}
           </select>
           <div class="mt-2">
-            <label class="block text-sm font-medium mb-1">Notes:</label>
+            <label class="block text-sm font-medium mb-1 text-foreground">Notes:</label>
             <input type="text" id="roomNotes" placeholder="Enter notes..." 
-                   class="w-full px-3 py-2 rounded-md border bg-background text-sm"
+                   class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm"
                    value="${room.maintenance_notes || ''}">
           </div>
         `;
