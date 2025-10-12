@@ -111,7 +111,9 @@ class HotelDataSync {
                 this.showToast('Room status updated successfully', 'success');
                 return true;
             } else {
-                this.showToast('Failed to update room status', 'error');
+                const errorMsg = data.message || data.error || 'Failed to update room status';
+                console.error('Room update failed:', data);
+                this.showToast(errorMsg, 'error');
                 return false;
             }
         } catch (error) {
