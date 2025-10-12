@@ -23,6 +23,7 @@
     <!-- Stylesheets -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
+    <script src="./public/js/hotel-sync.js"></script>
     
     <!-- Security -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
