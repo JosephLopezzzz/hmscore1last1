@@ -222,78 +222,26 @@
             <div class="space-y-4">
               <h3 class="text-lg font-semibold border-b pb-2">Guest Information</h3>
               
-              <div class="grid grid-cols-3 gap-4">
-                <div>
-                  <label class="block text-sm font-medium mb-1">First Name <span class="text-red-500">*</span></label>
-                  <input type="text" id="firstName" 
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Search Guest <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <input type="hidden" id="guestId" name="guestId" required>
+                  <input type="text" id="guestSearch" 
                          class="w-full rounded-md border px-3 py-2 text-sm"
-                         pattern="[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+" 
-                         title="Please enter a valid name (letters, spaces, hyphens, and apostrophes only)"
-                         oninput="this.value = this.value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s'-]/g, '')">
-                  <p class="text-xs text-gray-500 mt-1">Letters and spaces only</p>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium mb-1">M.I.</label>
-                  <input type="text" id="middleInitial" maxlength="1" 
-                         class="w-full rounded-md border px-3 py-2 text-sm uppercase" 
-                         placeholder="X"
-                         pattern="[A-Za-z]?"
-                         title="Please enter a single letter">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium mb-1">Last Name <span class="text-red-500">*</span></label>
-                  <input type="text" id="lastName" 
-                         class="w-full rounded-md border px-3 py-2 text-sm"
-                         pattern="[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+" 
-                         title="Please enter a valid name (letters, spaces, hyphens, and apostrophes only)"
-                         oninput="this.value = this.value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s'-]/g, '')">
-                </div>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium mb-1">Email <span class="text-red-500">*</span></label>
-                <input type="email" id="email" 
-                       class="w-full rounded-md border px-3 py-2 text-sm"
-                       pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
-                       title="Please enter a valid email address">
-                <p class="text-xs text-gray-500 mt-1">e.g., example@domain.com</p>
-              </div>
-              
-              <div class="grid grid-cols-4 gap-2">
-                <div class="col-span-1">
-                  <label class="block text-sm font-medium mb-1">Country Code</label>
-                  <select id="countryCode" class="w-full rounded-md border px-2 py-2 text-sm">
-                    <option value="+63" selected>PH (+63)</option>
-                    <option value="+1">US/CA (+1)</option>
-                    <option value="+44">UK (+44)</option>
-                    <option value="+61">AU (+61)</option>
-                    <option value="+65">SG (+65)</option>
-                    <option value="+60">MY (+60)</option>
-                    <option value="+81">JP (+81)</option>
-                    <option value="+82">KR (+82)</option>
-                    <option value="+86">CN (+86)</option>
-                    <option value="+91">IN (+91)</option>
-                  </select>
-                </div>
-                <div class="col-span-3">
-                  <label class="block text-sm font-medium mb-1">Phone <span class="text-red-500">*</span></label>
-                  <div class="flex">
-                    <span id="countryCodeDisplay" class="inline-flex items-center px-3 rounded-l-md border border-r-0 text-gray-500 bg-gray-50 text-sm">
-                      +63
-                    </span>
-                    <input type="tel" id="phone" required
-                           class="flex-1 min-w-0 block w-full rounded-none rounded-r-md border px-3 py-2 text-sm"
-                           pattern="[0-9]{10,15}"
-                           title="Please enter a valid phone number (10-15 digits)"
-                           placeholder="9123456789">
+                         placeholder="Type to search guests..."
+                         autocomplete="off">
+                  <div id="guestSearchResults" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <!-- Search results will be populated here -->
                   </div>
-                  <p class="text-xs text-gray-500 mt-1">e.g., 9123456789 (no spaces or special characters)</p>
                 </div>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium mb-1">Birthdate</label>
-                <input type="date" id="birthdate" class="w-full rounded-md border px-3 py-2 text-sm">
+                <div id="selectedGuest" class="mt-2 p-2 bg-gray-50 rounded hidden">
+                  <div class="flex justify-between items-center">
+                    <span id="selectedGuestName"></span>
+                    <button type="button" id="clearGuest" class="text-red-500 hover:text-red-700">
+                      <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
               
               <div class="pt-4 border-t mt-4">
@@ -367,6 +315,105 @@
       const checkInTime = document.getElementById("checkInTime");
       const checkOutTime = document.getElementById("checkOutTime");
       const totalAmount = document.getElementById("totalAmount");
+
+      // Modal open/close functionality
+      if (openModalBtn) {
+        openModalBtn.addEventListener('click', () => {
+          modal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        });
+      }
+
+      // Close modal functions
+      function closeModal() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+
+      if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+      if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+
+      // Close when clicking outside modal
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Guest search functionality
+      const guestSearch = document.getElementById('guestSearch');
+      const guestSearchResults = document.getElementById('guestSearchResults');
+      const selectedGuest = document.getElementById('selectedGuest');
+      const selectedGuestName = document.getElementById('selectedGuestName');
+      const guestIdInput = document.getElementById('guestId');
+      const clearGuestBtn = document.getElementById('clearGuest');
+      let searchTimeout;
+
+      // Search guests as user types
+      guestSearch.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+        
+        if (query.length < 2) {
+          guestSearchResults.classList.add('hidden');
+          return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+          try {
+            const response = await fetch(`/hmscore1last1/inn-nexus-main/api/search-guests.php?q=${encodeURIComponent(query)}`);
+            const guests = await response.json();
+            
+            if (guests.length > 0) {
+              guestSearchResults.innerHTML = guests.map(guest => `
+                <div class="p-2 hover:bg-gray-100 cursor-pointer" 
+                     data-id="${guest.id}" 
+                     data-name="${guest.first_name} ${guest.last_name}">
+                  ${guest.first_name} ${guest.last_name} 
+                  <span class="text-gray-500 text-sm">${guest.email}</span>
+                </div>
+              `).join('');
+              guestSearchResults.classList.remove('hidden');
+            } else {
+              guestSearchResults.innerHTML = '<div class="p-2 text-gray-500">No guests found</div>';
+              guestSearchResults.classList.remove('hidden');
+            }
+          } catch (error) {
+            console.error('Error searching guests:', error);
+            guestSearchResults.innerHTML = '<div class="p-2 text-red-500">Error searching guests</div>';
+            guestSearchResults.classList.remove('hidden');
+          }
+        }, 300);
+      });
+
+      // Handle guest selection
+      guestSearchResults.addEventListener('click', (e) => {
+        const guestItem = e.target.closest('[data-id]');
+        if (!guestItem) return;
+        
+        const guestId = guestItem.dataset.id;
+        const guestName = guestItem.dataset.name;
+        
+        guestIdInput.value = guestId;
+        selectedGuestName.textContent = guestName;
+        selectedGuest.classList.remove('hidden');
+        guestSearch.value = '';
+        guestSearchResults.classList.add('hidden');
+      });
+
+      // Clear selected guest
+      clearGuestBtn.addEventListener('click', () => {
+        guestIdInput.value = '';
+        selectedGuest.classList.add('hidden');
+        guestSearch.value = '';
+      });
+
+      // Close search results when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.relative')) {
+          guestSearchResults.classList.add('hidden');
+        }
+      });
 
       // Room type rates and max guests mapping - will be populated dynamically
       const roomTypeInfo = {};

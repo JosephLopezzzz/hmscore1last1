@@ -104,34 +104,18 @@ $checkInDate, $checkInDate,
             throw new Exception('The selected room is no longer available. Please try again.');
         }
 
-        // Create or update guest record
-        $stmt = $pdo->prepare("
-            INSERT INTO guests (
-                first_name, last_name, email, phone, date_of_birth, 
-                city, country, created_at, updated_at
-            ) VALUES (:first_name, :last_name, :email, :phone, :date_of_birth, :city, :country, NOW(), NOW())
-            ON DUPLICATE KEY UPDATE
-                first_name = VALUES(first_name),
-                last_name = VALUES(last_name),
-                email = VALUES(email),
-                phone = VALUES(phone),
-                date_of_birth = VALUES(date_of_birth),
-                city = VALUES(city),
-                country = VALUES(country),
-                updated_at = NOW()
-        ");
+        // Get guest ID from input
+        if (empty($input['guestId'])) {
+            throw new Exception('Guest ID is required');
+        }
+        $guestId = $input['guestId'];
         
-        $stmt->execute([
-            'first_name' => $input['firstName'],
-            'last_name' => $input['lastName'],
-            'email' => $input['email'] ?? null,
-            'phone' => $input['phone'] ?? null,
-            'date_of_birth' => !empty($input['birthdate']) ? $input['birthdate'] : null,
-            'city' => $input['city'] ?? null,
-            'country' => $input['country'] ?? null
-        ]);
-        
-        $guestId = $pdo->lastInsertId();
+        // Verify guest exists
+        $stmt = $pdo->prepare("SELECT id FROM guests WHERE id = ?");
+        $stmt->execute([$guestId]);
+        if (!$stmt->fetch()) {
+            throw new Exception('Invalid guest selected');
+        }
 
         // Create reservation
         $stmt = $pdo->prepare("
@@ -141,14 +125,14 @@ $checkInDate, $checkInDate,
                 total_amount, paid_amount, balance, 
                 special_requests, notes,
                 invoice_method, payment_source, created_at, updated_at,
-                first_name, last_name, email, phone, birthdate, room_type
+                room_type
             ) VALUES (
                 :guest_id, :room_id, :room_number,
                 :check_in_date, :check_out_date, 'Confirmed',
                 :total_amount, 0, :total_amount,
                 :special_requests, :notes,
                 :invoice_method, :payment_source, NOW(), NOW(),
-                :first_name, :last_name, :email, :phone, :birthdate, :room_type
+                :room_type
             )
         
         
@@ -166,11 +150,6 @@ $checkInDate, $checkInDate,
             // Use first selected invoice method or default to 'print'
             ':invoice_method' => !empty($input['invoiceMethod']) ? explode(',', $input['invoiceMethod'])[0] : 'print',
             ':payment_source' => $input['paymentSource'] ?? 'cash',
-            ':first_name' => $input['firstName'],
-            ':last_name' => $input['lastName'],
-            ':email' => $input['email'] ?? null,
-            ':phone' => $input['phone'] ?? null,
-            ':birthdate' => !empty($input['birthdate']) ? $input['birthdate'] : null,
             ':room_type' => $input['roomType']
         ]);
         
