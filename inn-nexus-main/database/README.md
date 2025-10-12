@@ -6,6 +6,25 @@ This folder contains the essential SQL scripts needed to set up the Inn Nexus da
 
 Run these scripts **in order** to set up your database:
 
+### 0️⃣ **00_initial_database_setup.sql** ⭐ START HERE!
+**Purpose:** Creates the database and all tables from scratch
+
+**What it does:**
+- Creates the `inn_nexus` database
+- Creates ALL 12 tables:
+  - **Core Tables:** users, guests, rooms, reservations, billing_transactions
+  - **Security Tables:** security_logs, email_verification_tokens, password_reset_tokens, user_sessions, rate_limits, security_events
+  - **Audit Tables:** room_status_logs
+- Sets up all indexes and foreign keys
+- Establishes complete database structure
+
+**Run this FIRST if setting up from scratch:**
+```sql
+SOURCE database/00_initial_database_setup.sql;
+```
+
+---
+
 ### 1️⃣ **complete_integration.sql**
 **Purpose:** Creates the main database structure and sample data
 
@@ -71,7 +90,21 @@ SOURCE database/create_test_user_with_2fa.sql;
 
 ## 🚀 Quick Setup (All at Once)
 
-If you're setting up from scratch, run all three scripts:
+### **Option A: Complete Fresh Install (Recommended for new setups)**
+
+Run all four scripts in order:
+
+```bash
+# Using MySQL CLI
+mysql -u root -p < database/00_initial_database_setup.sql
+mysql -u root -p inn_nexus < database/complete_integration.sql
+mysql -u root -p inn_nexus < database/setup_security_simple.sql
+mysql -u root -p inn_nexus < database/create_test_user_with_2fa.sql
+```
+
+### **Option B: Upgrade Existing Database**
+
+If you already have the database, run only these:
 
 ```bash
 # Using MySQL CLI
@@ -80,10 +113,11 @@ mysql -u root -p inn_nexus < database/setup_security_simple.sql
 mysql -u root -p inn_nexus < database/create_test_user_with_2fa.sql
 ```
 
-Or in phpMyAdmin:
-1. Select the `inn_nexus` database
-2. Go to "SQL" tab
-3. Import each file in order (or copy/paste contents)
+### **Using phpMyAdmin:**
+1. Go to "SQL" tab
+2. Import `00_initial_database_setup.sql` (creates database + tables)
+3. Select the `inn_nexus` database
+4. Import remaining files in order
 
 ---
 
