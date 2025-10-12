@@ -107,6 +107,32 @@ switch (true) {
         ]);
       }
       
+      // Auto-create housekeeping task when status changes to Cleaning or Maintenance
+      if ($status === 'Cleaning' || $status === 'Maintenance') {
+        // Check if task already exists
+        $checkTask = $pdo->prepare("SELECT id FROM housekeeping_tasks WHERE room_number = :room_number AND status != 'completed'");
+        $checkTask->execute([':room_number' => $roomNumber]);
+        
+        if (!$checkTask->fetch()) {
+          // Create new housekeeping task
+          $taskType = $status === 'Maintenance' ? 'maintenance' : 'cleaning';
+          $priority = $status === 'Maintenance' ? 'high' : 'normal';
+          
+          $createTask = $pdo->prepare("
+            INSERT INTO housekeeping_tasks (room_id, room_number, task_type, status, priority, guest_name, notes)
+            VALUES (:room_id, :room_number, :task_type, 'pending', :priority, :guest_name, :notes)
+          ");
+          $createTask->execute([
+            ':room_id' => $roomId,
+            ':room_number' => $roomNumber,
+            ':task_type' => $taskType,
+            ':priority' => $priority,
+            ':guest_name' => $guestName,
+            ':notes' => $notes ?? "Room needs $taskType"
+          ]);
+        }
+      }
+      
       // Log the change
       if ($oldData && $oldData['status'] !== $status) {
         logRoomStatusChange($roomNumber, $oldData['status'], $status, $notes ?? 'Status updated via API', 'API');
