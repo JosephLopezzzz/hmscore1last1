@@ -39,10 +39,24 @@ switch (true) {
     $pdo = getPdo();
     if (!$pdo) sendJson(['data' => []]);
     try {
-      $rows = $pdo->query('SELECT id, number, floor, status FROM rooms ORDER BY floor, number')->fetchAll();
+      $rows = $pdo->query('
+        SELECT 
+          id, 
+          room_number, 
+          room_type, 
+          floor_number, 
+          status, 
+          max_guests, 
+          rate,
+          guest_name,
+          maintenance_notes,
+          housekeeping_status
+        FROM rooms 
+        ORDER BY floor_number, room_number
+      ')->fetchAll();
       sendJson(['data' => $rows]);
     } catch (Throwable $e) {
-      sendJson(['error' => 'rooms_query_failed'], 500);
+      sendJson(['error' => 'rooms_query_failed', 'message' => $e->getMessage()], 500);
     }
 
   case $path === '/api/rooms' && in_array($_SERVER['REQUEST_METHOD'], ['POST','PATCH','PUT'], true):
