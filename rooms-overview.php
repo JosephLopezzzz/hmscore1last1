@@ -65,6 +65,14 @@
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         border-left: 4px solid #3b82f6;
       }
+      /* Ensure light mode text is dark */
+      .floor-header .text-gray-800 {
+        color: #1f2937 !important;
+      }
+      .floor-header .text-gray-600 {
+        color: #4b5563 !important;
+      }
+      /* Dark mode overrides */
       .dark .floor-header {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border-left: 4px solid #60a5fa;
