@@ -447,10 +447,13 @@
 
           if (success) {
             // Force immediate refresh of room data
+            console.log('Status update successful, refreshing data...');
             await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for DB to commit
             await hotelSync.init(); // Force reload from API
+            console.log('Data refreshed, rooms:', hotelSync.getRooms());
             closeModal();
           } else {
+            console.error('Status update failed');
             // Restore button
             updateBtn.textContent = originalText;
             updateBtn.disabled = false;
