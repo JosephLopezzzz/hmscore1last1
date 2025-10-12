@@ -16,13 +16,13 @@
   ];
 ?>
 <header class="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-  <div class="container mx-auto flex h-16 items-center justify-between px-4">
+  <div class="max-w-7xl mx-auto flex h-16 items-center justify-between px-6 w-full">
     <div class="flex items-center gap-6">
       <a href="<?php echo $basePath; ?>/index.php" class="flex items-center gap-2">
         <i data-lucide="hotel" class="h-6 w-6 text-accent"></i>
         <span class="text-xl font-bold text-foreground">Inn Nexus</span>
       </a>
-      <nav class="hidden md:flex items-center gap-1">
+      <nav class="hidden md:flex items-center gap-2">
         <?php foreach ($navItems as $item): $isActive = ($current === $item['path']); ?>
           <a href="<?php echo $basePath; ?>/<?php echo $item['path']; ?>" class="inline-flex">
             <button class="px-3 py-2 rounded-md text-sm hover:bg-accent/10 hover:text-accent <?php echo $isActive ? 'bg-accent/10 text-accent font-medium' : ''; ?>">
@@ -33,8 +33,8 @@
       </nav>
     </div>
 
-    <div class="flex items-center gap-4">
-      <div class="relative hidden sm:block w-64">
+    <div class="flex items-center gap-6">
+      <div class="relative hidden sm:block w-48 mr-4">
         <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
         <input type="text" placeholder="Search guests, rooms..." class="pl-9 h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50" />
       </div>
@@ -43,7 +43,7 @@
       </button>
       <?php require_once __DIR__ . '/db.php'; initSession(); ?>
       <?php if (currentUserRole()): ?>
-        <span class="hidden sm:inline text-sm text-muted-foreground"><?php echo htmlspecialchars(currentUserEmail() ?? '', ENT_QUOTES); ?> (<?php echo currentUserRole(); ?>)</span>
+        <span class="hidden sm:inline text-sm text-muted-foreground"><?php echo currentUserRole(); ?></span>
         <div class="relative">
           <button id="user-menu-toggle" class="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-accent/10">
             <i data-lucide="user" class="h-5 w-5"></i>
