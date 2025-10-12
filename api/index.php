@@ -90,7 +90,7 @@ switch (true) {
       
       // Update room
       if ($roomId > 0) {
-        $stmt = $pdo->prepare('UPDATE rooms SET status=:status, guest_name=:guest, maintenance_notes=:notes, updated_at=NOW() WHERE id=:id');
+        $stmt = $pdo->prepare('UPDATE rooms SET status=:status, guest_name=:guest, maintenance_notes=:notes WHERE id=:id');
         $stmt->execute([
           ':status' => $status,
           ':guest' => $guestName,
@@ -98,7 +98,7 @@ switch (true) {
           ':id' => $roomId
         ]);
       } else {
-        $stmt = $pdo->prepare('UPDATE rooms SET status=:status, guest_name=:guest, maintenance_notes=:notes, updated_at=NOW() WHERE room_number=:number');
+        $stmt = $pdo->prepare('UPDATE rooms SET status=:status, guest_name=:guest, maintenance_notes=:notes WHERE room_number=:number');
         $stmt->execute([
           ':status' => $status,
           ':guest' => $guestName,
