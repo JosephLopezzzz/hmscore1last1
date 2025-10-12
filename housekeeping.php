@@ -281,7 +281,7 @@
               Start Task
             </button>
           ` : status === 'in-progress' ? `
-            <button class="btn-complete-task h-8 px-3 rounded-md border text-sm w-full hover:bg-accent" data-task-id="${task.id}">
+            <button class="btn-complete-task h-8 px-3 rounded-md bg-success text-white text-sm w-full hover:bg-success/90 transition-colors" data-task-id="${task.id}">
               Mark Complete
             </button>
           ` : '';
