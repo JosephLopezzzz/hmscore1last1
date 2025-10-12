@@ -1,3 +1,8 @@
+<?php 
+  // PHP session and auth MUST be at the very top before any HTML
+  require_once __DIR__ . '/includes/db.php'; 
+  requireAuth(['admin','receptionist']); 
+?>
 <!doctype html>
 <html lang="en" class="">
   <head>
@@ -113,7 +118,6 @@
     </style>
   </head>
   <body class="min-h-screen bg-background">
-    <?php require_once __DIR__ . '/includes/db.php'; requireAuth(['admin','receptionist']); ?>
     <?php include __DIR__ . '/includes/header.php'; ?>
     
     <main class="container mx-auto px-4 py-6">
