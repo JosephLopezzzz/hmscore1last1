@@ -41,11 +41,21 @@ class HotelDataSync {
     }
 
     /**
+     * Get base API URL
+     */
+    getApiBase() {
+        // Get the current path and construct API base
+        const path = window.location.pathname;
+        const basePath = path.substring(0, path.lastIndexOf('/'));
+        return basePath + '/api';
+    }
+
+    /**
      * Fetch rooms data
      */
     async fetchRooms() {
         try {
-            const response = await fetch('/api/rooms');
+            const response = await fetch(this.getApiBase() + '/rooms');
             const data = await response.json();
             this.rooms = data.data || [];
             this.notifyListeners('roomsUpdate', this.rooms);
@@ -61,7 +71,7 @@ class HotelDataSync {
      */
     async fetchHousekeepingTasks(status = null) {
         try {
-            const url = status ? `/api/housekeeping?status=${status}` : '/api/housekeeping';
+            const url = status ? `${this.getApiBase()}/housekeeping?status=${status}` : `${this.getApiBase()}/housekeeping`;
             const response = await fetch(url);
             const data = await response.json();
             this.housekeepingTasks = data.data || [];
@@ -80,7 +90,7 @@ class HotelDataSync {
      */
     async updateRoomStatus(roomId, status, guestName = null, notes = null) {
         try {
-            const response = await fetch('/api/rooms', {
+            const response = await fetch(this.getApiBase() + '/rooms', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -116,7 +126,7 @@ class HotelDataSync {
      */
     async updateHousekeepingTask(taskId, status, assignedTo = null) {
         try {
-            const response = await fetch(`/api/housekeeping/${taskId}`, {
+            const response = await fetch(`${this.getApiBase()}/housekeeping/${taskId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -150,7 +160,7 @@ class HotelDataSync {
      */
     async createHousekeepingTask(taskData) {
         try {
-            const response = await fetch('/api/housekeeping', {
+            const response = await fetch(this.getApiBase() + '/housekeeping', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

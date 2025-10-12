@@ -42,15 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unset($_SESSION['temp_email']);
                 unset($_SESSION['temp_role']);
                 
-                // Log successful login
-                logSecurityEvent($userId, '2FA_VERIFICATION_SUCCESS', '2FA verification successful');
-                
+                // 2FA verification successful
                 // Redirect to dashboard
                 header('Location: index.php');
                 exit;
             } else {
                 $error = 'Invalid verification code. Please try again.';
-                logSecurityEvent($userId ?? null, '2FA_VERIFICATION_FAILED', 'Invalid 2FA code entered');
             }
         }
     }
@@ -75,6 +72,13 @@ $csrfToken = generateCSRFToken();
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
+    <!-- Theme initialization (must be first to prevent flash) -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     

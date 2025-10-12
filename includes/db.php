@@ -113,9 +113,9 @@ function verifyTOTPCode($userIdOrSecret, string $code): bool {
     $secret = $userIdOrSecret;
   }
   
-  $timeSlice = floor(time() / 30);
+  $timeSlice = (int)floor(time() / 30);
   for ($i = -1; $i <= 1; $i++) {
-    $calculatedCode = calculateTOTP($secret, $timeSlice + $i);
+    $calculatedCode = calculateTOTP($secret, (int)($timeSlice + $i));
     if (hash_equals($calculatedCode, $code)) {
       return true;
     }
