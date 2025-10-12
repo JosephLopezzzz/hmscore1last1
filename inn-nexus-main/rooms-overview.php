@@ -144,14 +144,20 @@
 
       let currentRoomModal = null;
 
-      // Status class mapping
+      // Status class mapping (handle both capitalized and lowercase)
       const statusClassMap = {
         "Vacant": "room-vacant",
+        "vacant": "room-vacant",
         "Occupied": "room-occupied",
+        "occupied": "room-occupied",
         "Cleaning": "room-cleaning",
+        "cleaning": "room-cleaning",
         "For Cleaning": "room-cleaning",
         "Maintenance": "room-maintenance",
-        "Reserved": "room-occupied"
+        "maintenance": "room-maintenance",
+        "Reserved": "room-occupied",
+        "reserved": "room-occupied",
+        "dirty": "room-cleaning"
       };
 
       // Status options for dropdown
