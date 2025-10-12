@@ -432,6 +432,12 @@
         const notes = document.getElementById('roomNotes')?.value;
 
         if (newStatus && newStatus !== currentRoomModal.status) {
+          // Show loading state
+          const updateBtn = document.getElementById('modalActionPrimary');
+          const originalText = updateBtn.textContent;
+          updateBtn.textContent = 'Updating...';
+          updateBtn.disabled = true;
+
           const success = await hotelSync.updateRoom(
             currentRoomModal.id,
             newStatus,
@@ -440,7 +446,14 @@
           );
 
           if (success) {
+            // Force immediate refresh of room data
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for DB to commit
+            await hotelSync.init(); // Force reload from API
             closeModal();
+          } else {
+            // Restore button
+            updateBtn.textContent = originalText;
+            updateBtn.disabled = false;
           }
         } else {
           closeModal();
