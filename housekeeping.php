@@ -316,12 +316,68 @@
 
         // Handle start task
         async function handleStartTask(taskId) {
-          await hotelSync.updateTask(taskId, 'in-progress');
+          const task = tasks.find(t => t.id === taskId);
+          if (!task) {
+            console.error('Task not found:', taskId);
+            return;
+          }
+
+          // Disable the button to prevent double-clicks
+          const button = document.querySelector(`[data-task-id="${taskId}"].btn-start-task`);
+          if (button) {
+            button.disabled = true;
+            button.textContent = 'Starting...';
+          }
+
+          console.log('Starting task:', taskId, task);
+          const success = await hotelSync.updateTask(taskId, 'in-progress');
+          
+          if (success) {
+            console.log('Task started successfully');
+            // Force immediate refresh
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await hotelSync.init();
+          } else {
+            console.error('Failed to start task');
+            // Re-enable button on failure
+            if (button) {
+              button.disabled = false;
+              button.textContent = 'Start Task';
+            }
+          }
         }
 
         // Handle complete task
         async function handleCompleteTask(taskId) {
-          await hotelSync.updateTask(taskId, 'completed');
+          const task = tasks.find(t => t.id === taskId);
+          if (!task) {
+            console.error('Task not found:', taskId);
+            return;
+          }
+
+          // Disable the button to prevent double-clicks
+          const button = document.querySelector(`[data-task-id="${taskId}"].btn-complete-task`);
+          if (button) {
+            button.disabled = true;
+            button.textContent = 'Completing...';
+          }
+
+          console.log('Completing task:', taskId, task);
+          const success = await hotelSync.updateTask(taskId, 'completed');
+          
+          if (success) {
+            console.log('Task completed successfully');
+            // Force immediate refresh
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await hotelSync.init();
+          } else {
+            console.error('Failed to complete task');
+            // Re-enable button on failure
+            if (button) {
+              button.disabled = false;
+              button.textContent = 'Mark Complete';
+            }
+          }
         }
 
         // Start when ready

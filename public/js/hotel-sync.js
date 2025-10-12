@@ -128,6 +128,8 @@ class HotelDataSync {
      */
     async updateHousekeepingTask(taskId, status, assignedTo = null) {
         try {
+            console.log(`Updating task ${taskId} to status: ${status}`);
+            
             const response = await fetch(`${this.getApiBase()}/housekeeping/${taskId}`, {
                 method: 'PATCH',
                 headers: {
@@ -139,20 +141,26 @@ class HotelDataSync {
                 })
             });
 
+            console.log('Response status:', response.status);
             const data = await response.json();
+            console.log('Response data:', data);
             
             if (data.ok) {
                 // Refresh both rooms and housekeeping data
+                console.log('Task updated successfully, refreshing data...');
                 await this.loadData();
+                console.log('Data refreshed');
                 this.showToast(data.message || 'Task updated successfully', 'success');
                 return true;
             } else {
-                this.showToast('Failed to update task', 'error');
+                const errorMsg = data.message || data.error || 'Failed to update task';
+                console.error('Task update failed:', data);
+                this.showToast(errorMsg, 'error');
                 return false;
             }
         } catch (error) {
             console.error('Failed to update task:', error);
-            this.showToast('Failed to update task', 'error');
+            this.showToast('Failed to update task: ' + error.message, 'error');
             return false;
         }
     }
