@@ -7,6 +7,15 @@
 
 USE inn_nexus;
 
+-- ================================================================
+-- HOUSEKEEPING INTEGRATION SCRIPT
+-- ================================================================
+-- Creates housekeeping_tasks table and updates rooms table
+-- for real-time synchronization between Rooms and Housekeeping
+-- ================================================================
+
+USE inn_nexus;
+
 -- Create housekeeping_tasks table
 CREATE TABLE IF NOT EXISTS housekeeping_tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -22,41 +31,41 @@ CREATE TABLE IF NOT EXISTS housekeeping_tasks (
     completed_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     INDEX idx_room_id (room_id),
     INDEX idx_room_number (room_number),
     INDEX idx_status (status),
     INDEX idx_priority (priority),
     INDEX idx_created_at (created_at),
-    
+
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Update rooms table to ensure all necessary fields exist
-ALTER TABLE rooms 
+-- Update rooms table to ensure all necessary fields exist (BEFORE using them in queries)
+ALTER TABLE rooms
 ADD COLUMN IF NOT EXISTS guest_name VARCHAR(200) NULL AFTER status,
 ADD COLUMN IF NOT EXISTS housekeeping_status ENUM('clean', 'dirty', 'cleaning', 'inspected') DEFAULT 'clean' AFTER guest_name;
 
 -- Create index for housekeeping status
 CREATE INDEX IF NOT EXISTS idx_housekeeping_status ON rooms(housekeeping_status);
 
--- Insert sample housekeeping tasks based on existing rooms
+-- Insert sample housekeeping tasks based on existing rooms (NOW columns exist)
 INSERT INTO housekeeping_tasks (room_id, room_number, task_type, status, priority, guest_name, notes)
-SELECT 
+SELECT
     r.id,
     r.room_number,
-    CASE 
+    CASE
         WHEN r.status = 'Cleaning' THEN 'cleaning'
         WHEN r.status = 'Maintenance' THEN 'maintenance'
         ELSE 'cleaning'
     END as task_type,
-    CASE 
+    CASE
         WHEN r.status = 'Cleaning' THEN 'pending'
         WHEN r.status = 'Maintenance' THEN 'maintenance'
         WHEN r.status = 'Occupied' THEN 'completed'
         ELSE 'pending'
     END as status,
-    CASE 
+    CASE
         WHEN r.status = 'Maintenance' THEN 'urgent'
         WHEN r.room_type = 'Suite' OR r.room_type = 'Deluxe' THEN 'high'
         ELSE 'normal'

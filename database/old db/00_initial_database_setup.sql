@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     birthdate DATE NULL,
     check_in_date DATETIME NOT NULL,
     check_out_date DATETIME NOT NULL,
-    room_type ENUM('general', 'deluxe', 'executive', 'luxury') NOT NULL,
+    room_type ENUM('Single', 'Double', 'Deluxe', 'Suite', 'Twin', 'Triple', 'Quad', 'Family', 'Junior Suite', 'Executive Suite', 'Family Suite', 'Luxury Suite', 'Presidential Suite', 'Penthouse', 'Honeymoon Suite', 'Accessible Single', 'Accessible Double', 'Pet-Friendly', 'Extended Stay', 'Connecting') NOT NULL,
     status ENUM('Pending', 'Confirmed', 'Checked In', 'Checked Out', 'Cancelled') DEFAULT 'Pending',
     total_amount DECIMAL(10,2) DEFAULT 0.00,
     paid_amount DECIMAL(10,2) DEFAULT 0.00,

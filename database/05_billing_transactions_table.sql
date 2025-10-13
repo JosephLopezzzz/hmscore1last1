@@ -1,0 +1,33 @@
+-- ================================================================
+-- INN NEXUS - BILLING TRANSACTIONS TABLE
+-- ================================================================
+-- Creates the billing_transactions table for financial transactions
+-- ================================================================
+
+USE inn_nexus;
+
+-- BILLING_TRANSACTIONS TABLE (Financial Transactions)
+CREATE TABLE IF NOT EXISTS billing_transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    reservation_id VARCHAR(50) NULL,
+    guest_name VARCHAR(100) NOT NULL,
+    room_number VARCHAR(10) NOT NULL,
+    transaction_type ENUM('Room Charge', 'Service', 'Payment', 'Refund') DEFAULT 'Room Charge',
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method ENUM('Cash', 'Card', 'GCash', 'Bank Transfer') DEFAULT 'Cash',
+    status ENUM('Pending', 'Paid', 'Failed', 'Refunded') DEFAULT 'Pending',
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_reservation_id (reservation_id),
+    INDEX idx_guest_name (guest_name),
+    INDEX idx_room_number (room_number),
+    INDEX idx_transaction_date (transaction_date),
+    INDEX idx_status (status),
+
+    FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SELECT 'Billing transactions table created successfully!' AS Status;
