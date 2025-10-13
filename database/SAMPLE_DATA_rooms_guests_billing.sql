@@ -99,6 +99,42 @@ ON DUPLICATE KEY UPDATE
     status = VALUES(status);
 
 -- ================================================================
+-- SAMPLE GUESTS DATA (15 Diverse Guests)
+-- ================================================================
+
+-- Insert sample guest data for testing and demonstration
+INSERT INTO guests (first_name, last_name, email, phone, address, city, country, id_type, id_number, date_of_birth, nationality, notes) VALUES
+('Sarah', 'Johnson', 'sarah.johnson@email.com', '+1-555-0101', '123 Oak Street', 'New York', 'United States', 'Driver License', 'DL123456789', '1985-03-15', 'American', 'VIP customer, prefers quiet rooms'),
+('Michael', 'Chen', 'm.chen@techcorp.com', '+1-555-0102', '456 Pine Avenue', 'San Francisco', 'United States', 'Passport', 'P123456789', '1990-07-22', 'American', 'Business traveler, frequent guest'),
+('Emma', 'Williams', 'emma.w@email.com', '+44-20-7946-0103', '789 Elm Road', 'London', 'United Kingdom', 'Passport', 'P987654321', '1988-11-08', 'British', 'Family vacation, two children'),
+('David', 'Brown', 'd.brown@consulting.com', '+1-555-0104', '321 Maple Drive', 'Chicago', 'United States', 'National ID', 'SSN123456789', '1975-01-30', 'American', 'Conference attendee'),
+('Lisa', 'Anderson', 'lisa.anderson@email.com', '+46-8-525-0105', '654 Cedar Lane', 'Stockholm', 'Sweden', 'Passport', 'P555666777', '1982-05-18', 'Swedish', 'Honeymoon trip'),
+('James', 'Wilson', 'james.w@freelance.com', '+61-2-9374-0106', '987 Birch Boulevard', 'Sydney', 'Australia', 'Driver License', 'DL987654321', '1992-09-12', 'Australian', 'Digital nomad, long-term stay'),
+('Maria', 'Garcia', 'maria.garcia@email.com', '+34-91-445-0107', '147 Palm Street', 'Madrid', 'Spain', 'National ID', 'DNI12345678', '1978-12-03', 'Spanish', 'Cultural tour visitor'),
+('Robert', 'Taylor', 'r.taylor@engineering.com', '+1-555-0108', '258 Willow Way', 'Seattle', 'United States', 'Passport', 'P456789123', '1980-04-25', 'American', 'Tech conference speaker'),
+('Anna', 'Novak', 'anna.novak@email.cz', '+420-224-0109', '369 Spruce Street', 'Prague', 'Czech Republic', 'Passport', 'P789123456', '1995-08-14', 'Czech', 'Student traveler, budget conscious'),
+('Pierre', 'Dubois', 'pierre.dubois@business.fr', '+33-1-4276-0110', '741 Fir Avenue', 'Paris', 'France', 'National ID', 'IDF123456789', '1970-06-20', 'French', 'Wine tour, anniversary celebration'),
+('Yuki', 'Tanaka', 'yuki.tanaka@email.jp', '+81-3-3570-0111', '852 Cherry Blossom St', 'Tokyo', 'Japan', 'Passport', 'P321654987', '1987-02-28', 'Japanese', 'Business meeting in the city'),
+('Ahmed', 'Al-Rashid', 'ahmed.rashid@email.ae', '+971-4-331-0112', '963 Desert Palm Ave', 'Dubai', 'United Arab Emirates', 'Passport', 'P654987321', '1983-10-10', 'Emirati', 'Luxury shopping trip'),
+('Sofia', 'Rodriguez', 'sofia.r@travelblog.com', '+52-55-5208-0113', '159 Cactus Road', 'Mexico City', 'Mexico', 'Passport', 'P147258369', '1991-12-05', 'Mexican', 'Travel blogger, social media influencer'),
+('Thomas', 'Müller', 'thomas.mueller@email.de', '+49-30-2098-0114', '357 Linden Street', 'Berlin', 'Germany', 'National ID', 'IDG987654321', '1976-07-15', 'German', 'Music festival attendee'),
+('Isabella', 'Costa', 'isabella.costa@email.br', '+55-11-3069-0115', '468 Carnival Square', 'Rio de Janeiro', 'Brazil', 'Passport', 'P963852741', '1989-03-22', 'Brazilian', 'Carnival season visitor')
+
+ON DUPLICATE KEY UPDATE
+    first_name = VALUES(first_name),
+    last_name = VALUES(last_name),
+    email = VALUES(email),
+    phone = VALUES(phone),
+    address = VALUES(address),
+    city = VALUES(city),
+    country = VALUES(country),
+    id_type = VALUES(id_type),
+    id_number = VALUES(id_number),
+    date_of_birth = VALUES(date_of_birth),
+    nationality = VALUES(nationality),
+    notes = VALUES(notes);
+
+-- ================================================================
 -- SAMPLE BILLING TRANSACTIONS
 -- ================================================================
 
