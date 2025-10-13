@@ -1,6 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="">
   <head>
+    <!-- Theme initialization (must be first to prevent flash) -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
@@ -274,7 +281,7 @@
               Start Task
             </button>
           ` : status === 'in-progress' ? `
-            <button class="btn-complete-task h-8 px-3 rounded-md border text-sm w-full hover:bg-accent" data-task-id="${task.id}">
+            <button class="btn-complete-task h-8 px-3 rounded-md bg-success text-white text-sm w-full hover:bg-success/90 transition-colors" data-task-id="${task.id}">
               Mark Complete
             </button>
           ` : '';
@@ -309,12 +316,68 @@
 
         // Handle start task
         async function handleStartTask(taskId) {
-          await hotelSync.updateTask(taskId, 'in-progress');
+          const task = tasks.find(t => t.id === taskId);
+          if (!task) {
+            console.error('Task not found:', taskId);
+            return;
+          }
+
+          // Disable the button to prevent double-clicks
+          const button = document.querySelector(`[data-task-id="${taskId}"].btn-start-task`);
+          if (button) {
+            button.disabled = true;
+            button.textContent = 'Starting...';
+          }
+
+          console.log('Starting task:', taskId, task);
+          const success = await hotelSync.updateTask(taskId, 'in-progress');
+          
+          if (success) {
+            console.log('Task started successfully');
+            // Force immediate refresh
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await hotelSync.init();
+          } else {
+            console.error('Failed to start task');
+            // Re-enable button on failure
+            if (button) {
+              button.disabled = false;
+              button.textContent = 'Start Task';
+            }
+          }
         }
 
         // Handle complete task
         async function handleCompleteTask(taskId) {
-          await hotelSync.updateTask(taskId, 'completed');
+          const task = tasks.find(t => t.id === taskId);
+          if (!task) {
+            console.error('Task not found:', taskId);
+            return;
+          }
+
+          // Disable the button to prevent double-clicks
+          const button = document.querySelector(`[data-task-id="${taskId}"].btn-complete-task`);
+          if (button) {
+            button.disabled = true;
+            button.textContent = 'Completing...';
+          }
+
+          console.log('Completing task:', taskId, task);
+          const success = await hotelSync.updateTask(taskId, 'completed');
+          
+          if (success) {
+            console.log('Task completed successfully');
+            // Force immediate refresh
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await hotelSync.init();
+          } else {
+            console.error('Failed to complete task');
+            // Re-enable button on failure
+            if (button) {
+              button.disabled = false;
+              button.textContent = 'Mark Complete';
+            }
+          }
         }
 
         // Start when ready

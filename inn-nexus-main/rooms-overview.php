@@ -1,6 +1,18 @@
+<?php 
+  // PHP session and auth MUST be at the very top before any HTML
+  require_once __DIR__ . '/includes/db.php'; 
+  requireAuth(['admin','receptionist']); 
+?>
 <!doctype html>
-<html lang="en">
+<html lang="en" class="">
   <head>
+    <!-- Theme initialization (must be first to prevent flash) -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
@@ -58,6 +70,40 @@
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         border-left: 4px solid #3b82f6;
       }
+      /* Ensure light mode text is dark */
+      .floor-header .text-gray-800 {
+        color: #1f2937 !important;
+      }
+      .floor-header .text-gray-600 {
+        color: #4b5563 !important;
+      }
+      /* Dark mode overrides */
+      .dark .floor-header {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border-left: 4px solid #60a5fa;
+      }
+      .dark .floor-header .text-gray-800 {
+        color: #e2e8f0 !important;
+      }
+      .dark .floor-header .text-gray-600 {
+        color: #cbd5e1 !important;
+      }
+      .dark .floor-header .bg-green-100 {
+        background-color: #065f46 !important;
+        color: #d1fae5 !important;
+      }
+      .dark .floor-header .bg-red-100 {
+        background-color: #7f1d1d !important;
+        color: #fecaca !important;
+      }
+      .dark .floor-header .bg-orange-100 {
+        background-color: #78350f !important;
+        color: #fed7aa !important;
+      }
+      .dark .floor-header .bg-gray-100 {
+        background-color: #374151 !important;
+        color: #e5e7eb !important;
+      }
       .legend-dot {
         width: 12px;
         height: 12px;
@@ -72,7 +118,6 @@
     </style>
   </head>
   <body class="min-h-screen bg-background">
-    <?php require_once __DIR__ . '/includes/db.php'; requireAuth(['admin','receptionist']); ?>
     <?php include __DIR__ . '/includes/header.php'; ?>
     
     <main class="container mx-auto px-4 py-6">
@@ -100,6 +145,37 @@
             <span class="text-sm font-medium">Maintenance</span>
           </div>
         </div>
+
+        <!-- Filters -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mb-2">
+          <div>
+            <label for="filterStatus" class="block text-xs text-muted-foreground mb-1">Status</label>
+            <select id="filterStatus" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+              <option value="all">All statuses</option>
+              <option value="Vacant">Vacant</option>
+              <option value="Occupied">Occupied</option>
+              <option value="Cleaning">Cleaning</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Reserved">Reserved</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterType" class="block text-xs text-muted-foreground mb-1">Type</label>
+            <select id="filterType" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+              <option value="all">All types</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterFloor" class="block text-xs text-muted-foreground mb-1">Floor</label>
+            <select id="filterFloor" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+              <option value="all">All floors</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterSearch" class="block text-xs text-muted-foreground mb-1">Search</label>
+            <input id="filterSearch" type="text" placeholder="Room or guest" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm" />
+          </div>
+        </div>
       </div>
 
       <!-- Floors Container -->
@@ -110,10 +186,10 @@
 
     <!-- Room Detail Modal -->
     <div id="roomModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-      <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div class="bg-card text-card-foreground rounded-lg p-6 w-full max-w-md mx-4 shadow-xl border border-border">
         <div class="flex items-center justify-between mb-4">
-          <h2 id="modalRoomNumber" class="text-xl font-bold">Room 101</h2>
-          <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+          <h2 id="modalRoomNumber" class="text-xl font-bold text-foreground">Room 101</h2>
+          <button id="closeModal" class="text-muted-foreground hover:text-foreground">
             <i data-lucide="x" class="h-5 w-5"></i>
           </button>
         </div>
@@ -128,7 +204,7 @@
           <button id="modalActionPrimary" class="flex-1 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
             View / Assign
           </button>
-          <button id="modalActionSecondary" class="flex-1 rounded-md border px-4 py-2 text-sm hover:bg-muted">
+          <button id="modalActionSecondary" class="flex-1 rounded-md border border-border px-4 py-2 text-sm hover:bg-muted text-foreground">
             Close
           </button>
         </div>
@@ -143,6 +219,14 @@
       let rooms = [];
 
       let currentRoomModal = null;
+
+        // UI filters
+        const filters = {
+          status: 'all',
+          type: 'all',
+          floor: 'all',
+          search: ''
+        };
 
       // Status class mapping (handle both capitalized and lowercase)
       const statusClassMap = {
@@ -180,6 +264,8 @@
         
         // Initial render
         rooms = hotelSync.getRooms();
+        setupFilters();
+        populateFilterOptions();
         renderRooms();
         
         // Setup modal
@@ -189,6 +275,7 @@
       // Handle rooms data update
       function handleRoomsUpdate(updatedRooms) {
         rooms = updatedRooms;
+        populateFilterOptions();
         renderRooms();
       }
 
@@ -198,8 +285,28 @@
 
         floorsContainer.innerHTML = "";
         
+        const normalizedSearch = (filters.search || '').toString().trim().toLowerCase();
+
+        // Apply filters
+        const visibleRooms = rooms.filter(r => {
+          const statusOk = filters.status === 'all' || (r.status === filters.status || (r.status || '').toString().toLowerCase() === filters.status.toLowerCase());
+          const typeOk = filters.type === 'all' || (r.room_type === filters.type);
+          const floorOk = filters.floor === 'all' || ((r.floor_number || 1).toString() === filters.floor.toString());
+          if (!normalizedSearch) return statusOk && typeOk && floorOk;
+          const hay = `${r.room_number || ''} ${r.guest_name || ''}`.toLowerCase();
+          return statusOk && typeOk && floorOk && hay.includes(normalizedSearch);
+        });
+
+        if (visibleRooms.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'text-sm text-muted-foreground px-1';
+          empty.textContent = 'No rooms match the current filters.';
+          floorsContainer.appendChild(empty);
+          return;
+        }
+
         // Group by floor
-        const grouped = rooms.reduce((acc, room) => {
+        const grouped = visibleRooms.reduce((acc, room) => {
           const floor = room.floor_number || 1;
           if (!acc[floor]) acc[floor] = [];
           acc[floor].push(room);
@@ -291,6 +398,38 @@
         return card;
       }
 
+      // Filters setup and helpers
+      function setupFilters() {
+        const statusEl = document.getElementById('filterStatus');
+        const typeEl = document.getElementById('filterType');
+        const floorEl = document.getElementById('filterFloor');
+        const searchEl = document.getElementById('filterSearch');
+
+        if (statusEl) statusEl.addEventListener('change', () => { filters.status = statusEl.value; renderRooms(); });
+        if (typeEl) typeEl.addEventListener('change', () => { filters.type = typeEl.value; renderRooms(); });
+        if (floorEl) floorEl.addEventListener('change', () => { filters.floor = floorEl.value; renderRooms(); });
+        if (searchEl) searchEl.addEventListener('input', () => { filters.search = searchEl.value; renderRooms(); });
+      }
+
+      function populateFilterOptions() {
+        const typeEl = document.getElementById('filterType');
+        const floorEl = document.getElementById('filterFloor');
+        if (!typeEl || !floorEl) return;
+
+        const types = Array.from(new Set((rooms || []).map(r => r.room_type).filter(Boolean))).sort();
+        const floors = Array.from(new Set((rooms || []).map(r => r.floor_number || 1))).sort((a,b) => (a||0)-(b||0));
+
+        const currentType = filters.type;
+        const currentFloor = filters.floor;
+
+        typeEl.innerHTML = '<option value="all">All types</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+        floorEl.innerHTML = '<option value="all">All floors</option>' + floors.map(f => `<option value="${f}">Floor ${f}</option>`).join('');
+
+        // Restore selected values if still valid
+        if ([...typeEl.options].some(o => o.value === currentType)) typeEl.value = currentType; else typeEl.value = 'all';
+        if ([...floorEl.options].some(o => o.value.toString() === currentFloor.toString())) floorEl.value = currentFloor; else floorEl.value = 'all';
+      }
+
       // Setup modal
       function setupModal() {
         const modal = document.getElementById("roomModal");
@@ -346,8 +485,8 @@
         statusSelector.id = 'statusSelector';
         statusSelector.className = 'mt-4 p-4 bg-muted/30 rounded-lg';
         statusSelector.innerHTML = `
-          <label class="block text-sm font-medium mb-2">Change Status:</label>
-          <select id="newStatus" class="w-full px-3 py-2 rounded-md border bg-background">
+          <label class="block text-sm font-medium mb-2 text-foreground">Change Status:</label>
+          <select id="newStatus" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground">
             ${statusOptions.map(opt => `
               <option value="${opt.value}" ${opt.value === room.status ? 'selected' : ''}>
                 ${opt.label}
@@ -355,9 +494,9 @@
             `).join('')}
           </select>
           <div class="mt-2">
-            <label class="block text-sm font-medium mb-1">Notes:</label>
+            <label class="block text-sm font-medium mb-1 text-foreground">Notes:</label>
             <input type="text" id="roomNotes" placeholder="Enter notes..." 
-                   class="w-full px-3 py-2 rounded-md border bg-background text-sm"
+                   class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm"
                    value="${room.maintenance_notes || ''}">
           </div>
         `;
@@ -387,6 +526,12 @@
         const notes = document.getElementById('roomNotes')?.value;
 
         if (newStatus && newStatus !== currentRoomModal.status) {
+          // Show loading state
+          const updateBtn = document.getElementById('modalActionPrimary');
+          const originalText = updateBtn.textContent;
+          updateBtn.textContent = 'Updating...';
+          updateBtn.disabled = true;
+
           const success = await hotelSync.updateRoom(
             currentRoomModal.id,
             newStatus,
@@ -395,7 +540,17 @@
           );
 
           if (success) {
+            // Force immediate refresh of room data
+            console.log('Status update successful, refreshing data...');
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for DB to commit
+            await hotelSync.init(); // Force reload from API
+            console.log('Data refreshed, rooms:', hotelSync.getRooms());
             closeModal();
+          } else {
+            console.error('Status update failed');
+            // Restore button
+            updateBtn.textContent = originalText;
+            updateBtn.disabled = false;
           }
         } else {
           closeModal();

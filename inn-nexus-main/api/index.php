@@ -90,7 +90,7 @@ switch (true) {
       
       // Update room
       if ($roomId > 0) {
-        $stmt = $pdo->prepare('UPDATE rooms SET status=:status, guest_name=:guest, maintenance_notes=:notes, updated_at=NOW() WHERE id=:id');
+        $stmt = $pdo->prepare('UPDATE rooms SET status=:status, guest_name=:guest, maintenance_notes=:notes WHERE id=:id');
         $stmt->execute([
           ':status' => $status,
           ':guest' => $guestName,
@@ -98,13 +98,39 @@ switch (true) {
           ':id' => $roomId
         ]);
       } else {
-        $stmt = $pdo->prepare('UPDATE rooms SET status=:status, guest_name=:guest, maintenance_notes=:notes, updated_at=NOW() WHERE room_number=:number');
+        $stmt = $pdo->prepare('UPDATE rooms SET status=:status, guest_name=:guest, maintenance_notes=:notes WHERE room_number=:number');
         $stmt->execute([
           ':status' => $status,
           ':guest' => $guestName,
           ':notes' => $notes,
           ':number' => $roomNumber
         ]);
+      }
+      
+      // Auto-create housekeeping task when status changes to Cleaning or Maintenance
+      if ($status === 'Cleaning' || $status === 'Maintenance') {
+        // Check if task already exists
+        $checkTask = $pdo->prepare("SELECT id FROM housekeeping_tasks WHERE room_number = :room_number AND status != 'completed'");
+        $checkTask->execute([':room_number' => $roomNumber]);
+        
+        if (!$checkTask->fetch()) {
+          // Create new housekeeping task
+          $taskType = $status === 'Maintenance' ? 'maintenance' : 'cleaning';
+          $priority = $status === 'Maintenance' ? 'high' : 'normal';
+          
+          $createTask = $pdo->prepare("
+            INSERT INTO housekeeping_tasks (room_id, room_number, task_type, status, priority, guest_name, notes)
+            VALUES (:room_id, :room_number, :task_type, 'pending', :priority, :guest_name, :notes)
+          ");
+          $createTask->execute([
+            ':room_id' => $roomId,
+            ':room_number' => $roomNumber,
+            ':task_type' => $taskType,
+            ':priority' => $priority,
+            ':guest_name' => $guestName,
+            ':notes' => $notes ?? "Room needs $taskType"
+          ]);
+        }
       }
       
       // Log the change

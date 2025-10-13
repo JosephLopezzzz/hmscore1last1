@@ -1,0 +1,34 @@
+# Apache configuration for clean URLs and proper asset handling
+
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # IMPORTANT: If you move this app, update RewriteBase to the new mount path
+  # Current local path: /inn-nexus-main/inn-nexus-main/
+  RewriteBase /inn-nexus-main/inn-nexus-main/
+
+  # Skip existing files and directories (serve assets directly)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Route well-known top-level pages to their PHP counterparts
+  RewriteRule ^(index|reservations|housekeeping|billing|guests|analytics)$ $1.php [L,QSA]
+
+  # API routing
+  RewriteRule ^api(/.*)?$ api/index.php [L,QSA]
+
+  # Fallback: everything else routes to index.php (dashboard)
+  RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+# Cache static assets from /public for better performance
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+

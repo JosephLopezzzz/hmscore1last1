@@ -1,6 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="">
   <head>
+    <!-- Theme initialization (must be first to prevent flash) -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     

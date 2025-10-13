@@ -1,0 +1,7 @@
+# Commands to run after creating your GitHub repository
+
+# Replace 'charlie-223' with your actual GitHub username
+# Replace 'inn-nexus' with your repository name
+
+git remote add origin https://github.com/charlie-223/inn-nexus.git
+git push -u origin main
