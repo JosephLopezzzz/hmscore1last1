@@ -36,7 +36,7 @@
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
   </head>
-  <body class="min-h-screen bg-background flex items-center justify-center">
+  <body class="min-h-screen bg-background flex items-center justify-center relative">
     <?php require_once __DIR__ . '/includes/db.php'; initSession(); ?>
     <?php
       $error = '';
@@ -87,6 +87,13 @@
       }
       
     ?>
+    <!-- Theme toggle (top-right) -->
+    <button id="theme-toggle" aria-label="Toggle theme" class="absolute top-4 right-4 h-9 px-3 rounded-md border border-border bg-background text-foreground hover:bg-muted inline-flex items-center gap-2">
+      <i data-lucide="sun" class="h-4 w-4 dark:hidden"></i>
+      <i data-lucide="moon" class="h-4 w-4 hidden dark:block"></i>
+      <span class="hidden sm:inline text-sm">Theme</span>
+    </button>
+
     <div class="w-full max-w-sm rounded-lg border bg-card p-6 shadow-sm">
       <h1 class="text-2xl font-bold mb-4 text-center">Sign in</h1>
       <?php if (!empty($error)): ?><p class="text-destructive text-sm mb-3"><?php echo $error; ?></p><?php endif; ?>
@@ -104,6 +111,23 @@
         <button class="w-full h-10 rounded-md bg-primary text-primary-foreground">Login</button>
       </form>
     </div>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.lucide) window.lucide.createIcons();
+        const toggle = document.getElementById('theme-toggle');
+        if (toggle) {
+          toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            html.classList.toggle('dark', !isDark);
+            localStorage.setItem('theme', newTheme);
+          });
+        }
+      });
+    </script>
   </body>
   </html>
 
