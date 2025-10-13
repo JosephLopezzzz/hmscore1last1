@@ -93,10 +93,12 @@
     // Check for saved theme preference or default to 'light'
     const currentTheme = localStorage.getItem('theme') || 'light';
     html.classList.toggle('dark', currentTheme === 'dark');
-    if (themeText) themeText.textContent = currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+    // Label should indicate the option to switch TO
+    if (themeText) themeText.textContent = currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
     if (themeIconSun && themeIconMoon) {
-      themeIconSun.style.display = currentTheme === 'dark' ? 'none' : 'inline';
-      themeIconMoon.style.display = currentTheme === 'dark' ? 'inline' : 'none';
+      // In dark mode, show sun (switch to light). In light mode, show moon
+      themeIconSun.style.display = currentTheme === 'dark' ? 'inline' : 'none';
+      themeIconMoon.style.display = currentTheme === 'dark' ? 'none' : 'inline';
     }
     
     // User menu toggle
@@ -124,10 +126,11 @@
         const newTheme = isDark ? 'light' : 'dark';
         html.classList.toggle('dark', !isDark);
         localStorage.setItem('theme', newTheme);
-        if (themeText) themeText.textContent = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+        // Label shows the mode to switch TO next
+        if (themeText) themeText.textContent = newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
         if (themeIconSun && themeIconMoon) {
-          themeIconSun.style.display = newTheme === 'dark' ? 'none' : 'inline';
-          themeIconMoon.style.display = newTheme === 'dark' ? 'inline' : 'none';
+          themeIconSun.style.display = newTheme === 'dark' ? 'inline' : 'none';
+          themeIconMoon.style.display = newTheme === 'dark' ? 'none' : 'inline';
         }
         if (userMenu) userMenu.classList.add('hidden');
       });
