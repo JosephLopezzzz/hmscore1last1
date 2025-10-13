@@ -111,9 +111,7 @@ class HotelDataSync {
                 this.showToast('Room status updated successfully', 'success');
                 return true;
             } else {
-                const errorMsg = data.message || data.error || 'Failed to update room status';
-                console.error('Room update failed:', data);
-                this.showToast(errorMsg, 'error');
+                this.showToast('Failed to update room status', 'error');
                 return false;
             }
         } catch (error) {
@@ -128,8 +126,6 @@ class HotelDataSync {
      */
     async updateHousekeepingTask(taskId, status, assignedTo = null) {
         try {
-            console.log(`Updating task ${taskId} to status: ${status}`);
-            
             const response = await fetch(`${this.getApiBase()}/housekeeping/${taskId}`, {
                 method: 'PATCH',
                 headers: {
@@ -141,26 +137,20 @@ class HotelDataSync {
                 })
             });
 
-            console.log('Response status:', response.status);
             const data = await response.json();
-            console.log('Response data:', data);
             
             if (data.ok) {
                 // Refresh both rooms and housekeeping data
-                console.log('Task updated successfully, refreshing data...');
                 await this.loadData();
-                console.log('Data refreshed');
                 this.showToast(data.message || 'Task updated successfully', 'success');
                 return true;
             } else {
-                const errorMsg = data.message || data.error || 'Failed to update task';
-                console.error('Task update failed:', data);
-                this.showToast(errorMsg, 'error');
+                this.showToast('Failed to update task', 'error');
                 return false;
             }
         } catch (error) {
             console.error('Failed to update task:', error);
-            this.showToast('Failed to update task: ' + error.message, 'error');
+            this.showToast('Failed to update task', 'error');
             return false;
         }
     }

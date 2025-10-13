@@ -238,9 +238,53 @@ function fetchAllReservations(): array {
   $pdo = getPdo();
   if (!$pdo) return [];
   try {
-    $sql = 'SELECT id, guest_name AS guest, room, checkin, checkout, status, nights, rate FROM reservations ORDER BY checkin DESC';
-    return $pdo->query($sql)->fetchAll();
+    $query = "
+      SELECT 
+        r.id,
+        r.guest_name as guest,
+        r.room_number as room,
+        r.check_in_date as checkin,
+        r.check_out_date as checkout,
+        LOWER(r.status) as status,
+        DATEDIFF(r.check_out_date, r.check_in_date) as nights,
+        r.total_amount as rate,
+        r.contact_number,
+        r.special_requests,
+        r.notes,
+        g.email as guest_email,
+        g.phone as guest_phone,
+        rm.room_type
+      FROM reservations r
+      LEFT JOIN guests g ON r.guest_id = g.id
+      LEFT JOIN rooms rm ON r.room_id = rm.id
+      ORDER BY r.check_in_date DESC, r.created_at DESC
+    ";
+    
+    $stmt = $pdo->query($query);
+    $reservations = $stmt->fetchAll();
+    
+    // Format the data to match the expected structure
+    return array_map(function($res) {
+      return [
+        'id' => $res['id'],
+        'guest' => $res['guest'],
+        'room' => $res['room'],
+        'checkin' => $res['checkin'],
+        'checkout' => $res['checkout'],
+        'status' => strtolower($res['status']),
+        'nights' => (int)$res['nights'],
+        'rate' => (float)$res['rate'],
+        'guest_email' => $res['guest_email'] ?? null,
+        'guest_phone' => $res['guest_phone'] ?? null,
+        'room_type' => $res['room_type'] ?? null,
+        'contact_number' => $res['contact_number'],
+        'special_requests' => $res['special_requests'],
+        'notes' => $res['notes']
+      ];
+    }, $reservations);
   } catch (Throwable $e) {
+    // Log the error for debugging
+    error_log('Error fetching reservations: ' . $e->getMessage());
     return [];
   }
 }

@@ -103,8 +103,14 @@ CREATE TABLE IF NOT EXISTS reservations (
     room_id INT NULL,
     room_number VARCHAR(10) NULL,
     guest_name VARCHAR(200) NOT NULL,
-    check_in_date DATE NOT NULL,
-    check_out_date DATE NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NULL,
+    phone VARCHAR(20) NULL,
+    birthdate DATE NULL,
+    check_in_date DATETIME NOT NULL,
+    check_out_date DATETIME NOT NULL,
+    room_type ENUM('general', 'deluxe', 'executive', 'luxury') NOT NULL,
     status ENUM('Pending', 'Confirmed', 'Checked In', 'Checked Out', 'Cancelled') DEFAULT 'Pending',
     total_amount DECIMAL(10,2) DEFAULT 0.00,
     paid_amount DECIMAL(10,2) DEFAULT 0.00,
@@ -112,18 +118,25 @@ CREATE TABLE IF NOT EXISTS reservations (
     contact_number VARCHAR(20) NULL,
     special_requests TEXT NULL,
     notes TEXT NULL,
+    invoice_method ENUM('email', 'print') DEFAULT 'print',
+    payment_source ENUM('cash', 'online') DEFAULT 'cash',
+    occupancy INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     INDEX idx_guest_id (guest_id),
     INDEX idx_room_id (room_id),
     INDEX idx_check_in_date (check_in_date),
+    INDEX idx_room_type (room_type),
+    INDEX idx_room_status (room_number, status, check_in_date, check_out_date),
+    CONSTRAINT chk_occupancy CHECK (occupancy > 0 AND occupancy <= 3),
     INDEX idx_check_out_date (check_out_date),
     INDEX idx_status (status),
     
     FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE SET NULL,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- 5. BILLING_TRANSACTIONS TABLE
 CREATE TABLE IF NOT EXISTS billing_transactions (

@@ -145,6 +145,37 @@
             <span class="text-sm font-medium">Maintenance</span>
           </div>
         </div>
+
+        <!-- Filters -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mb-2">
+          <div>
+            <label for="filterStatus" class="block text-xs text-muted-foreground mb-1">Status</label>
+            <select id="filterStatus" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+              <option value="all">All statuses</option>
+              <option value="Vacant">Vacant</option>
+              <option value="Occupied">Occupied</option>
+              <option value="Cleaning">Cleaning</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Reserved">Reserved</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterType" class="block text-xs text-muted-foreground mb-1">Type</label>
+            <select id="filterType" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+              <option value="all">All types</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterFloor" class="block text-xs text-muted-foreground mb-1">Floor</label>
+            <select id="filterFloor" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+              <option value="all">All floors</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterSearch" class="block text-xs text-muted-foreground mb-1">Search</label>
+            <input id="filterSearch" type="text" placeholder="Room or guest" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm" />
+          </div>
+        </div>
       </div>
 
       <!-- Floors Container -->
@@ -189,6 +220,14 @@
 
       let currentRoomModal = null;
 
+        // UI filters
+        const filters = {
+          status: 'all',
+          type: 'all',
+          floor: 'all',
+          search: ''
+        };
+
       // Status class mapping (handle both capitalized and lowercase)
       const statusClassMap = {
         "Vacant": "room-vacant",
@@ -225,6 +264,8 @@
         
         // Initial render
         rooms = hotelSync.getRooms();
+        setupFilters();
+        populateFilterOptions();
         renderRooms();
         
         // Setup modal
@@ -234,6 +275,7 @@
       // Handle rooms data update
       function handleRoomsUpdate(updatedRooms) {
         rooms = updatedRooms;
+        populateFilterOptions();
         renderRooms();
       }
 
@@ -243,8 +285,28 @@
 
         floorsContainer.innerHTML = "";
         
+        const normalizedSearch = (filters.search || '').toString().trim().toLowerCase();
+
+        // Apply filters
+        const visibleRooms = rooms.filter(r => {
+          const statusOk = filters.status === 'all' || (r.status === filters.status || (r.status || '').toString().toLowerCase() === filters.status.toLowerCase());
+          const typeOk = filters.type === 'all' || (r.room_type === filters.type);
+          const floorOk = filters.floor === 'all' || ((r.floor_number || 1).toString() === filters.floor.toString());
+          if (!normalizedSearch) return statusOk && typeOk && floorOk;
+          const hay = `${r.room_number || ''} ${r.guest_name || ''}`.toLowerCase();
+          return statusOk && typeOk && floorOk && hay.includes(normalizedSearch);
+        });
+
+        if (visibleRooms.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'text-sm text-muted-foreground px-1';
+          empty.textContent = 'No rooms match the current filters.';
+          floorsContainer.appendChild(empty);
+          return;
+        }
+
         // Group by floor
-        const grouped = rooms.reduce((acc, room) => {
+        const grouped = visibleRooms.reduce((acc, room) => {
           const floor = room.floor_number || 1;
           if (!acc[floor]) acc[floor] = [];
           acc[floor].push(room);
@@ -334,6 +396,38 @@
         card.addEventListener("click", () => openRoomModal(room));
 
         return card;
+      }
+
+      // Filters setup and helpers
+      function setupFilters() {
+        const statusEl = document.getElementById('filterStatus');
+        const typeEl = document.getElementById('filterType');
+        const floorEl = document.getElementById('filterFloor');
+        const searchEl = document.getElementById('filterSearch');
+
+        if (statusEl) statusEl.addEventListener('change', () => { filters.status = statusEl.value; renderRooms(); });
+        if (typeEl) typeEl.addEventListener('change', () => { filters.type = typeEl.value; renderRooms(); });
+        if (floorEl) floorEl.addEventListener('change', () => { filters.floor = floorEl.value; renderRooms(); });
+        if (searchEl) searchEl.addEventListener('input', () => { filters.search = searchEl.value; renderRooms(); });
+      }
+
+      function populateFilterOptions() {
+        const typeEl = document.getElementById('filterType');
+        const floorEl = document.getElementById('filterFloor');
+        if (!typeEl || !floorEl) return;
+
+        const types = Array.from(new Set((rooms || []).map(r => r.room_type).filter(Boolean))).sort();
+        const floors = Array.from(new Set((rooms || []).map(r => r.floor_number || 1))).sort((a,b) => (a||0)-(b||0));
+
+        const currentType = filters.type;
+        const currentFloor = filters.floor;
+
+        typeEl.innerHTML = '<option value="all">All types</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+        floorEl.innerHTML = '<option value="all">All floors</option>' + floors.map(f => `<option value="${f}">Floor ${f}</option>`).join('');
+
+        // Restore selected values if still valid
+        if ([...typeEl.options].some(o => o.value === currentType)) typeEl.value = currentType; else typeEl.value = 'all';
+        if ([...floorEl.options].some(o => o.value.toString() === currentFloor.toString())) floorEl.value = currentFloor; else floorEl.value = 'all';
       }
 
       // Setup modal
