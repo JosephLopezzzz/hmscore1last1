@@ -141,6 +141,7 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>window.lucide && window.lucide.createIcons();</script>
+    <?php include __DIR__ . '/reservation-modal.php'; ?>
   </body>
 </html>
 
