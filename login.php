@@ -121,8 +121,9 @@
 
         function applyIconState(){
           const isDark = html.classList.contains('dark');
-          if (sun()) sun().style.display = isDark ? 'none' : 'inline';
-          if (moon()) moon().style.display = isDark ? 'inline' : 'none';
+          // Show the option to switch TO: sun when dark (switch to light), moon when light (switch to dark)
+          if (sun()) sun().style.display = isDark ? 'inline' : 'none';
+          if (moon()) moon().style.display = isDark ? 'none' : 'inline';
         }
 
         // Set icon state initially (after reading localStorage in <head>)
