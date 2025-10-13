@@ -88,10 +88,9 @@
       
     ?>
     <!-- Theme toggle (top-right) -->
-    <button id="theme-toggle" aria-label="Toggle theme" class="absolute top-4 right-4 h-9 px-3 rounded-md border border-border bg-background text-foreground hover:bg-muted inline-flex items-center gap-2">
-      <i data-lucide="sun" class="h-4 w-4 dark:hidden"></i>
-      <i data-lucide="moon" class="h-4 w-4 hidden dark:block"></i>
-      <span class="hidden sm:inline text-sm">Theme</span>
+    <button id="theme-toggle" type="button" aria-label="Toggle theme" class="absolute top-4 right-4 h-9 w-9 rounded-md border border-border bg-background text-foreground hover:bg-muted inline-flex items-center justify-center">
+      <i data-lucide="sun" class="h-4 w-4 icon-sun"></i>
+      <i data-lucide="moon" class="h-4 w-4 icon-moon" style="display:none"></i>
     </button>
 
     <div class="w-full max-w-sm rounded-lg border bg-card p-6 shadow-sm">
@@ -116,14 +115,27 @@
       document.addEventListener('DOMContentLoaded', function() {
         if (window.lucide) window.lucide.createIcons();
         const toggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const sun = () => toggle?.querySelector('.icon-sun');
+        const moon = () => toggle?.querySelector('.icon-moon');
+
+        function applyIconState(){
+          const isDark = html.classList.contains('dark');
+          if (sun()) sun().style.display = isDark ? 'none' : 'inline';
+          if (moon()) moon().style.display = isDark ? 'inline' : 'none';
+        }
+
+        // Set icon state initially (after reading localStorage in <head>)
+        applyIconState();
+
         if (toggle) {
           toggle.addEventListener('click', function(e) {
             e.preventDefault();
-            const html = document.documentElement;
             const isDark = html.classList.contains('dark');
             const newTheme = isDark ? 'light' : 'dark';
             html.classList.toggle('dark', !isDark);
             localStorage.setItem('theme', newTheme);
+            applyIconState();
           });
         }
       });
