@@ -92,9 +92,14 @@ body{background-color:hsl(var(--background));color:hsl(var(--foreground));}
 .text-gold{color:hsl(var(--gold));}
 
 /* Base theming for native form controls and bare buttons */
-button, input, select, textarea{
+input, select, textarea{
   background-color:hsl(var(--background));
   color:hsl(var(--foreground));
+  border-color:hsl(var(--border));
+}
+
+/* Buttons: do not override explicit bg-* utilities */
+button{
   border-color:hsl(var(--border));
 }
 
