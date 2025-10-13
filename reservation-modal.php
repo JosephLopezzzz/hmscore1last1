@@ -14,21 +14,11 @@
       <form id="reservationForm" class="p-6">
         <!-- Guest Selection Section -->
         <div class="mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-medium">Guest Information</h3>
-            <div class="flex gap-2">
-              <button type="button" id="existingGuestBtn" class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-                Select Existing Guest
-              </button>
-              <button type="button" id="newGuestBtn" class="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">
-                Create New Guest
-              </button>
-            </div>
-          </div>
+          <h3 class="text-lg font-medium mb-4">Guest Information</h3>
 
-          <!-- Existing Guest Selection -->
-          <div id="existingGuestSection" class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Search and Select Guest</label>
+          <!-- Search Section (Always Visible) -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search Existing Guests</label>
             <div class="relative">
               <input type="text" id="guestSearch" placeholder="Search guests by name, email, or phone..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
               <div id="guestSearchResults" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden">
@@ -36,15 +26,18 @@
                 <div id="noGuestsFound" class="p-3 text-sm text-gray-500 hidden">No guests found</div>
               </div>
             </div>
-            <div id="selectedGuestInfo" class="mt-2 p-3 bg-gray-50 rounded hidden">
-              <p class="text-sm text-gray-600">Selected: <span id="selectedGuestName" class="font-medium"></span></p>
+            <div id="selectedGuestInfo" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded hidden">
+              <p class="text-sm text-blue-600">Selected: <span id="selectedGuestName" class="font-medium"></span></p>
               <input type="hidden" id="guest_id" name="guest_id">
             </div>
             <div id="guestsFetchStatus" class="mt-2 text-xs text-gray-500">Guests: <span id="guestsStatus">Not loaded</span></div>
           </div>
 
-          <!-- New Guest Form -->
-          <div id="newGuestSection" class="mb-4 hidden">
+          <!-- New Guest Form (Always Visible but disabled when search selection exists) -->
+          <div id="newGuestSection" class="mb-4">
+            <div class="mb-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Or Create New Guest</label>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
@@ -235,6 +228,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('check_in_date').value = formatDateTimeLocal(now);
     document.getElementById('check_out_date').value = formatDateTimeLocal(tomorrow);
+
+    // Initialize guest selection state
+    checkGuestSelection();
   }
 
   // Modal event listeners
@@ -263,36 +259,65 @@ document.addEventListener('DOMContentLoaded', function() {
   function closeModal() {
     modal.classList.add('hidden');
     reservationForm.reset();
-    // Reset to existing guest view
-    showExistingGuestSection();
+    // Reset guest selection
+    selectedGuestInfo.classList.add('hidden');
+    guestIdInput.value = '';
+    // Re-enable new guest inputs
+    toggleNewGuestInputs(false);
   }
 
-  // Guest section toggle
-  if (existingGuestBtn) {
-    existingGuestBtn.addEventListener('click', showExistingGuestSection);
+  // Toggle new guest inputs based on search selection
+  function toggleNewGuestInputs(disable) {
+    const newGuestInputs = newGuestSection.querySelectorAll('input, select');
+    newGuestInputs.forEach(input => {
+      input.disabled = disable;
+      if (disable) {
+        input.classList.add('bg-gray-100', 'cursor-not-allowed');
+      } else {
+        input.classList.remove('bg-gray-100', 'cursor-not-allowed');
+      }
+    });
   }
 
-  if (newGuestBtn) {
-    newGuestBtn.addEventListener('click', showNewGuestSection);
+  // Monitor guest selection changes
+  function checkGuestSelection() {
+    if (guestIdInput.value) {
+      // Guest selected from search - disable new guest inputs
+      toggleNewGuestInputs(true);
+      selectedGuestInfo.classList.remove('hidden');
+    } else {
+      // No guest selected - enable new guest inputs
+      toggleNewGuestInputs(false);
+      selectedGuestInfo.classList.add('hidden');
+    }
   }
 
-  function showExistingGuestSection() {
-    existingGuestSection.classList.remove('hidden');
-    newGuestSection.classList.add('hidden');
-    existingGuestBtn.classList.add('bg-blue-600');
-    existingGuestBtn.classList.remove('bg-gray-600');
-    newGuestBtn.classList.add('bg-green-600');
-    newGuestBtn.classList.remove('bg-gray-600');
-  }
+  // Guest section toggle (REMOVED - now unified interface)
+  // if (existingGuestBtn) {
+  //   existingGuestBtn.addEventListener('click', showExistingGuestSection);
+  // }
 
-  function showNewGuestSection() {
-    existingGuestSection.classList.add('hidden');
-    newGuestSection.classList.remove('hidden');
-    newGuestBtn.classList.add('bg-green-600');
-    newGuestBtn.classList.remove('bg-gray-600');
-    existingGuestBtn.classList.add('bg-blue-600');
-    existingGuestBtn.classList.remove('bg-gray-600');
-  }
+  // if (newGuestBtn) {
+  //   newGuestBtn.addEventListener('click', showNewGuestSection);
+  // }
+
+  // function showExistingGuestSection() {
+  //   existingGuestSection.classList.remove('hidden');
+  //   newGuestSection.classList.add('hidden');
+  //   existingGuestBtn.classList.add('bg-blue-600');
+  //   existingGuestBtn.classList.remove('bg-gray-600');
+  //   newGuestBtn.classList.add('bg-green-600');
+  //   newGuestBtn.classList.remove('bg-gray-600');
+  // }
+
+  // function showNewGuestSection() {
+  //   existingGuestSection.classList.add('hidden');
+  //   newGuestSection.classList.remove('hidden');
+  //   newGuestBtn.classList.add('bg-green-600');
+  //   newGuestBtn.classList.remove('bg-gray-600');
+  //   existingGuestBtn.classList.add('bg-blue-600');
+  //   existingGuestBtn.classList.remove('bg-gray-600');
+  // }
 
   // Load guests from API
   async function loadGuests() {
@@ -368,6 +393,8 @@ document.addEventListener('DOMContentLoaded', function() {
     selectedGuestInfo.classList.remove('hidden');
     guestSearchResults.classList.add('hidden');
     guestSearch.value = guest.name || '';
+    // Update UI state when guest is selected
+    checkGuestSelection();
   }
 
   // Load rooms from API
@@ -449,8 +476,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Determine if we're using existing guest or creating new guest
         let guestId = null;
 
-        if (!newGuestSection.classList.contains('hidden')) {
-          // Creating new guest first
+        // Clean logic: use hidden guest_id input as single source of truth
+        if (guestIdInput.value) {
+          // Use existing guest selected from search
+          guestId = guestIdInput.value;
+        } else if (document.getElementById('first_name').value.trim() && document.getElementById('last_name').value.trim()) {
+          // Create new guest since no search selection exists
           const newGuestData = {
             first_name: document.getElementById('first_name').value,
             last_name: document.getElementById('last_name').value,
@@ -481,11 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
           guestId = guestData.id;
         } else {
-          // Using existing guest
-          guestId = guestIdInput.value;
-          if (!guestId) {
-            throw new Error('Please select a guest');
-          }
+          throw new Error('Please select an existing guest from the search or fill in the guest information form');
         }
 
         // Create reservation
@@ -499,12 +526,25 @@ document.addEventListener('DOMContentLoaded', function() {
           payment_source: document.querySelector('input[name="payment_source"]:checked').value
         };
 
+        const reservationResponse = await fetch('http://localhost/hmscore1last1/api/reservations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(reservationData)
+        });
+
+        const reservationResult = await reservationResponse.json();
+
+        if (!reservationResult.ok) {
+          throw new Error(reservationResult.message || 'Failed to create reservation');
+        }
+
+        alert('Reservation created successfully!');
+        location.reload(); // Refresh to show new reservation
+
         // Here you would submit to your reservations API endpoint
         console.log('Reservation data:', reservationData);
-
-        // For now, just show success
-        alert('Reservation created successfully!');
-        closeModal();
 
       } catch (error) {
         console.error('Error creating reservation:', error);
