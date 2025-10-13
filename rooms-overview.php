@@ -204,7 +204,7 @@
           <button id="modalActionPrimary" class="flex-1 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
             View / Assign
           </button>
-          <button id="modalActionSecondary" class="flex-1 rounded-md border border-border px-4 py-2 text-sm hover:bg-muted text-foreground">
+          <button id="modalActionSecondary" class="flex-1 rounded-md border border-border px-4 py-2 text-sm hover:bg-muted bg-background text-foreground">
             Close
           </button>
         </div>

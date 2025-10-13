@@ -68,6 +68,7 @@ body{background-color:hsl(var(--background));color:hsl(var(--foreground));}
 .text-foreground{color:hsl(var(--foreground));}
 .bg-card{background-color:hsl(var(--card));}
 .text-card-foreground{color:hsl(var(--card-foreground));}
+.border-border{border-color:hsl(var(--border));}
 .bg-muted{background-color:hsl(var(--muted));}
 .text-muted-foreground{color:hsl(var(--muted-foreground));}
 .bg-accent{background-color:hsl(var(--accent));}
@@ -89,4 +90,17 @@ body{background-color:hsl(var(--background));color:hsl(var(--foreground));}
 .bg-room-reserved{background-color:hsl(var(--room-reserved));}
 .bg-gold{background-color:hsl(var(--gold));}
 .text-gold{color:hsl(var(--gold));}
+
+/* Base theming for native form controls and bare buttons */
+button, input, select, textarea{
+  background-color:hsl(var(--background));
+  color:hsl(var(--foreground));
+  border-color:hsl(var(--border));
+}
+
+/* Ensure plain buttons without explicit bg classes are not stark white in dark mode */
+button:not([class*="bg-"]){
+  background-color:hsl(var(--card));
+  color:hsl(var(--card-foreground));
+}
 
