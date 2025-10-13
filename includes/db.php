@@ -306,11 +306,11 @@ function fetchDashboardStats(): array {
   if (!$pdo) return [];
   try {
     // Guests in-house: any reservation spanning today
-    $inHouse = (int)$pdo->query("SELECT COUNT(*) FROM reservations WHERE CURDATE() BETWEEN checkin AND checkout AND status IN ('checked-in','confirmed')")->fetchColumn();
+    $inHouse = (int)$pdo->query("SELECT COUNT(*) FROM reservations WHERE CURDATE() BETWEEN check_in_date AND check_out_date AND status IN ('checked-in','confirmed')")->fetchColumn();
     // ADR for current month
-    $avgRate = (float)$pdo->query("SELECT AVG(rate) FROM reservations WHERE MONTH(checkin)=MONTH(CURDATE()) AND YEAR(checkin)=YEAR(CURDATE())")->fetchColumn();
+    $avgRate = (float)$pdo->query("SELECT AVG(rm.rate) FROM reservations r LEFT JOIN rooms rm ON r.room_id = rm.id WHERE MONTH(r.check_in_date)=MONTH(CURDATE()) AND YEAR(r.check_in_date)=YEAR(CURDATE())")->fetchColumn();
     // Simple revenue proxy: sum of rate for stays that include today
-    $todayRevenue = (float)$pdo->query("SELECT SUM(rate) FROM reservations WHERE CURDATE() BETWEEN checkin AND checkout")->fetchColumn();
+    $todayRevenue = (float)$pdo->query("SELECT SUM(rm.rate) FROM reservations r LEFT JOIN rooms rm ON r.room_id = rm.id WHERE CURDATE() BETWEEN r.check_in_date AND r.check_out_date")->fetchColumn();
 
     // Occupancy: use rooms inventory if available
     $totalRooms = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name='rooms'")->fetchColumn() > 0
@@ -318,7 +318,7 @@ function fetchDashboardStats(): array {
       : 0;
     $occRooms = 0;
     if ($totalRooms > 0) {
-      $occRooms = (int)$pdo->query("SELECT COUNT(DISTINCT room) FROM reservations WHERE CURDATE() BETWEEN checkin AND checkout AND status IN ('checked-in','confirmed')")->fetchColumn();
+      $occRooms = (int)$pdo->query("SELECT COUNT(DISTINCT r.room_id) FROM reservations r WHERE CURDATE() BETWEEN r.check_in_date AND r.check_out_date AND r.status IN ('checked-in','confirmed')")->fetchColumn();
     }
     $occupancy = $totalRooms > 0 ? max(0, min(100, (int)round(($occRooms / $totalRooms) * 100))) : 87;
     return [
