@@ -36,8 +36,8 @@
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
   </head>
-  <body class="min-h-screen bg-background flex items-center justify-center">
-    <?php require_once __DIR__ . '/includes/db.php'; initSession(); ?>
+  <body class="min-h-screen bg-background flex items-center justify-center relative">
+    <?php require_once __DIR__ . '/includes/db.php'; initSession(); ensureDefaultAdmin(); ?>
     <?php
       $error = '';
       
@@ -87,6 +87,12 @@
       }
       
     ?>
+    <!-- Theme toggle (top-right) -->
+    <button id="theme-toggle" type="button" aria-label="Toggle theme" class="absolute top-4 right-4 h-9 w-9 rounded-md border border-border bg-background text-foreground hover:bg-muted inline-flex items-center justify-center">
+      <i data-lucide="sun" class="h-4 w-4 icon-sun"></i>
+      <i data-lucide="moon" class="h-4 w-4 icon-moon" style="display:none"></i>
+    </button>
+
     <div class="w-full max-w-sm rounded-lg border bg-card p-6 shadow-sm">
       <h1 class="text-2xl font-bold mb-4 text-center">Sign in</h1>
       <?php if (!empty($error)): ?><p class="text-destructive text-sm mb-3"><?php echo $error; ?></p><?php endif; ?>
@@ -104,6 +110,37 @@
         <button class="w-full h-10 rounded-md bg-primary text-primary-foreground">Login</button>
       </form>
     </div>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.lucide) window.lucide.createIcons();
+        const toggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const sun = () => toggle?.querySelector('.icon-sun');
+        const moon = () => toggle?.querySelector('.icon-moon');
+
+        function applyIconState(){
+          const isDark = html.classList.contains('dark');
+          // Show the option to switch TO: sun when dark (switch to light), moon when light (switch to dark)
+          if (sun()) sun().style.display = isDark ? 'inline' : 'none';
+          if (moon()) moon().style.display = isDark ? 'none' : 'inline';
+        }
+
+        // Set icon state initially (after reading localStorage in <head>)
+        applyIconState();
+
+        if (toggle) {
+          toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const isDark = html.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            html.classList.toggle('dark', !isDark);
+            localStorage.setItem('theme', newTheme);
+            applyIconState();
+          });
+        }
+      });
+    </script>
   </body>
   </html>
 

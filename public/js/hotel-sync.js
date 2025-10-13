@@ -44,10 +44,16 @@ class HotelDataSync {
      * Get base API URL
      */
     getApiBase() {
-        // Get the current path and construct API base
+        // Robustly derive base: find '/inn-nexus-main' in path if present
         const path = window.location.pathname;
+        const idx = path.indexOf('/inn-nexus-main');
+        if (idx !== -1) {
+            const root = path.substring(0, idx + '/inn-nexus-main'.length);
+            return window.location.origin + root + '/api';
+        }
+        // Fallback to current directory api
         const basePath = path.substring(0, path.lastIndexOf('/'));
-        return basePath + '/api';
+        return window.location.origin + basePath + '/api';
     }
 
     /**

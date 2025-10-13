@@ -38,8 +38,9 @@
   --card-foreground:210 20% 90%;
   --popover:215 25% 12%;
   --popover-foreground:210 20% 90%;
-  --primary:210 20% 90%;
-  --primary-foreground:215 25% 8%;
+  /* Dark mode primary should be a blue, not near-white */
+  --primary:215 72% 55%;
+  --primary-foreground:0 0% 100%;
   --secondary:215 20% 18%;
   --secondary-foreground:210 20% 90%;
   --muted:215 20% 18%;
@@ -68,6 +69,7 @@ body{background-color:hsl(var(--background));color:hsl(var(--foreground));}
 .text-foreground{color:hsl(var(--foreground));}
 .bg-card{background-color:hsl(var(--card));}
 .text-card-foreground{color:hsl(var(--card-foreground));}
+.border-border{border-color:hsl(var(--border));}
 .bg-muted{background-color:hsl(var(--muted));}
 .text-muted-foreground{color:hsl(var(--muted-foreground));}
 .bg-accent{background-color:hsl(var(--accent));}
@@ -89,4 +91,22 @@ body{background-color:hsl(var(--background));color:hsl(var(--foreground));}
 .bg-room-reserved{background-color:hsl(var(--room-reserved));}
 .bg-gold{background-color:hsl(var(--gold));}
 .text-gold{color:hsl(var(--gold));}
+
+/* Base theming for native form controls and bare buttons */
+input, select, textarea{
+  background-color:hsl(var(--background));
+  color:hsl(var(--foreground));
+  border-color:hsl(var(--border));
+}
+
+/* Buttons: do not override explicit bg-* utilities */
+button{
+  border-color:hsl(var(--border));
+}
+
+/* Ensure plain buttons without explicit bg classes are not stark white in dark mode */
+button:not([class*="bg-"]){
+  background-color:hsl(var(--card));
+  color:hsl(var(--card-foreground));
+}
 
