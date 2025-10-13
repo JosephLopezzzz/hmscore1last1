@@ -32,37 +32,36 @@
 }
 
 .dark{
-  /* Softer, more comfortable dark mode - easy on the eyes */
-  --background:220 15% 12%;
-  --foreground:210 15% 85%;
-  --card:220 15% 16%;
-  --card-foreground:210 15% 88%;
-  --popover:220 15% 16%;
-  --popover-foreground:210 15% 88%;
-  --primary:210 80% 60%;
-  --primary-foreground:220 15% 12%;
-  --secondary:220 12% 22%;
-  --secondary-foreground:210 15% 85%;
-  --muted:220 12% 20%;
-  --muted-foreground:215 10% 65%;
-  --accent:195 75% 55%;
-  --accent-foreground:220 15% 12%;
-  --success:145 60% 50%;
-  --success-foreground:220 15% 12%;
-  --warning:35 85% 60%;
-  --warning-foreground:220 15% 12%;
-  --destructive:0 65% 58%;
+  --background:215 25% 8%;
+  --foreground:210 20% 90%;
+  --card:215 25% 12%;
+  --card-foreground:210 20% 90%;
+  --popover:215 25% 12%;
+  --popover-foreground:210 20% 90%;
+  --primary:210 20% 90%;
+  --primary-foreground:215 25% 8%;
+  --secondary:215 20% 18%;
+  --secondary-foreground:210 20% 90%;
+  --muted:215 20% 18%;
+  --muted-foreground:215 15% 60%;
+  --accent:180 45% 48%;
+  --accent-foreground:0 0% 100%;
+  --success:145 65% 45%;
+  --success-foreground:0 0% 100%;
+  --warning:35 90% 55%;
+  --warning-foreground:0 0% 100%;
+  --destructive:0 72% 51%;
   --destructive-foreground:0 0% 100%;
-  --border:220 12% 25%;
-  --input:220 12% 22%;
-  --ring:195 75% 55%;
-  --room-vacant:145 60% 50%;
-  --room-occupied:210 80% 60%;
-  --room-dirty:35 85% 60%;
-  --room-maintenance:0 65% 58%;
-  --room-reserved:195 75% 55%;
-  --gold:45 85% 60%;
-  --gold-foreground:220 15% 12%;
+  --border:215 20% 18%;
+  --input:215 20% 18%;
+  --ring:180 45% 48%;
+  --room-vacant:145 65% 45%;
+  --room-occupied:215 40% 25%;
+  --room-dirty:35 90% 55%;
+  --room-maintenance:0 72% 51%;
+  --room-reserved:180 45% 48%;
+  --gold:45 80% 55%;
+  --gold-foreground:215 25% 8%;
 }
 body{background-color:hsl(var(--background));color:hsl(var(--foreground));}
 .bg-background{background-color:hsl(var(--background));}
