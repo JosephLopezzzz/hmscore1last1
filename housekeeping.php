@@ -1,3 +1,9 @@
+<?php 
+  // Ensure session/auth is initialized before any output
+  require_once __DIR__ . '/includes/db.php'; 
+  require_once __DIR__ . '/includes/housekeeping.php';
+  requireAuth(['admin','receptionist']); 
+?>
 <!doctype html>
 <html lang="en" class="">
   <head>
@@ -44,11 +50,6 @@
     </style>
   </head>
   <body class="min-h-screen bg-background">
-    <?php 
-    require_once __DIR__ . '/includes/db.php'; 
-    require_once __DIR__ . '/includes/housekeeping.php';
-    requireAuth(['admin','receptionist']); 
-    ?>
     <?php include __DIR__ . '/includes/header.php'; ?>
     
     <main class="container mx-auto px-4 py-6">

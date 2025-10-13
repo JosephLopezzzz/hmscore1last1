@@ -6,8 +6,8 @@ DirectoryIndex index.php
   RewriteEngine On
 
   # IMPORTANT: If you move this app, update RewriteBase to the new mount path
-  # Current local path: /inn-nexus-main/inn-nexus-main/
-  RewriteBase /inn-nexus-main/inn-nexus-main/
+  # Current local path: /inn-nexus-main/
+  RewriteBase /inn-nexus-main/
 
   # Skip existing files and directories (serve assets directly)
   RewriteCond %{REQUEST_FILENAME} -f [OR]
