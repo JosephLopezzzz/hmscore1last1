@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS reservations (
     check_in_date DATETIME NOT NULL,
     check_out_date DATETIME NOT NULL,
     status ENUM('Pending', 'Confirmed', 'Checked In', 'Checked Out', 'Cancelled') DEFAULT 'Pending',
-    balance DECIMAL(10,2) DEFAULT 0.00,
     invoice_method ENUM('email', 'print') DEFAULT 'print',
     payment_source ENUM('cash', 'online') DEFAULT 'cash',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
