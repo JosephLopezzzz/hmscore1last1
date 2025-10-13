@@ -51,8 +51,8 @@
           <div id="user-menu" class="hidden absolute right-0 top-10 w-48 rounded-md border bg-card text-card-foreground shadow-lg z-50">
             <div class="p-1">
               <button id="theme-toggle" class="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent/10 rounded">
-                <i data-lucide="sun" class="h-4 w-4 dark:hidden"></i>
-                <i data-lucide="moon" class="h-4 w-4 hidden dark:block"></i>
+                <i data-lucide="sun" class="h-4 w-4" id="theme-icon-sun"></i>
+                <i data-lucide="moon" class="h-4 w-4" id="theme-icon-moon" style="display:none"></i>
                 <span class="theme-text">Light Mode</span>
               </button>
               <a href="<?php echo $basePath; ?>/setup-2fa.php" class="block">
@@ -86,13 +86,17 @@
     const userMenu = document.getElementById('user-menu');
     const themeToggle = document.getElementById('theme-toggle');
     const themeText = document.querySelector('.theme-text');
+    const themeIconSun = document.getElementById('theme-icon-sun');
+    const themeIconMoon = document.getElementById('theme-icon-moon');
     const html = document.documentElement;
     
     // Check for saved theme preference or default to 'light'
     const currentTheme = localStorage.getItem('theme') || 'light';
     html.classList.toggle('dark', currentTheme === 'dark');
-    if (themeText) {
-      themeText.textContent = currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+    if (themeText) themeText.textContent = currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+    if (themeIconSun && themeIconMoon) {
+      themeIconSun.style.display = currentTheme === 'dark' ? 'none' : 'inline';
+      themeIconMoon.style.display = currentTheme === 'dark' ? 'inline' : 'none';
     }
     
     // User menu toggle
@@ -120,13 +124,12 @@
         const newTheme = isDark ? 'light' : 'dark';
         html.classList.toggle('dark', !isDark);
         localStorage.setItem('theme', newTheme);
-        if (themeText) {
-          themeText.textContent = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+        if (themeText) themeText.textContent = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+        if (themeIconSun && themeIconMoon) {
+          themeIconSun.style.display = newTheme === 'dark' ? 'none' : 'inline';
+          themeIconMoon.style.display = newTheme === 'dark' ? 'inline' : 'none';
         }
-        // Close menu after theme change
-        if (userMenu) {
-          userMenu.classList.add('hidden');
-        }
+        if (userMenu) userMenu.classList.add('hidden');
       });
     }
   });
