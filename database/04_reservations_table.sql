@@ -13,9 +13,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     room_id INT NULL,
     check_in_date DATETIME NOT NULL,
     check_out_date DATETIME NOT NULL,
-    status ENUM('Pending', 'Confirmed', 'Checked In', 'Checked Out', 'Cancelled') DEFAULT 'Pending',
-    invoice_method ENUM('email', 'print') DEFAULT 'print',
-    payment_source ENUM('cash', 'online') DEFAULT 'cash',
+    status ENUM('Pending', 'Checked In', 'Checked Out', 'Cancelled') DEFAULT 'Pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
