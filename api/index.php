@@ -31,6 +31,71 @@ switch (true) {
     $rows = fetchAllGuests();
     sendJson(['data' => $rows]);
 
+  case $path === '/api/guests' && $_SERVER['REQUEST_METHOD'] === 'POST':
+    $pdo = getPdo();
+    if (!$pdo) sendJson(['error' => 'no_db'], 500);
+    $payload = json_decode(file_get_contents('php://input') ?: '{}', true) ?: [];
+
+    // Validate required fields
+    $required = ['first_name', 'last_name'];
+    foreach ($required as $field) {
+      if (empty(trim($payload[$field] ?? ''))) {
+        sendJson(['error' => 'invalid_input', 'message' => "$field is required"], 422);
+      }
+    }
+
+    try {
+      $pdo->beginTransaction();
+
+      $stmt = $pdo->prepare('
+        INSERT INTO guests (
+          first_name, last_name, email, phone, address, city, country,
+          id_type, id_number, date_of_birth, nationality, notes
+        ) VALUES (
+          :first_name, :last_name, :email, :phone, :address, :city, :country,
+          :id_type, :id_number, :date_of_birth, :nationality, :notes
+        )
+      ');
+
+      $result = $stmt->execute([
+        ':first_name' => trim($payload['first_name']),
+        ':last_name' => trim($payload['last_name']),
+        ':email' => trim($payload['email'] ?? ''),
+        ':phone' => trim($payload['phone'] ?? ''),
+        ':address' => trim($payload['address'] ?? ''),
+        ':city' => trim($payload['city'] ?? ''),
+        ':country' => trim($payload['country'] ?? ''),
+        ':id_type' => $payload['id_type'] ?? 'National ID',
+        ':id_number' => trim($payload['id_number'] ?? ''),
+        ':date_of_birth' => $payload['date_of_birth'] ?? null,
+        ':nationality' => trim($payload['nationality'] ?? ''),
+        ':notes' => trim($payload['notes'] ?? '')
+      ]);
+
+      if (!$result) {
+        sendJson(['error' => 'guest_creation_failed'], 500);
+      }
+
+      $guestId = $pdo->lastInsertId();
+      $pdo->commit();
+
+      sendJson([
+        'ok' => true,
+        'id' => (int)$guestId,
+        'message' => 'Guest created successfully',
+        'guest' => [
+          'id' => (int)$guestId,
+          'first_name' => trim($payload['first_name']),
+          'last_name' => trim($payload['last_name']),
+          'email' => trim($payload['email'] ?? ''),
+          'phone' => trim($payload['phone'] ?? '')
+        ]
+      ]);
+    } catch (Throwable $e) {
+      $pdo->rollBack();
+      sendJson(['error' => 'guest_creation_failed', 'message' => $e->getMessage()], 500);
+    }
+
   case $path === '/api/reservations' && $_SERVER['REQUEST_METHOD'] === 'GET':
     $rows = fetchAllReservations();
     sendJson(['data' => $rows]);
@@ -48,6 +113,7 @@ switch (true) {
           status, 
           max_guests, 
           rate,
+          amenities,
           guest_name,
           maintenance_notes,
           housekeeping_status
