@@ -37,7 +37,7 @@
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
   </head>
   <body class="min-h-screen bg-background flex items-center justify-center relative">
-    <?php require_once __DIR__ . '/includes/db.php'; initSession(); ?>
+    <?php require_once __DIR__ . '/includes/db.php'; initSession(); ensureDefaultAdmin(); ?>
     <?php
       $error = '';
       

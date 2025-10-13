@@ -52,6 +52,24 @@ function createUser(string $email, string $password, string $role = 'receptionis
   } catch (Throwable $e) { return false; }
 }
 
+/**
+ * Ensure a default admin exists for development environments.
+ * Creates admin@example.com with password "password" if the users table is empty.
+ */
+function ensureDefaultAdmin(): void {
+  $pdo = getPdo(); if (!$pdo) return;
+  try {
+    $count = (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+    if ($count === 0) {
+      $hash = password_hash('password', PASSWORD_BCRYPT);
+      $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role) VALUES (:email,:hash,'admin')");
+      $stmt->execute([':email' => 'admin@example.com', ':hash' => $hash]);
+    }
+  } catch (Throwable $e) {
+    // ignore in case table doesn't exist yet
+  }
+}
+
 function verifyLogin(string $email, string $password): bool {
   $pdo = getPdo(); if (!$pdo) return false;
   try {
