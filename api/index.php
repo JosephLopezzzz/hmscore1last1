@@ -29,6 +29,18 @@ switch (true) {
 
   // Manual sync trigger for schedulers/ops
   case $path === '/api/sync' && $_SERVER['REQUEST_METHOD'] === 'GET':
+    // Auth: allow if admin session OR token matches SYNC_TOKEN
+    $providedToken = $_GET['token'] ?? ($_SERVER['HTTP_X_API_TOKEN'] ?? '');
+    $expectedToken = getenv('SYNC_TOKEN') ?: ($_ENV['SYNC_TOKEN'] ?? ($_SERVER['SYNC_TOKEN'] ?? ''));
+    $role = currentUserRole();
+
+    $isAdmin = $role === 'admin';
+    $hasValidToken = ($expectedToken !== '' && hash_equals((string)$expectedToken, (string)$providedToken));
+
+    if (!$isAdmin && !$hasValidToken) {
+      sendJson(['error' => 'forbidden', 'message' => 'Unauthorized'], 403);
+    }
+
     syncRoomsWithTodaysPendingArrivals();
     sendJson(['ok' => true, 'message' => 'Sync completed']);
 
