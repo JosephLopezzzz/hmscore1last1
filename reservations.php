@@ -43,6 +43,10 @@
     <?php require_once __DIR__ . '/includes/db.php'; ?>
     <?php
       $reservations = fetchAllReservations() ?: [];
+      // Filter to only show pending and cancelled reservations
+      $reservations = array_filter($reservations, function($res) {
+        return isset($res['status']) && ($res['status'] === 'pending' || $res['status'] === 'cancelled');
+      });
       $statusClasses = [
         'confirmed' => 'bg-success/10 text-success border border-success/20',
         'pending' => 'bg-warning/10 text-warning border border-warning/20',
@@ -153,8 +157,7 @@
               <th class="pb-3 text-sm font-medium text-muted-foreground">Nights</th>
               <th class="pb-3 text-sm font-medium text-muted-foreground">Rate</th>
               <th class="pb-3 text-sm font-medium text-muted-foreground">Status</th>
-              <th class="pb-3 text-sm font-medium text-muted-foreground">Actions</th>
-            </tr>
+              <th class="pb-3 text-sm font-medium text-muted-foreground">            </tr>
           </thead>
           <tbody>
             <?php foreach ($reservations as $res): ?>
@@ -170,9 +173,7 @@
                   <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusClasses[$res['status']]; ?>"><?php echo $res['status']; ?></span>
                 </td>
                 <td class="py-4">
-                  <button class="text-sm px-2 py-1 rounded-md hover:bg-accent/10">View</button>
-                </td>
-              </tr>
+                  <button class="text-sm px-2 py-1 rounded-md hover:bg-accent/10">              </tr>
             <?php endforeach; ?>
           </tbody>
         </table>
