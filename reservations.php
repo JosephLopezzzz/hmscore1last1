@@ -66,6 +66,8 @@
         </button>
       </div>
 
+      
+
       <?php
         $today = date('Y-m-d');
         $arrivingToday = 0;

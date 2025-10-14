@@ -311,48 +311,123 @@ function fetchDashboardStats(): array {
     'changes' => [ 'occupancy' => 0, 'inHouse' => 0, 'todayRevenue' => 0, 'avgRate' => 0 ]
   ];
   try {
-    // Guests in-house: any reservation spanning today
-    $inHouse = (int)$pdo->query("SELECT COUNT(*) FROM reservations WHERE CURDATE() BETWEEN check_in_date AND check_out_date AND status IN ('checked-in','confirmed')")->fetchColumn();
-    // ADR for current month
-    $avgRate = (float)$pdo->query("SELECT AVG(rm.rate) FROM reservations r LEFT JOIN rooms rm ON r.room_id = rm.id WHERE MONTH(r.check_in_date)=MONTH(CURDATE()) AND YEAR(r.check_in_date)=YEAR(CURDATE())")->fetchColumn();
-    // Simple revenue proxy: sum of rate for stays that include today
-    $todayRevenue = (float)$pdo->query("SELECT SUM(rm.rate) FROM reservations r LEFT JOIN rooms rm ON r.room_id = rm.id WHERE CURDATE() BETWEEN r.check_in_date AND r.check_out_date")->fetchColumn();
+    // In-house guests: reservations that are currently checked in (check-out day not counted)
+    $inHouse = (int)$pdo->query(
+      "SELECT COUNT(*)
+       FROM reservations
+       WHERE CURDATE() >= DATE(check_in_date)
+         AND CURDATE() <  DATE(check_out_date)
+         AND status = 'Checked In'"
+    )->fetchColumn();
 
-    // Occupancy: use rooms inventory if available
-    $totalRooms = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name='rooms'")->fetchColumn() > 0
-      ? (int)$pdo->query("SELECT COUNT(*) FROM rooms")->fetchColumn()
-      : 0;
+    // ADR based on rooms in-house today (fallback to overall avg if none)
+    $avgRate = (float)$pdo->query(
+      "SELECT AVG(rm.rate)
+       FROM reservations r
+       LEFT JOIN rooms rm ON r.room_id = rm.id
+       WHERE CURDATE() >= DATE(r.check_in_date)
+         AND CURDATE() <  DATE(r.check_out_date)
+         AND r.status = 'Checked In'
+         AND rm.rate > 0"
+    )->fetchColumn();
+    if (!$avgRate) {
+      $avgRate = (float)$pdo->query("SELECT AVG(rate) FROM rooms WHERE rate > 0")->fetchColumn();
+    }
+
+    // Today's revenue: charges minus refunds posted today, paid status
+    $billingTableExists = (int)$pdo->query(
+      "SELECT COUNT(*) FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name = 'billing_transactions'"
+    )->fetchColumn() > 0;
+
+    $todayRevenue = 0.0;
+    if ($billingTableExists) {
+      $todayRevenue = (float)$pdo->query(
+        "SELECT COALESCE(SUM(CASE
+            WHEN transaction_type = 'Refund' THEN -amount
+            WHEN transaction_type IN ('Room Charge','Service') THEN amount
+            ELSE 0
+          END), 0)
+         FROM billing_transactions
+         WHERE DATE(transaction_date) = CURDATE()
+           AND status = 'Paid'"
+      )->fetchColumn();
+    }
+
+    // Occupancy = occupied rooms / total rooms
+    $roomsTableExists = (int)$pdo->query(
+      "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name='rooms'"
+    )->fetchColumn() > 0;
+    $totalRooms = $roomsTableExists ? (int)$pdo->query("SELECT COUNT(*) FROM rooms")->fetchColumn() : 0;
     $occRooms = 0;
     if ($totalRooms > 0) {
-      $occRooms = (int)$pdo->query("SELECT COUNT(DISTINCT r.room_id) FROM reservations r WHERE CURDATE() BETWEEN r.check_in_date AND r.check_out_date AND r.status IN ('checked-in','confirmed')")->fetchColumn();
+      $occRooms = (int)$pdo->query(
+        "SELECT COUNT(DISTINCT r.room_id)
+         FROM reservations r
+         WHERE CURDATE() >= DATE(r.check_in_date)
+           AND CURDATE() <  DATE(r.check_out_date)
+           AND r.status = 'Checked In'"
+      )->fetchColumn();
     }
     $occupancy = $totalRooms > 0 ? max(0, min(100, (int)round(($occRooms / $totalRooms) * 100))) : 0;
 
-    // Changes vs yesterday (or recent averages)
-    $yInHouse = (int)$pdo->query("SELECT COUNT(*) FROM reservations WHERE DATE_SUB(CURDATE(), INTERVAL 1 DAY) BETWEEN check_in_date AND check_out_date AND status IN ('checked-in','confirmed')")->fetchColumn();
+    // Changes vs yesterday
+    $yInHouse = (int)$pdo->query(
+      "SELECT COUNT(*)
+       FROM reservations
+       WHERE DATE_SUB(CURDATE(), INTERVAL 1 DAY) >= DATE(check_in_date)
+         AND DATE_SUB(CURDATE(), INTERVAL 1 DAY) <  DATE(check_out_date)
+         AND status = 'Checked In'"
+    )->fetchColumn();
 
-    $yRevenue = (float)$pdo->query("SELECT SUM(rm.rate) FROM reservations r LEFT JOIN rooms rm ON r.room_id = rm.id WHERE DATE_SUB(CURDATE(), INTERVAL 1 DAY) BETWEEN r.check_in_date AND r.check_out_date")->fetchColumn();
+    $yRevenue = 0.0;
+    if ($billingTableExists) {
+      $yRevenue = (float)$pdo->query(
+        "SELECT COALESCE(SUM(CASE
+            WHEN transaction_type = 'Refund' THEN -amount
+            WHEN transaction_type IN ('Room Charge','Service') THEN amount
+            ELSE 0
+          END), 0)
+         FROM billing_transactions
+         WHERE DATE(transaction_date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+           AND status = 'Paid'"
+      )->fetchColumn();
+    }
 
     $yOccRooms = 0;
     if ($totalRooms > 0) {
-      $yOccRooms = (int)$pdo->query("SELECT COUNT(DISTINCT r.room_id) FROM reservations r WHERE DATE_SUB(CURDATE(), INTERVAL 1 DAY) BETWEEN r.check_in_date AND r.check_out_date AND r.status IN ('checked-in','confirmed')")->fetchColumn();
+      $yOccRooms = (int)$pdo->query(
+        "SELECT COUNT(DISTINCT r.room_id)
+         FROM reservations r
+         WHERE DATE_SUB(CURDATE(), INTERVAL 1 DAY) >= DATE(r.check_in_date)
+           AND DATE_SUB(CURDATE(), INTERVAL 1 DAY) <  DATE(r.check_out_date)
+           AND r.status = 'Checked In'"
+      )->fetchColumn();
     }
     $yOccupancy = $totalRooms > 0 ? max(0, min(100, (int)round(($yOccRooms / $totalRooms) * 100))) : 0;
 
-    // Avg rate recent baseline: last 7 days (excluding today)
-    $baselineAvgRate = (float)$pdo->query("SELECT AVG(rm.rate) FROM reservations r LEFT JOIN rooms rm ON r.room_id = rm.id WHERE r.check_in_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND DATE_SUB(CURDATE(), INTERVAL 1 DAY)")->fetchColumn();
+    // Avg rate baseline from last 7 days (excluding today) among stays that were in-house
+    $baselineAvgRate = (float)$pdo->query(
+      "SELECT AVG(rm.rate)
+       FROM reservations r
+       LEFT JOIN rooms rm ON r.room_id = rm.id
+       WHERE rm.rate > 0
+         AND DATE(r.check_in_date) <= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+         AND DATE(r.check_out_date) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+         AND r.status = 'Checked In'"
+    )->fetchColumn();
 
     // Compute signed changes (percent for occupancy/revenue/avgRate, absolute for in-house)
-    $occChange = $yOccupancy === 0 ? ($occupancy > 0 ? 100 : 0) : round((($occupancy - $yOccupancy) / max(1, $yOccupancy)) * 100);
-    $revChange = $yRevenue == 0.0 ? ($todayRevenue > 0 ? 100 : 0) : round((($todayRevenue - $yRevenue) / max(0.01, $yRevenue)) * 100);
-    $adrChange = $baselineAvgRate == 0.0 ? ($avgRate > 0 ? 100 : 0) : round((($avgRate - $baselineAvgRate) / max(0.01, $baselineAvgRate)) * 100);
-    $inHouseChange = $inHouse - $yInHouse;
+    $occChange = $yOccupancy === 0 ? ($occupancy > 0 ? 100 : 0) : (int)round((($occupancy - $yOccupancy) / max(1, $yOccupancy)) * 100);
+    $revChange = $yRevenue == 0.0 ? ($todayRevenue > 0 ? 100 : 0) : (int)round((($todayRevenue - $yRevenue) / max(0.01, $yRevenue)) * 100);
+    $adrChange = $baselineAvgRate == 0.0 ? ($avgRate > 0 ? 100 : 0) : (int)round((($avgRate - $baselineAvgRate) / max(0.01, $baselineAvgRate)) * 100);
+    $inHouseChange = (int)($inHouse - $yInHouse);
 
     return [
-      'occupancy' => $occupancy,
-      'inHouse' => $inHouse,
-      'todayRevenue' => $todayRevenue,
-      'avgRate' => $avgRate,
+      'occupancy' => (int)$occupancy,
+      'inHouse' => (int)$inHouse,
+      'todayRevenue' => (float)$todayRevenue,
+      'avgRate' => (float)$avgRate,
       'changes' => [
         'occupancy' => (int)$occChange,
         'inHouse' => (int)$inHouseChange,
