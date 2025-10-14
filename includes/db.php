@@ -557,8 +557,7 @@ function fetchDepartures(): array {
       FROM reservations r
       LEFT JOIN guests g ON r.guest_id = g.id
       LEFT JOIN rooms rm ON r.room_id = rm.id
-      WHERE DATE(r.check_out_date) = CURDATE()
-      AND r.status = 'Checked In'
+      WHERE r.status = 'Checked In'
       ORDER BY r.check_out_date
     ";
     $stmt = $pdo->query($query);

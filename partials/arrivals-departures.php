@@ -51,6 +51,10 @@ $departures = fetchDepartures();
     </div>
     <div class="space-y-3">
       <?php foreach ($departures as $reservation): ?>
+        <?php
+        $status = strtolower($reservation['status']);
+        if ($status !== 'checked in') continue;
+        ?>
         <div class="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
           <div class="flex-1">
             <p class="font-medium"><?php echo $reservation['name']; ?></p>
@@ -62,13 +66,8 @@ $departures = fetchDepartures();
             </div>
           </div>
           <?php
-          $status = strtolower($reservation['status']);
           if ($status === 'checked in'): ?>
             <button onclick="checkOutGuest('<?php echo $reservation['id']; ?>')" class="h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm">Check Out</button>
-          <?php elseif ($status === 'checked out'): ?>
-            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs bg-muted text-muted-foreground">Checked Out</span>
-          <?php else: ?>
-            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs bg-secondary text-secondary-foreground"><?php echo ucfirst($status); ?></span>
           <?php endif; ?>
         </div>
       <?php endforeach; ?>
