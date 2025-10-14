@@ -159,6 +159,9 @@ switch (true) {
     $pdo = getPdo();
     if (!$pdo) sendJson(['data' => []]);
     try {
+      // Ensure rooms reflect today's pending arrivals as Reserved
+      syncRoomsWithTodaysPendingArrivals();
+
       $rows = $pdo->query('
         SELECT 
           id, 
