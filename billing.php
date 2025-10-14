@@ -144,7 +144,7 @@
       </div>
 
 
-      <div class="grid gap-6 mb-6 md:grid-cols-4">
+      <div class="grid gap-6 mb-6 md:grid-cols-3">
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
           <div class="flex items-center gap-3">
             <div class="p-2 rounded-lg bg-accent/10">
@@ -175,17 +175,6 @@
             <div>
               <p class="text-sm text-muted-foreground">Outstanding</p>
               <p class="text-2xl font-bold"><?php echo formatCurrencyPhpPeso($totalOutstanding, 2); ?></p>
-            </div>
-          </div>
-        </div>
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <div class="flex items-center gap-3">
-            <div class="p-2 rounded-lg bg-primary/10">
-              <i data-lucide="trending-up" class="h-5 w-5 text-primary"></i>
-            </div>
-            <div>
-              <p class="text-sm text-muted-foreground">Collection Rate</p>
-              <p class="text-2xl font-bold">86%</p>
             </div>
           </div>
         </div>
