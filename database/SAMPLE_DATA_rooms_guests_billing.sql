@@ -230,3 +230,81 @@ SELECT
 FROM housekeeping_tasks;
 
 SELECT '✅ Sample room, billing, and housekeeping data loaded successfully!' AS final_status;
+
+-- ================================================================
+-- SAMPLE RESERVATIONS DATA (Dynamic Check-out Today)
+-- ================================================================
+-- This section adds sample reservations with check-out dates set to today
+-- Run this to populate active reservations for testing
+
+-- Sample Reservation 1
+INSERT INTO reservations (
+    id,
+    guest_id,
+    room_id,
+    check_in_date,
+    check_out_date,
+    status
+) VALUES (
+    'RSV-TEST-001',
+    1,
+    1,
+    DATE_SUB(CURDATE(), INTERVAL 2 DAY),
+    CURDATE(),
+    'Checked In'
+);
+
+-- Sample Reservation 2
+INSERT INTO reservations (
+    id,
+    guest_id,
+    room_id,
+    check_in_date,
+    check_out_date,
+    status
+) VALUES (
+    'RSV-TEST-002',
+    2,
+    2,
+    DATE_SUB(CURDATE(), INTERVAL 1 DAY),
+    CURDATE(),
+    'Checked In'
+);
+
+-- Sample Reservation 3
+INSERT INTO reservations (
+    id,
+    guest_id,
+    room_id,
+    check_in_date,
+    check_out_date,
+    status
+) VALUES (
+    'RSV-TEST-003',
+    3,
+    3,
+    DATE_SUB(CURDATE(), INTERVAL 3 DAY),
+    CURDATE(),
+    'Checked In'
+);
+
+-- Corresponding billing transactions for these reservations
+INSERT INTO billing_transactions (
+    reservation_id,
+    guest_name,
+    room_number,
+    transaction_type,
+    amount,
+    payment_method,
+    status,
+    transaction_date
+) VALUES
+-- Transactions for Reservation 1
+('RSV-TEST-001', 'John Doe', '101', 'Room Charge', 150.00, 'Cash', 'Paid', CURDATE()),
+-- Transactions for Reservation 2
+('RSV-TEST-002', 'Jane Smith', '102', 'Room Charge', 200.00, 'Card', 'Paid', CURDATE()),
+('RSV-TEST-002', 'Jane Smith', '102', 'Service', 50.00, 'Card', 'Paid', CURDATE()),
+-- Transactions for Reservation 3
+('RSV-TEST-003', 'Bob Johnson', '103', 'Room Charge', 175.00, 'Cash', 'Paid', CURDATE());
+
+SELECT '✅ Sample reservations and billing data loaded successfully!' AS final_status;
