@@ -67,20 +67,60 @@
         $arrivingToday = 0;
         $departingToday = 0;
         $totalRates = 0;
+        $reservationsWithRates = 0;
+
+        // Count arriving and departing guests
+        // Note: Same-day bookings (check-in and check-out on same day) will be counted in both categories
+
+        // DEBUG: Check first reservation to understand data format
+        if (!empty($reservations)) {
+          $firstRes = $reservations[0];
+          echo "<!-- FORMAT DEBUG: checkin='{$firstRes['checkin']}', checkout='{$firstRes['checkout']}' -->";
+          echo "<!-- FORMAT DEBUG: checkin type=" . gettype($firstRes['checkin']) . " -->";
+        }
 
         foreach ($reservations as $res) {
-          if (isset($res['checkin']) && $res['checkin'] === $today) {
+          // Check if checkin is today (within 24-hour range)
+          $isArrivingToday = false;
+          $isDepartingToday = false;
+
+          if (isset($res['checkin']) && !empty($res['checkin'])) {
+            // Convert database datetime to date-only for comparison
+            $checkinDateTime = strtotime($res['checkin']);
+            $todayStart = strtotime('today');
+            $todayEnd = strtotime('tomorrow') - 1; // End of today
+
+            if ($checkinDateTime >= $todayStart && $checkinDateTime <= $todayEnd) {
+              $isArrivingToday = true;
+            }
+          }
+
+          if (isset($res['checkout']) && !empty($res['checkout'])) {
+            // Convert database datetime to date-only for comparison
+            $checkoutDateTime = strtotime($res['checkout']);
+            $todayStart = strtotime('today');
+            $todayEnd = strtotime('tomorrow') - 1; // End of today
+
+            if ($checkoutDateTime >= $todayStart && $checkoutDateTime <= $todayEnd) {
+              $isDepartingToday = true;
+            }
+          }
+
+          if ($isArrivingToday) {
             $arrivingToday++;
           }
-          if (isset($res['checkout']) && $res['checkout'] === $today) {
+          if ($isDepartingToday) {
             $departingToday++;
           }
-          if (isset($res['rate'])) {
+
+          // Fix: Only count reservations that have valid rates for average calculation
+          if (isset($res['rate']) && $res['rate'] > 0) {
             $totalRates += $res['rate'];
+            $reservationsWithRates++;
           }
         }
 
-        $averageRate = count($reservations) > 0 ? $totalRates / count($reservations) : 0;
+        $averageRate = $reservationsWithRates > 0 ? $totalRates / $reservationsWithRates : 0;
       ?>
       <div class="grid gap-6 mb-6 md:grid-cols-4">
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">

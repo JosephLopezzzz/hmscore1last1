@@ -1,185 +1,210 @@
+<?php
+require_once __DIR__ . '/includes/security.php';
+?>
+
 <!-- Reservation Modal -->
-<div id="reservationModal" class="fixed inset-0 bg-black/50 z-50 hidden">
+<div id="reservationModal" class="fixed inset-0 bg-black/60 z-50 hidden">
   <div class="flex items-center justify-center min-h-screen p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between p-6 border-b">
-        <h2 class="text-xl font-semibold">New Reservation</h2>
-        <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
-          <i data-lucide="x" class="h-6 w-6"></i>
+      <div class="flex items-center justify-between p-4 border-b flex-shrink-0 bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-800">New Reservation</h2>
+        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-100 rounded-full">
+          <i data-lucide="x" class="h-5 w-5"></i>
         </button>
       </div>
 
-      <!-- Modal Body -->
-      <form id="reservationForm" class="p-6">
-        <!-- Guest Selection Section -->
-        <div class="mb-6">
-          <h3 class="text-lg font-medium mb-4">Guest Information</h3>
+      <!-- Modal Body - Scrollable Content -->
+      <div class="flex-1 overflow-y-auto bg-white">
+        <form id="reservationForm" class="p-4">
+          <!-- Two Column Layout -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column: Guest Information -->
+            <div class="space-y-4">
+              <h3 class="text-lg font-medium mb-4 border-b pb-2">Guest Information</h3>
 
-          <!-- Search Section (Always Visible) -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Search Existing Guests</label>
-            <div class="relative">
-              <input type="text" id="guestSearch" placeholder="Search guests by name, email, or phone..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <div id="guestSearchResults" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden">
-                <div id="guestsLoading" class="p-3 text-sm text-gray-500">Loading guests...</div>
-                <div id="noGuestsFound" class="p-3 text-sm text-gray-500 hidden">No guests found</div>
+              <!-- Search Section -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search Existing Guests</label>
+                <div class="relative">
+                  <input type="text" id="guestSearch" placeholder="Search guests by name, email, or phone..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <div id="guestSearchResults" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden">
+                    <div id="guestsLoading" class="p-3 text-sm text-gray-500">Loading guests...</div>
+                    <div id="noGuestsFound" class="p-3 text-sm text-gray-500 hidden">No guests found</div>
+                  </div>
+                </div>
+                <div id="selectedGuestInfo" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded hidden">
+                  <p class="text-sm text-blue-600">Selected: <span id="selectedGuestName" class="font-medium"></span></p>
+                  <input type="hidden" id="guest_id" name="guest_id">
+                </div>
+                <div id="guestsFetchStatus" class="mt-2 text-xs text-gray-500">Guests: <span id="guestsStatus">Not loaded</span></div>
               </div>
-            </div>
-            <div id="selectedGuestInfo" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded hidden">
-              <p class="text-sm text-blue-600">Selected: <span id="selectedGuestName" class="font-medium"></span></p>
-              <input type="hidden" id="guest_id" name="guest_id">
-            </div>
-            <div id="guestsFetchStatus" class="mt-2 text-xs text-gray-500">Guests: <span id="guestsStatus">Not loaded</span></div>
-          </div>
 
-          <!-- New Guest Form (Always Visible but disabled when search selection exists) -->
-          <div id="newGuestSection" class="mb-4">
-            <div class="mb-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Or Create New Guest</label>
+              <!-- New Guest Form -->
+              <div id="newGuestSection">
+                <div class="mb-3">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Or Create New Guest</label>
+                </div>
+                <div class="grid grid-cols-1 gap-3">
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                      <input type="text" id="first_name" name="first_name" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                      <input type="text" id="last_name" name="last_name" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                      <input type="email" id="email" name="email" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <input type="tel" id="phone" name="phone" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                      <input type="text" id="address" name="address" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                      <input type="text" id="city" name="city" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                      <input type="text" id="country" name="country" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
+                      <input type="text" id="nationality" name="nationality" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">ID Type</label>
+                      <select id="id_type" name="id_type" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                        <option value="National ID">National ID</option>
+                        <option value="Passport">Passport</option>
+                        <option value="Driver License">Driver License</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
+                      <input type="text" id="id_number" name="id_number" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth *</label>
+                    <input type="date" id="date_of_birth" name="date_of_birth" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                    <div id="dateOfBirthError" class="mt-1 text-sm text-red-600 hidden"></div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Right Column: Room & Reservation Info -->
+            <div class="space-y-4">
+              <!-- Room Selection Section -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                <input type="text" id="first_name" name="first_name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                <h3 class="text-lg font-medium mb-3 border-b pb-2">Room Selection</h3>
+                <div class="grid grid-cols-1 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Room</label>
+                    <select id="room_id" name="room_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required>
+                      <option value="">Loading rooms...</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Room Preview</label>
+                    <div id="selectedRoomInfo" class="p-3 bg-gray-50 rounded min-h-[40px] flex items-center text-sm">
+                      <span class="text-sm text-gray-500">Select a room to see details</span>
+                    </div>
+                  </div>
+                </div>
+                <div id="roomsFetchStatus" class="mt-2 text-xs text-gray-500">Rooms: <span id="roomsStatus">Not loaded</span></div>
               </div>
+
+              <!-- Date and Time Section -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                <input type="text" id="last_name" name="last_name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                <h3 class="text-lg font-medium mb-3 border-b pb-2">Reservation Dates</h3>
+                <div class="grid grid-cols-1 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Check-in Date & Time *</label>
+                    <input type="datetime-local" id="check_in_date" name="check_in_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required min="">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Check-out Date & Time *</label>
+                    <input type="datetime-local" id="check_out_date" name="check_out_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required min="">
+                  </div>
+                </div>
               </div>
+
+              <!-- Payment Section -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                <h3 class="text-lg font-medium mb-3 border-b pb-2">Payment Information</h3>
+                <div class="grid grid-cols-1 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Invoice Method</label>
+                    <div class="space-y-2">
+                      <label class="flex items-center">
+                        <input type="radio" name="invoice_method" value="print" class="mr-2" checked>
+                        <span class="text-sm">Print</span>
+                      </label>
+                      <label class="flex items-center">
+                        <input type="radio" name="invoice_method" value="email" class="mr-2">
+                        <span class="text-sm">Email</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Source</label>
+                    <div class="space-y-2">
+                      <label class="flex items-center">
+                        <input type="radio" name="payment_source" value="cash" class="mr-2" checked>
+                        <span class="text-sm">Cash</span>
+                      </label>
+                      <label class="flex items-center">
+                        <input type="radio" name="payment_source" value="online" class="mr-2" disabled>
+                        <span class="text-sm text-gray-400">Online (Coming Soon)</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              <!-- Status Section -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input type="tel" id="phone" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <input type="text" id="address" name="address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                <input type="text" id="city" name="city" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                <input type="text" id="country" name="country" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">ID Type</label>
-                <select id="id_type" name="id_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                  <option value="National ID">National ID</option>
-                  <option value="Passport">Passport</option>
-                  <option value="Driver License">Driver License</option>
+                <h3 class="text-lg font-medium mb-3 border-b pb-2">Reservation Status</h3>
+                <select id="status" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="Pending">Pending</option>
+                  <option value="Checked In">Checked In</option>
+                  <option value="Checked Out">Checked Out</option>
+                  <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
-                <input type="text" id="id_number" name="id_number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" id="date_of_birth" name="date_of_birth" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
-                <input type="text" id="nationality" name="nationality" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Room Selection Section -->
-        <div class="mb-6">
-          <h3 class="text-lg font-medium mb-4">Room Selection</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Select Room</label>
-              <select id="room_id" name="room_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                <option value="">Loading rooms...</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Room Preview</label>
-              <div id="selectedRoomInfo" class="p-3 bg-gray-50 rounded min-h-[44px] flex items-center">
-                <span class="text-sm text-gray-500">Select a room to see details</span>
-              </div>
+          <!-- Submit Section - Full Width -->
+          <div class="mt-6 pt-4 border-t bg-gray-50 -mx-4 px-4 -mb-4 pb-4">
+            <div class="flex justify-end gap-3">
+              <button type="button" id="cancelBtn" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">
+                Cancel
+              </button>
+              <button type="submit" id="submitBtn" class="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                Create Reservation
+              </button>
             </div>
           </div>
-          <div id="roomsFetchStatus" class="mt-2 text-xs text-gray-500">Rooms: <span id="roomsStatus">Not loaded</span></div>
-        </div>
-
-        <!-- Date and Time Section -->
-        <div class="mb-6">
-          <h3 class="text-lg font-medium mb-4">Reservation Dates</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Check-in Date & Time *</label>
-              <input type="datetime-local" id="check_in_date" name="check_in_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Check-out Date & Time *</label>
-              <input type="datetime-local" id="check_out_date" name="check_out_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            </div>
-          </div>
-        </div>
-
-        <!-- Payment Section -->
-        <div class="mb-6">
-          <h3 class="text-lg font-medium mb-4">Payment Information</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-3">Invoice Method</label>
-              <div class="space-y-2">
-                <label class="flex items-center">
-                  <input type="radio" name="invoice_method" value="print" class="mr-2" checked>
-                  <span class="text-sm">Print</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="radio" name="invoice_method" value="email" class="mr-2">
-                  <span class="text-sm">Email</span>
-                </label>
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-3">Payment Source</label>
-              <div class="space-y-2">
-                <label class="flex items-center">
-                  <input type="radio" name="payment_source" value="cash" class="mr-2" checked>
-                  <span class="text-sm">Cash</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="radio" name="payment_source" value="online" class="mr-2" disabled>
-                  <span class="text-sm text-gray-400">Online (Coming Soon)</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Status Section -->
-        <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Reservation Status</label>
-          <select id="status" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="Pending">Pending</option>
-            <option value="Checked In">Checked In</option>
-            <option value="Checked Out">Checked Out</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
-
-        <!-- Submit Section -->
-        <div class="flex justify-end gap-3 pt-6 border-t">
-          <button type="button" id="cancelBtn" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded">
-            Cancel
-          </button>
-          <button type="submit" id="submitBtn" class="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed">
-            Create Reservation
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </div>
@@ -226,8 +251,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    document.getElementById('check_in_date').value = formatDateTimeLocal(now);
-    document.getElementById('check_out_date').value = formatDateTimeLocal(tomorrow);
+    const checkinInput = document.getElementById('check_in_date');
+    const checkoutInput = document.getElementById('check_out_date');
+
+    checkinInput.value = formatDateTimeLocal(now);
+    checkoutInput.value = formatDateTimeLocal(tomorrow);
+
+    // Set minimum date/time to 5 minutes ago to allow reasonable form completion time
+    const fiveMinutesAgo = new Date(now.getTime() - (5 * 60 * 1000));
+    checkinInput.min = formatDateTimeLocal(fiveMinutesAgo);
+    checkoutInput.min = formatDateTimeLocal(fiveMinutesAgo);
 
     // Initialize guest selection state
     checkGuestSelection();
@@ -351,9 +384,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const filteredGuests = guests.filter(guest =>
-        (guest.name && guest.name.toLowerCase().includes(query)) ||
+        // Search by first_name + last_name combination
+        (guest.first_name && guest.last_name && 
+         `${guest.first_name} ${guest.last_name}`.toLowerCase().includes(query)) ||
+        // Search by individual fields
+        (guest.first_name && guest.first_name.toLowerCase().includes(query)) ||
+        (guest.last_name && guest.last_name.toLowerCase().includes(query)) ||
         (guest.email && guest.email.toLowerCase().includes(query)) ||
-        (guest.phone && guest.phone.toLowerCase().includes(query))
+        (guest.phone && guest.phone.toLowerCase().includes(query)) ||
+        // Fallback to name field if it exists
+        (guest.name && guest.name.toLowerCase().includes(query))
       );
 
       showGuestSearchResults(filteredGuests, query);
@@ -378,8 +418,14 @@ document.addEventListener('DOMContentLoaded', function() {
     results.forEach(guest => {
       const div = document.createElement('div');
       div.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0';
+      
+      // Properly format guest name from first_name and last_name
+      const guestName = guest.first_name && guest.last_name 
+        ? `${guest.first_name} ${guest.last_name}` 
+        : (guest.name || 'Unknown');
+        
       div.innerHTML = `
-        <div class="font-medium">${guest.name || 'Unknown'}</div>
+        <div class="font-medium">${guestName}</div>
         <div class="text-sm text-gray-500">${guest.email || ''} ${guest.phone || ''}</div>
       `;
       div.addEventListener('click', () => selectGuest(guest));
@@ -388,11 +434,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function selectGuest(guest) {
-    selectedGuestName.textContent = guest.name || 'Unknown';
+    // Properly format guest name from first_name and last_name
+    const guestName = guest.first_name && guest.last_name 
+      ? `${guest.first_name} ${guest.last_name}` 
+      : (guest.name || 'Unknown');
+      
+    selectedGuestName.textContent = guestName;
     guestIdInput.value = guest.id;
     selectedGuestInfo.classList.remove('hidden');
     guestSearchResults.classList.add('hidden');
-    guestSearch.value = guest.name || '';
+    guestSearch.value = guestName;
     // Update UI state when guest is selected
     checkGuestSelection();
   }
@@ -473,6 +524,31 @@ document.addEventListener('DOMContentLoaded', function() {
       submitBtn.textContent = 'Creating...';
 
       try {
+        // Validate dates are not in the past
+        const checkinDateTime = new Date(document.getElementById('check_in_date').value);
+        const checkoutDateTime = new Date(document.getElementById('check_out_date').value);
+        const now = new Date();
+
+        // Allow 5 minutes buffer for form completion time
+        const fiveMinutesAgo = new Date(now.getTime() - (5 * 60 * 1000));
+
+        if (checkinDateTime < fiveMinutesAgo) {
+          throw new Error('Check-in date/time cannot be more than 5 minutes in the past');
+        }
+
+        if (checkoutDateTime < fiveMinutesAgo) {
+          throw new Error('Check-out date/time cannot be more than 5 minutes in the past');
+        }
+
+        if (checkoutDateTime <= checkinDateTime) {
+          throw new Error('Check-out date/time must be after check-in date/time');
+        }
+
+        // Validate date of birth before proceeding
+        if (!validateDateOfBirth()) {
+          throw new Error('Please fix the date of birth validation errors');
+        }
+
         // Determine if we're using existing guest or creating new guest
         let guestId = null;
 
@@ -556,14 +632,79 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Helper function to format datetime for input
-  function formatDateTimeLocal(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  // Date of birth validation
+  const dateOfBirthInput = document.getElementById('date_of_birth');
+  const dateOfBirthError = document.getElementById('dateOfBirthError');
+
+  function validateDateOfBirth() {
+    const selectedDate = new Date(dateOfBirthInput.value);
+    const today = new Date();
+    const errorMessages = [];
+
+    // Reset error display
+    dateOfBirthError.classList.add('hidden');
+    dateOfBirthError.textContent = '';
+
+    // Check if date is selected
+    if (!dateOfBirthInput.value) {
+      return true; // Allow empty dates for optional fields
+    }
+
+    // Check for future dates
+    if (selectedDate > today) {
+      errorMessages.push('Date of birth cannot be in the future');
+    }
+
+    // Calculate age
+    const age = Math.floor((today - selectedDate) / (365.25 * 24 * 60 * 60 * 1000));
+
+    // Check minimum age (18)
+    if (age < 18) {
+      errorMessages.push('Must be at least 18 years old');
+    }
+
+    // Check maximum age (80)
+    if (age >= 80) {
+      errorMessages.push('Age 80 or older is not allowed');
+    }
+
+    // Display errors if any
+    if (errorMessages.length > 0) {
+      dateOfBirthError.textContent = errorMessages.join(', ');
+      dateOfBirthError.classList.remove('hidden');
+      return false;
+    }
+
+    return true;
+  }
+
+  // Set date input constraints
+  function setDateOfBirthConstraints() {
+    const today = new Date();
+    const minDate = new Date(today);
+    const maxDate = new Date(today);
+
+    // Set minimum date to 80 years ago (maximum allowed age)
+    minDate.setFullYear(today.getFullYear() - 80);
+
+    // Set maximum date to 18 years ago (minimum allowed age)
+    maxDate.setFullYear(today.getFullYear() - 18);
+
+    // Format dates for input constraints
+    const minDateString = minDate.toISOString().split('T')[0];
+    const maxDateString = maxDate.toISOString().split('T')[0];
+
+    dateOfBirthInput.setAttribute('min', minDateString);
+    dateOfBirthInput.setAttribute('max', maxDateString);
+  }
+
+  // Initialize date constraints and validation
+  setDateOfBirthConstraints();
+
+  // Add validation listener
+  if (dateOfBirthInput) {
+    dateOfBirthInput.addEventListener('change', validateDateOfBirth);
+    dateOfBirthInput.addEventListener('input', validateDateOfBirth);
   }
 });
 </script>
