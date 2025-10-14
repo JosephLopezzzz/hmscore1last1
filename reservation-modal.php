@@ -208,6 +208,18 @@ document.addEventListener('DOMContentLoaded', function() {
   let guests = [];
   let rooms = [];
 
+  // Helper: format Date to input[type=datetime-local] value (YYYY-MM-DDTHH:MM)
+  function formatDateTimeLocal(date) {
+    if (!(date instanceof Date)) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const h = pad(date.getHours());
+    const min = pad(date.getMinutes());
+    return `${y}-${m}-${d}T${h}:${min}`;
+  }
+
   // Initialize modal
   function initModal() {
     loadGuests();
@@ -239,6 +251,61 @@ document.addEventListener('DOMContentLoaded', function() {
       modal.classList.remove('hidden');
       initModal();
     });
+  }
+
+  // Allow other pages to open and prefill the modal for a specific guest
+  window.openReservationModalForGuest = function(guestId, guestName, guestData) {
+    modal.classList.remove('hidden');
+    try { initModal(); } catch (e) { console.error('initModal error:', e); }
+
+    // Prefill display immediately
+    if (guestId) {
+      guestIdInput.value = guestId;
+      selectedGuestName.textContent = guestName || '';
+      guestSearch.value = guestName || '';
+      selectedGuestInfo.classList.remove('hidden');
+    }
+
+    // Prefill detailed fields once guests are loaded
+    function prefillGuestFields(g) {
+      if (!g) return;
+      // Write fields for clarity in case user wants to edit
+      const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+      setVal('first_name', g.first_name || '');
+      setVal('last_name', g.last_name || '');
+      setVal('email', g.email || '');
+      setVal('phone', g.phone || '');
+      setVal('address', g.address || '');
+      setVal('city', g.city || '');
+      setVal('country', g.country || '');
+      setVal('id_type', g.id_type || 'National ID');
+      setVal('id_number', g.id_number || '');
+      setVal('nationality', g.nationality || '');
+      if (g.date_of_birth) {
+        const dobEl = document.getElementById('date_of_birth');
+        if (dobEl) dobEl.value = String(g.date_of_birth).substring(0, 10);
+      }
+      // Lock fields since we will use existing guest_id
+      toggleNewGuestInputs(true);
+      checkGuestSelection();
+    }
+
+    // Try immediate match from provided data first
+    if (guestData && typeof guestData === 'object') {
+      prefillGuestFields(guestData);
+    }
+
+    // Then try lookup from loaded guests; else wait until guests loaded
+    let attempts = 0;
+    (function tryPrefill() {
+      attempts++;
+      const g = Array.isArray(guests) ? guests.find(x => String(x.id) === String(guestId)) : null;
+      if (g) {
+        prefillGuestFields(g);
+      } else if (attempts < 30) { // ~3s @100ms
+        setTimeout(tryPrefill, 100);
+      }
+    })();
   }
 
   if (closeModalBtn) {

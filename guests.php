@@ -89,7 +89,27 @@
                 </div>
                 <div class="flex gap-2">
                   <button class="inline-flex items-center rounded-md border px-3 py-2 text-sm">View Profile</button>
-                  <button class="inline-flex items-center rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm">New Booking</button>
+                  <?php 
+                    $guestPayload = [
+                      'first_name' => $guest['first_name'] ?? '',
+                      'last_name' => $guest['last_name'] ?? '',
+                      'email' => $guest['email'] ?? '',
+                      'phone' => $guest['phone'] ?? '',
+                      'address' => $guest['address'] ?? '',
+                      'city' => $guest['city'] ?? '',
+                      'country' => $guest['country'] ?? '',
+                      'id_type' => $guest['id_type'] ?? 'National ID',
+                      'id_number' => $guest['id_number'] ?? '',
+                      'date_of_birth' => $guest['date_of_birth'] ?? '',
+                      'nationality' => $guest['nationality'] ?? ''
+                    ];
+                    $guestJson = htmlspecialchars(json_encode($guestPayload, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP), ENT_QUOTES);
+                    $guestName = htmlspecialchars(trim(($guest['first_name'] ?? '') . ' ' . ($guest['last_name'] ?? '')), ENT_QUOTES);
+                  ?>
+                  <button class="inline-flex items-center rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm"
+                    onclick="openReservationModalForGuest(<?php echo (int)($guest['id'] ?? 0); ?>, '<?php echo $guestName; ?>', <?php echo $guestJson; ?>)">
+                    New Booking
+                  </button>
                 </div>
               </div>
             </div>
@@ -111,6 +131,7 @@
         });
       });
     </script>
+    <?php include __DIR__ . '/reservation-modal.php'; ?>
   </body>
   </html>
 
