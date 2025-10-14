@@ -47,22 +47,15 @@
       // Fetch guest folios with balance information
       $foliosQuery = "
         SELECT
-          reservation_id as id,
-          guest_name as guest,
-          room_number as room,
-          SUM(CASE WHEN transaction_type IN ('Room Charge', 'Service') THEN amount ELSE 0 END) as charges,
-          SUM(CASE WHEN transaction_type = 'Payment' THEN amount ELSE 0 END) as paid,
-          (SUM(CASE WHEN transaction_type IN ('Room Charge', 'Service') THEN amount ELSE 0 END) -
-           SUM(CASE WHEN transaction_type = 'Payment' THEN amount ELSE 0 END)) as balance,
-          CASE
-            WHEN (SUM(CASE WHEN transaction_type IN ('Room Charge', 'Service') THEN amount ELSE 0 END) -
-                  SUM(CASE WHEN transaction_type = 'Payment' THEN amount ELSE 0 END)) = 0 THEN 'paid'
-            WHEN SUM(CASE WHEN transaction_type = 'Payment' THEN amount ELSE 0 END) > 0 THEN 'partial'
-            ELSE 'open'
-          END as status
-        FROM billing_transactions
-        GROUP BY reservation_id, guest_name, room_number
-        ORDER BY MAX(created_at) DESC
+          bt.reservation_id as id,
+          bt.transaction_type,
+          bt.amount,
+          bt.payment_method,
+          bt.transaction_date,
+          bt.status
+        FROM billing_transactions bt
+        WHERE bt.status = 'Pending'
+        ORDER BY bt.transaction_date DESC
         LIMIT 10
       ";
 
@@ -73,15 +66,14 @@
       // Fetch recent transactions
       $recentQuery = "
         SELECT
-          id,
-          guest_name as guest,
-          transaction_type as type,
-          amount,
-          payment_method as method,
-          DATE_FORMAT(transaction_date, '%l:%i %p') as time
-        FROM billing_transactions
-        WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-        ORDER BY transaction_date DESC
+          bt.id,
+          bt.transaction_type as type,
+          bt.amount,
+          bt.payment_method as method,
+          bt.transaction_date
+        FROM billing_transactions bt
+        WHERE bt.transaction_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        ORDER BY bt.transaction_date DESC
         LIMIT 5
       ";
 
@@ -90,32 +82,52 @@
       $recent = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       $statusColors = [
-        'paid' => 'bg-success/10 text-success border border-success/20',
-        'open' => 'bg-warning/10 text-warning border border-warning/20',
-        'partial' => 'bg-accent/10 text-accent border border-accent/20',
+        'Paid' => 'bg-success/10 text-success border border-success/20',
+        'Pending' => 'bg-warning/10 text-warning border border-warning/20',
+        'Failed' => 'bg-danger/10 text-danger border border-danger/20',
+        'Refunded' => 'bg-accent/10 text-accent border border-accent/20',
+        'Open' => 'bg-warning/10 text-warning border border-warning/20',
       ];
 
-      $totalRevenue = array_sum(array_map(fn($f) => $f['charges'], $folios));
-      $totalPaid = array_sum(array_map(fn($f) => $f['paid'], $folios));
-      $totalOutstanding = array_sum(array_map(fn($f) => $f['balance'], $folios));
+      $totalRevenue = 0;
+      $totalPaid = 0;
+      $totalOutstanding = 0;
       // Fetch billing data for JavaScript export functionality
       $billingDataQuery = "
         SELECT
-          id,
-          guest_name as guest,
-          room_number as room,
-          payment_method as method,
-          amount,
-          DATE(transaction_date) as date,
-          status
-        FROM billing_transactions
-        ORDER BY transaction_date DESC
+          bt.id,
+          bt.transaction_type,
+          bt.amount,
+          bt.payment_method as method,
+          bt.transaction_date,
+          bt.status
+        FROM billing_transactions bt
+        ORDER BY bt.transaction_date DESC
         LIMIT 100
       ";
 
       $stmt = $pdo->prepare($billingDataQuery);
       $stmt->execute();
       $billingData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+      // Fetch only PAID transactions for the second section
+      $paidTransactionsQuery = "
+        SELECT
+          bt.id,
+          bt.transaction_type,
+          bt.amount,
+          bt.payment_method,
+          bt.transaction_date,
+          bt.status
+        FROM billing_transactions bt
+        WHERE bt.status = 'Paid'
+        ORDER BY bt.transaction_date DESC
+        LIMIT 10
+      ";
+
+      $stmt = $pdo->prepare($paidTransactionsQuery);
+      $stmt->execute();
+      $paidTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
     ?>
     <main class="container mx-auto px-4 py-6">
       <div class="flex items-center justify-between mb-6">
@@ -181,55 +193,43 @@
 
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Guest Folios</h3>
-            <button class="inline-flex items-center rounded-md border px-3 py-2 text-sm">View All</button>
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold">Pending Transactions</h3>
           </div>
           <div class="space-y-3">
             <?php foreach ($folios as $folio): ?>
               <div class="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                 <div class="flex items-start justify-between mb-2">
                   <div>
-                    <p class="font-bold"><?php echo $folio['guest']; ?></p>
-                    <p class="text-sm text-muted-foreground">Room <?php echo $folio['room']; ?> • <?php echo $folio['id']; ?></p>
+                    <p class="font-bold">Transaction #<?php echo $folio['id']; ?></p>
+                    <p class="text-sm text-muted-foreground"><?php echo ucfirst($folio['transaction_type']); ?> • <?php echo $folio['payment_method']; ?></p>
                   </div>
-                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusColors[$folio['status']]; ?>"><?php echo $folio['status']; ?></span>
+                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusColors[$folio['status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['status'] ?? 'Pending'); ?></span>
                 </div>
                 <div class="flex justify-between text-sm mt-3">
-                  <span class="text-muted-foreground">Charges: <?php echo formatCurrencyPhpPeso($folio['charges'], 2); ?></span>
-                  <span class="text-muted-foreground">Paid: <?php echo formatCurrencyPhpPeso($folio['paid'], 2); ?></span>
-                  <span class="font-medium">Balance: <?php echo formatCurrencyPhpPeso($folio['balance'], 2); ?></span>
+                  <span class="text-muted-foreground">Amount: <?php echo formatCurrencyPhpPeso($folio['amount'] ?? 0, 2); ?></span>
+                  <span class="font-medium">Date: <?php echo date('M d, Y H:i', strtotime($folio['transaction_date'])); ?></span>
                 </div>
-                <?php if ($folio['balance'] > 0): ?>
-                  <button class="process-payment-btn h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm w-full mt-3" 
-                          data-guest="<?php echo htmlspecialchars($folio['guest']); ?>"
-                          data-room="<?php echo htmlspecialchars($folio['room']); ?>"
-                          data-balance="<?php echo $folio['balance']; ?>"
-                          data-folio-id="<?php echo htmlspecialchars($folio['id']); ?>">
-                    Process Payment
-                  </button>
-                <?php endif; ?>
               </div>
             <?php endforeach; ?>
           </div>
         </div>
 
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Recent Transactions</h3>
-            <button class="inline-flex items-center rounded-md border px-3 py-2 text-sm">View All</button>
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold">Paid Transactions</h3>
           </div>
           <div class="space-y-3">
-            <?php foreach ($recent as $txn): ?>
+            <?php foreach ($paidTransactions as $txn): ?>
               <div class="p-4 rounded-lg bg-muted/50">
                 <div class="flex items-start justify-between mb-2">
                   <div class="flex-1">
-                    <p class="font-medium"><?php echo $txn['guest']; ?></p>
-                    <p class="text-sm text-muted-foreground"><?php echo $txn['type']; ?> • <?php echo $txn['method']; ?></p>
+                    <p class="font-medium">Transaction #<?php echo $txn['id']; ?></p>
+                    <p class="text-sm text-muted-foreground"><?php echo ucfirst($txn['transaction_type']); ?> • <?php echo $txn['payment_method']; ?></p>
                   </div>
                   <div class="text-right">
                     <p class="font-bold"><?php echo formatCurrencyPhpPeso($txn['amount'], 2); ?></p>
-                    <p class="text-xs text-muted-foreground"><?php echo $txn['time']; ?></p>
+                    <p class="text-xs text-muted-foreground"><?php echo date('M d, Y H:i', strtotime($txn['transaction_date'])); ?></p>
                   </div>
                 </div>
               </div>
@@ -257,10 +257,10 @@
         </div>
 
         <!-- Payment Form -->
-        <form id="paymentForm" class="space-y-4">
+        <form id="paymentForm" class="space-y-3">
           <div>
-            <label class="block text-sm font-medium mb-1">Payment Method</label>
-            <select id="paymentMethod" required class="w-full rounded-md border px-3 py-2 text-sm">
+            <label class="text-xs text-muted-foreground">Payment Method</label>
+            <select id="paymentMethod" required class="h-10 w-full rounded-md border bg-background px-3 text-sm">
               <option value="">Select payment method...</option>
               <option value="Cash">Cash</option>
               <option value="Card">Card</option>
@@ -268,29 +268,29 @@
               <option value="Bank Transfer">Bank Transfer</option>
             </select>
           </div>
-          
+
           <div>
-            <label class="block text-sm font-medium mb-1">Amount Received (₱)</label>
-            <input type="number" id="amountReceived" step="0.01" min="0" required 
-                   class="w-full rounded-md border px-3 py-2 text-sm" 
+            <label class="text-xs text-muted-foreground">Amount Received (₱)</label>
+            <input type="number" id="amountReceived" step="0.01" min="0" required
+                   class="h-10 w-full rounded-md border bg-background px-3 text-sm"
                    placeholder="Enter amount received...">
           </div>
-          
+
           <div class="p-3 bg-blue-50 rounded-md">
             <p><strong>Change Due:</strong> <span id="changeAmount" class="text-blue-600">₱0.00</span></p>
           </div>
-          
+
           <div>
-            <label class="block text-sm font-medium mb-1">Payment Reference/Notes</label>
-            <textarea id="paymentNotes" rows="2" class="w-full rounded-md border px-3 py-2 text-sm" 
+            <label class="text-xs text-muted-foreground">Payment Reference/Notes</label>
+            <textarea id="paymentNotes" rows="2" class="h-10 w-full rounded-md border bg-background px-3 text-sm"
                       placeholder="Transaction reference, notes..."></textarea>
           </div>
-          
+
           <div class="flex gap-3 pt-4">
-            <button type="submit" class="flex-1 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
+            <button type="submit" class="flex-1 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90">
               Confirm Payment
             </button>
-            <button type="button" id="cancelPayment" class="flex-1 rounded-md border px-4 py-2 text-sm hover:bg-muted">
+            <button type="button" id="cancelPayment" class="flex-1 h-10 rounded-md border hover:bg-muted">
               Cancel
             </button>
           </div>
@@ -491,8 +491,6 @@
           formData.append('method', document.getElementById('paymentMethod').value);
           formData.append('amount', document.getElementById('amountReceived').value);
           formData.append('notes', document.getElementById('paymentNotes').value);
-          formData.append('guest_name', currentPaymentData.guest);
-          formData.append('room_number', currentPaymentData.room);
 
           fetch('process_payment.php', {
             method: 'POST',

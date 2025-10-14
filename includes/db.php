@@ -492,5 +492,3 @@ function fetchDepartures(): array {
     return [];
   }
 }
-
-
