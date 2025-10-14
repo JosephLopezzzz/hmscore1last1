@@ -453,5 +453,3 @@ function fetchDepartures(): array {
     return [];
   }
 }
-
-

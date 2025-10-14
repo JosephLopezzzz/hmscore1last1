@@ -33,9 +33,6 @@ $folio_id        = $_POST['folio_id'] ?? null;
 $payment_method  = $_POST['method'] ?? null;
 $amount_received = $_POST['amount'] ?? null;
 $reference_no    = $_POST['notes'] ?? null;
-$guest_name      = $_POST['guest_name'] ?? null;
-$room_number     = $_POST['room_number'] ?? null;
-$reservation_id  = $_POST['reservation_id'] ?? null;
 
 if (!$folio_id || !$payment_method || !$amount_received) {
     echo json_encode([
@@ -133,32 +130,13 @@ try {
             // Create new payment transaction record
             $stmt = $pdo->prepare("
                 INSERT INTO billing_transactions (
-                    reservation_id, guest_name, room_number, transaction_type, amount, payment_method,
+                    reservation_id, transaction_type, amount, payment_method,
                     status, notes, transaction_date
-                ) VALUES (?, ?, ?, 'Payment', ?, ?, 'Paid', ?, NOW())
+                ) VALUES (?, 'Payment', ?, ?, 'Paid', ?, NOW())
             ");
 
             // STRICT VALIDATION: Validate all input data before INSERT operation
-            // Validate guest_name
-            if (empty(trim($guest_name)) || strlen($guest_name) > 100) {
-                throw new Exception('Guest name is required and must be 100 characters or less');
-            }
-            if (!preg_match('/^[a-zA-Z0-9\s\.\-\'&]+$/', $guest_name)) {
-                throw new Exception('Guest name contains invalid characters (only letters, numbers, spaces, periods, hyphens, apostrophes, and ampersands are allowed)');
-            }
-
-            // Validate room_number
-            if (empty(trim($room_number))) {
-                throw new Exception('Room number is required');
-            }
-            if (strlen($room_number) > 20) {
-                throw new Exception('Room number must be 20 characters or less');
-            }
-            if (!preg_match('/^[a-zA-Z0-9\-\/]+$/', $room_number)) {
-                throw new Exception('Room number contains invalid characters (only letters, numbers, hyphens, and forward slashes are allowed)');
-            }
-
-            // Validate and sanitize amount_received
+            // Validate amount_received
             $amountFloat = floatval($amount_received);
             if ($amountFloat <= 0) {
                 throw new Exception('Payment amount must be greater than zero');
@@ -184,16 +162,9 @@ try {
             // Sanitize reference_no to prevent injection
             $reference_no = htmlspecialchars(strip_tags($reference_no));
 
-            // Validate reservation_id
-            if ($reservation_id !== null && (!is_numeric($reservation_id) || $reservation_id <= 0)) {
-                throw new Exception('Invalid reservation ID');
-            }
-
 
             if (!$stmt->execute([
-                $reservation_id,
-                $guest_name,
-                $room_number,
+                $folio_id,
                 floatval($amount_received),
                 $payment_method,
                 $reference_no
@@ -222,11 +193,8 @@ try {
                 'error_code' => $e->getCode(),
                 'error_message' => $e->getMessage(),
                 'folio_id' => $folio_id,
-                'guest_name' => $guest_name,
-                'room_number' => $room_number,
                 'payment_method' => $payment_method,
-                'amount' => $amount_received,
-                'reservation_id' => $reservation_id
+                'amount' => $amount_received
             ]);
             if ($e->getCode() == '23000') {
                 // Integrity constraint violation (duplicate key, foreign key constraint, etc.)
@@ -273,11 +241,8 @@ try {
             logError('General error during payment insert', [
                 'error_message' => $e->getMessage(),
                 'folio_id' => $folio_id,
-                'guest_name' => $guest_name,
-                'room_number' => $room_number,
                 'payment_method' => $payment_method,
-                'amount' => $amount_received,
-                'reservation_id' => $reservation_id
+                'amount' => $amount_received
             ]);
             echo json_encode([
                 'success' => false,
