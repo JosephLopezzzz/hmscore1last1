@@ -33,30 +33,13 @@
         </button>
       </div>
 
-      <div class="grid gap-6 mb-6 md:grid-cols-4">
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <p class="text-sm text-muted-foreground mb-1">Total Guests</p>
-          <p class="text-2xl font-bold"><?php echo count($guests); ?></p>
-        </div>
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <p class="text-sm text-muted-foreground mb-1">Guests with Email</p>
-          <p class="text-2xl font-bold"><?php echo count(array_filter($guests, fn($g) => !empty($g['email']))); ?></p>
-        </div>
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <p class="text-sm text-muted-foreground mb-1">Guests with Phone</p>
-          <p class="text-2xl font-bold"><?php echo count(array_filter($guests, fn($g) => !empty($g['phone']))); ?></p>
-        </div>
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <p class="text-sm text-muted-foreground mb-1">Guests with Address</p>
-          <p class="text-2xl font-bold"><?php echo count(array_filter($guests, fn($g) => !empty($g['address']))); ?></p>
-        </div>
-      </div>
+      
 
       <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
         <div class="mb-6">
           <div class="relative">
             <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
-            <input id="guestSearch" placeholder="Search guests by name or email..." class="pl-9 h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50" />
+            <input id="guestListSearch" placeholder="Search guests by name or email..." class="pl-9 h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50" />
           </div>
         </div>
 
@@ -121,7 +104,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>window.lucide && window.lucide.createIcons();</script>
     <script>
-      const input = document.getElementById('guestSearch');
+      const input = document.getElementById('guestListSearch');
       const cards = Array.from(document.querySelectorAll('#guestList > div'));
       input.addEventListener('input', () => {
         const q = input.value.toLowerCase();
