@@ -27,6 +27,11 @@ switch (true) {
   case $path === '/api/health':
     sendJson(['status' => 'ok', 'time' => date('c')]);
 
+  // Manual sync trigger for schedulers/ops
+  case $path === '/api/sync' && $_SERVER['REQUEST_METHOD'] === 'GET':
+    syncRoomsWithTodaysPendingArrivals();
+    sendJson(['ok' => true, 'message' => 'Sync completed']);
+
   case $path === '/api/guests' && $_SERVER['REQUEST_METHOD'] === 'GET':
     $rows = fetchAllGuests();
     sendJson(['data' => $rows]);

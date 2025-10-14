@@ -47,10 +47,13 @@
       $reservations = array_filter($reservations, function($res) {
         return isset($res['status']) && ($res['status'] === 'pending' || $res['status'] === 'cancelled');
       });
+      // Reindex to avoid undefined index 0 after filtering
+      $reservations = array_values($reservations);
       $statusClasses = [
         'confirmed' => 'bg-success/10 text-success border border-success/20',
         'pending' => 'bg-warning/10 text-warning border border-warning/20',
         'checked-in' => 'bg-accent/10 text-accent border border-accent/20',
+        'checked in' => 'bg-accent/10 text-accent border border-accent/20',
         'cancelled' => 'bg-destructive/10 text-destructive border border-destructive/20',
       ];
     ?>
@@ -77,13 +80,6 @@
 
         // Count arriving and departing guests
         // Note: Same-day bookings (check-in and check-out on same day) will be counted in both categories
-
-        // DEBUG: Check first reservation to understand data format
-        if (!empty($reservations)) {
-          $firstRes = $reservations[0];
-          echo "<!-- FORMAT DEBUG: checkin='{$firstRes['checkin']}', checkout='{$firstRes['checkout']}' -->";
-          echo "<!-- FORMAT DEBUG: checkin type=" . gettype($firstRes['checkin']) . " -->";
-        }
 
         foreach ($reservations as $res) {
           // Check if checkin is today (within 24-hour range)
@@ -159,7 +155,8 @@
               <th class="pb-3 text-sm font-medium text-muted-foreground">Nights</th>
               <th class="pb-3 text-sm font-medium text-muted-foreground">Rate</th>
               <th class="pb-3 text-sm font-medium text-muted-foreground">Status</th>
-              <th class="pb-3 text-sm font-medium text-muted-foreground">            </tr>
+              <th class="pb-3 text-sm font-medium text-muted-foreground">Actions</th>
+            </tr>
           </thead>
           <tbody>
             <?php foreach ($reservations as $res): ?>
@@ -172,10 +169,13 @@
                 <td class="py-4 text-sm"><?php echo $res['nights']; ?></td>
                 <td class="py-4 font-medium"><?php echo formatCurrencyPhpPeso($res['rate'], 2); ?></td>
                 <td class="py-4">
-                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusClasses[$res['status']]; ?>"><?php echo $res['status']; ?></span>
+                  <?php $statusKey = strtolower(str_replace('-', ' ', (string)($res['status'] ?? ''))); ?>
+                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusClasses[$statusKey] ?? 'bg-muted text-muted-foreground border'; ?>"><?php echo htmlspecialchars((string)($res['status'] ?? '')); ?></span>
                 </td>
                 <td class="py-4">
-                  <button class="text-sm px-2 py-1 rounded-md hover:bg-accent/10">              </tr>
+                  <button class="text-sm px-2 py-1 rounded-md hover:bg-accent/10">View</button>
+                </td>
+              </tr>
             <?php endforeach; ?>
           </tbody>
         </table>
