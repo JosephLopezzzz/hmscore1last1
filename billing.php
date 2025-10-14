@@ -44,18 +44,22 @@
       // Get PDO connection
       $pdo = getPdo();
 
-      // Fetch guest folios with balance information
+      // Fetch pending reservations for billing
       $foliosQuery = "
         SELECT
-          bt.reservation_id as id,
-          bt.transaction_type,
-          bt.amount,
-          bt.payment_method,
-          bt.transaction_date,
-          bt.status
-        FROM billing_transactions bt
-        WHERE bt.status = 'Pending'
-        ORDER BY bt.transaction_date DESC
+          r.id,
+          CONCAT(g.first_name, ' ', g.last_name) as guest_name,
+          r.room_id,
+          rm.room_number,
+          r.check_in_date,
+          r.check_out_date,
+          rm.rate as amount,
+          r.status
+        FROM reservations r
+        JOIN rooms rm ON r.room_id = rm.id
+        JOIN guests g ON r.guest_id = g.id
+        WHERE r.status = 'Pending'
+        ORDER BY r.created_at DESC
         LIMIT 10
       ";
 
@@ -201,14 +205,22 @@
               <div class="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                 <div class="flex items-start justify-between mb-2">
                   <div>
-                    <p class="font-bold">Transaction #<?php echo $folio['id']; ?></p>
-                    <p class="text-sm text-muted-foreground"><?php echo ucfirst($folio['transaction_type']); ?> • <?php echo $folio['payment_method']; ?></p>
+                    <p class="font-bold">Reservation #<?php echo $folio['id']; ?></p>
+                    <p class="text-sm text-muted-foreground"><?php echo $folio['guest_name']; ?> • Room <?php echo $folio['room_number']; ?></p>
                   </div>
                   <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusColors[$folio['status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['status'] ?? 'Pending'); ?></span>
                 </div>
-                <div class="flex justify-between text-sm mt-3">
+                <div class="flex justify-between items-center text-sm mt-3">
                   <span class="text-muted-foreground">Amount: <?php echo formatCurrencyPhpPeso($folio['amount'] ?? 0, 2); ?></span>
-                  <span class="font-medium">Date: <?php echo date('M d, Y H:i', strtotime($folio['transaction_date'])); ?></span>
+                  <span class="font-medium">Check-in: <?php echo date('M d, Y', strtotime($folio['check_in_date'])); ?></span>
+                  <button class="process-payment-btn inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs text-primary-foreground hover:bg-primary/90"
+                          data-guest="<?php echo htmlspecialchars($folio['guest_name']); ?>"
+                          data-room="<?php echo htmlspecialchars($folio['room_number']); ?>"
+                          data-balance="<?php echo $folio['amount'] ?? 0; ?>"
+                          data-reservation-id="<?php echo $folio['id']; ?>">
+                    <i data-lucide="credit-card" class="h-3 w-3"></i>
+                    PAY
+                  </button>
                 </div>
               </div>
             <?php endforeach; ?>
@@ -411,17 +423,17 @@
       // Payment processing functionality
       let currentPaymentData = {};
 
-      function openPaymentModal(guest, room, balance, folioId) {
-        currentPaymentData = { guest, room, balance, folioId };
-        
+      function openPaymentModal(guest, room, balance, reservationId) {
+        currentPaymentData = { guest, room, balance, reservationId };
+
         document.getElementById('modalGuestName').textContent = guest;
         document.getElementById('modalRoomNo').textContent = room;
         document.getElementById('modalBalance').textContent = formatCurrency(balance);
-        
+
         // Reset form
         document.getElementById('paymentForm').reset();
         document.getElementById('changeAmount').textContent = '₱0.00';
-        
+
         // Show modal
         document.getElementById('paymentModal').classList.remove('hidden');
         document.getElementById('paymentModal').classList.add('flex');
@@ -462,9 +474,9 @@
             const guest = this.getAttribute('data-guest');
             const room = this.getAttribute('data-room');
             const balance = parseFloat(this.getAttribute('data-balance'));
-            const folioId = this.getAttribute('data-folio-id');
-            
-            openPaymentModal(guest, room, balance, folioId);
+            const reservationId = this.getAttribute('data-reservation-id');
+
+            openPaymentModal(guest, room, balance, reservationId);
           });
         });
 
@@ -487,7 +499,7 @@
           e.preventDefault();
 
           const formData = new FormData();
-          formData.append('folio_id', currentPaymentData.folioId);
+          formData.append('folio_id', currentPaymentData.reservationId);
           formData.append('method', document.getElementById('paymentMethod').value);
           formData.append('amount', document.getElementById('amountReceived').value);
           formData.append('notes', document.getElementById('paymentNotes').value);
