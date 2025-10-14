@@ -342,7 +342,7 @@ function fetchArrivals(): array {
         CONCAT(g.first_name, ' ', g.last_name) AS name,
         rm.room_number as room,
         DATE_FORMAT(r.check_in_date, '%H:%i') AS time,
-        'pending' AS status
+        LOWER(r.status) AS status
       FROM reservations r
       LEFT JOIN guests g ON r.guest_id = g.id
       LEFT JOIN rooms rm ON r.room_id = rm.id
@@ -416,6 +416,18 @@ function createReservation(array $data): bool {
   }
 }
 
+function updateReservationStatusSimple(string $reservationId, string $status): bool {
+  $pdo = getPdo();
+  if (!$pdo) return false;
+  try {
+    $stmt = $pdo->prepare('UPDATE reservations SET status = :status, updated_at = NOW() WHERE id = :id');
+    return $stmt->execute([':status' => $status, ':id' => $reservationId]);
+  } catch (Throwable $e) {
+    error_log('Error updating reservation status: ' . $e->getMessage());
+    return false;
+  }
+}
+
 function fetchDepartures(): array {
   $pdo = getPdo();
   if (!$pdo) return [];
@@ -426,7 +438,7 @@ function fetchDepartures(): array {
         CONCAT(g.first_name, ' ', g.last_name) AS name,
         rm.room_number as room,
         DATE_FORMAT(r.check_out_date, '%H:%i') AS time,
-        'pending' AS status
+        LOWER(r.status) AS status
       FROM reservations r
       LEFT JOIN guests g ON r.guest_id = g.id
       LEFT JOIN rooms rm ON r.room_id = rm.id

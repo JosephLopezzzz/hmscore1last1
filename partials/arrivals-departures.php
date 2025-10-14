@@ -1,19 +1,8 @@
 <?php
 require_once __DIR__ . '/../includes/db.php';
+
 $arrivals = fetchArrivals();
 $departures = fetchDepartures();
-if (!$arrivals || !$departures) {
-  $arrivals = [
-    [ 'id' => 1, 'name' => 'Sarah Johnson', 'room' => '204', 'time' => '14:00', 'status' => 'pending' ],
-    [ 'id' => 2, 'name' => 'Michael Chen', 'room' => '315', 'time' => '15:30', 'status' => 'pending' ],
-    [ 'id' => 3, 'name' => 'Emma Williams', 'room' => '102', 'time' => '16:00', 'status' => 'checked-in' ],
-  ];
-  $departures = [
-    [ 'id' => 1, 'name' => 'David Brown', 'room' => '410', 'time' => '11:00', 'status' => 'pending' ],
-    [ 'id' => 2, 'name' => 'Lisa Anderson', 'room' => '208', 'time' => '12:00', 'status' => 'checked-out' ],
-    [ 'id' => 3, 'name' => 'James Wilson', 'room' => '506', 'time' => '10:30', 'status' => 'pending' ],
-  ];
-}
 ?>
 <div class="grid gap-6 lg:grid-cols-2">
   <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -37,7 +26,7 @@ if (!$arrivals || !$departures) {
             </div>
           </div>
           <?php if ($guest['status'] === 'pending'): ?>
-            <button class="h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm">Check In</button>
+            <button onclick="checkInGuest('<?php echo $guest['id']; ?>')" class="h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm">Check In</button>
           <?php else: ?>
             <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs bg-success/10 text-success border-success/20">Checked In</span>
           <?php endif; ?>
@@ -76,5 +65,40 @@ if (!$arrivals || !$departures) {
     </div>
   </div>
 </div>
+
+<script>
+function checkInGuest(reservationId) {
+    if (confirm('Are you sure you want to check in this guest?')) {
+        // Create XMLHttpRequest
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/hmscore1last1/api/check-in-guest.php', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                console.log('AJAX response status:', xhr.status);
+                console.log('AJAX response text:', xhr.responseText);
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            // Update the UI to show checked in status
+                            location.reload();
+                        } else {
+                            alert('Error checking in guest: ' + response.message);
+                        }
+                    } catch (e) {
+                        alert('Error parsing response: ' + e.message);
+                    }
+                } else {
+                    alert('Error checking in guest. Status: ' + xhr.status + '. Please try again.');
+                }
+            }
+        };
+
+        xhr.send('reservation_id=' + encodeURIComponent(reservationId));
+    }
+}
+</script>
 
 
