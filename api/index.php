@@ -31,9 +31,129 @@ switch (true) {
     $rows = fetchAllGuests();
     sendJson(['data' => $rows]);
 
+  case $path === '/api/guests' && $_SERVER['REQUEST_METHOD'] === 'POST':
+    $pdo = getPdo();
+    if (!$pdo) sendJson(['error' => 'no_db'], 500);
+    $payload = json_decode(file_get_contents('php://input') ?: '{}', true) ?: [];
+
+    // Validate required fields
+    $required = ['first_name', 'last_name'];
+    foreach ($required as $field) {
+      if (empty(trim($payload[$field] ?? ''))) {
+        sendJson(['error' => 'invalid_input', 'message' => "$field is required"], 422);
+      }
+    }
+
+    try {
+      $pdo->beginTransaction();
+
+      // Use the database function for consistency
+      $guestData = [
+        'first_name' => trim($payload['first_name']),
+        'last_name' => trim($payload['last_name']),
+        'email' => trim($payload['email'] ?? ''),
+        'phone' => trim($payload['phone'] ?? ''),
+        'address' => trim($payload['address'] ?? ''),
+        'city' => trim($payload['city'] ?? ''),
+        'country' => trim($payload['country'] ?? ''),
+        'id_type' => $payload['id_type'] ?? 'National ID',
+        'id_number' => trim($payload['id_number'] ?? ''),
+        'date_of_birth' => $payload['date_of_birth'] ?? null,
+        'nationality' => trim($payload['nationality'] ?? ''),
+        'notes' => trim($payload['notes'] ?? '')
+      ];
+
+      $success = createGuest($guestData);
+
+      if (!$success) {
+        sendJson(['error' => 'guest_creation_failed'], 500);
+      }
+
+      $guestId = $pdo->lastInsertId();
+      $pdo->commit();
+
+      sendJson([
+        'ok' => true,
+        'id' => (int)$guestId,
+        'message' => 'Guest created successfully',
+        'guest' => [
+          'id' => (int)$guestId,
+          'first_name' => trim($payload['first_name']),
+          'last_name' => trim($payload['last_name']),
+          'email' => trim($payload['email'] ?? ''),
+          'phone' => trim($payload['phone'] ?? '')
+        ]
+      ]);
+    } catch (Throwable $e) {
+      $pdo->rollBack();
+      sendJson(['error' => 'guest_creation_failed', 'message' => $e->getMessage()], 500);
+    }
+
   case $path === '/api/reservations' && $_SERVER['REQUEST_METHOD'] === 'GET':
     $rows = fetchAllReservations();
     sendJson(['data' => $rows]);
+
+  case $path === '/api/reservations' && $_SERVER['REQUEST_METHOD'] === 'POST':
+    $pdo = getPdo();
+    if (!$pdo) sendJson(['error' => 'no_db'], 500);
+    $payload = json_decode(file_get_contents('php://input') ?: '{}', true) ?: [];
+
+    // Validate required fields
+    $required = ['guest_id', 'room_id', 'check_in_date', 'check_out_date'];
+    foreach ($required as $field) {
+      if (empty($payload[$field])) {
+        sendJson(['error' => 'invalid_input', 'message' => "$field is required"], 422);
+      }
+    }
+
+    try {
+      $pdo->beginTransaction();
+
+      // Check if room is available for the selected dates
+      $checkAvailability = $pdo->prepare("
+        SELECT COUNT(*) as count FROM reservations
+        WHERE room_id = :room_id
+        AND status IN ('Pending', 'Checked In', 'Confirmed')
+        AND (
+          (check_in_date <= :check_out_date AND check_out_date >= :check_in_date)
+        )
+      ");
+      $checkAvailability->execute([
+        ':room_id' => $payload['room_id'],
+        ':check_in_date' => $payload['check_in_date'],
+        ':check_out_date' => $payload['check_out_date']
+      ]);
+      $conflict = $checkAvailability->fetch();
+
+      if ($conflict['count'] > 0) {
+        sendJson(['error' => 'room_not_available', 'message' => 'Room is not available for the selected dates'], 409);
+      }
+
+      // Use the database function for consistency
+      $reservationData = [
+        'guest_id' => $payload['guest_id'],
+        'room_id' => $payload['room_id'],
+        'check_in_date' => $payload['check_in_date'],
+        'check_out_date' => $payload['check_out_date'],
+        'status' => $payload['status'] ?? 'Pending'
+      ];
+
+      $success = createReservation($reservationData);
+
+      if (!$success) {
+        sendJson(['error' => 'reservation_creation_failed'], 500);
+      }
+
+      $pdo->commit();
+
+      sendJson([
+        'ok' => true,
+        'message' => 'Reservation created successfully'
+      ]);
+    } catch (Throwable $e) {
+      $pdo->rollBack();
+      sendJson(['error' => 'reservation_creation_failed', 'message' => $e->getMessage()], 500);
+    }
 
   case $path === '/api/rooms' && $_SERVER['REQUEST_METHOD'] === 'GET':
     $pdo = getPdo();
@@ -48,6 +168,7 @@ switch (true) {
           status, 
           max_guests, 
           rate,
+          amenities,
           guest_name,
           maintenance_notes,
           housekeeping_status

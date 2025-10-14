@@ -245,7 +245,7 @@ function fetchAllGuests(): array {
   $pdo = getPdo();
   if (!$pdo) return [];
   try {
-    $sql = 'SELECT id, name, email, phone, stays, tier, last_visit AS lastVisit FROM guests ORDER BY name';
+    $sql = 'SELECT id, first_name, last_name, email, phone, address, city, country, id_type, id_number, date_of_birth, nationality, notes FROM guests ORDER BY first_name, last_name';
     return $pdo->query($sql)->fetchAll();
   } catch (Throwable $e) {
     return [];
@@ -257,18 +257,15 @@ function fetchAllReservations(): array {
   if (!$pdo) return [];
   try {
     $query = "
-      SELECT 
+      SELECT
         r.id,
-        r.guest_name as guest,
-        r.room_number as room,
+        CONCAT(g.first_name, ' ', g.last_name) as guest,
+        rm.room_number as room,
         r.check_in_date as checkin,
         r.check_out_date as checkout,
         LOWER(r.status) as status,
-        DATEDIFF(r.check_out_date, r.check_in_date) as nights,
-        r.total_amount as rate,
-        r.contact_number,
-        r.special_requests,
-        r.notes,
+        TIMESTAMPDIFF(HOUR, r.check_in_date, r.check_out_date) DIV 24 as nights,
+        rm.rate,
         g.email as guest_email,
         g.phone as guest_phone,
         rm.room_type
@@ -277,27 +274,24 @@ function fetchAllReservations(): array {
       LEFT JOIN rooms rm ON r.room_id = rm.id
       ORDER BY r.check_in_date DESC, r.created_at DESC
     ";
-    
+
     $stmt = $pdo->query($query);
     $reservations = $stmt->fetchAll();
-    
+
     // Format the data to match the expected structure
     return array_map(function($res) {
       return [
         'id' => $res['id'],
-        'guest' => $res['guest'],
-        'room' => $res['room'],
+        'guest' => $res['guest'] ?? 'Unknown Guest',
+        'room' => $res['room'] ?? 'Unknown Room',
         'checkin' => $res['checkin'],
         'checkout' => $res['checkout'],
         'status' => strtolower($res['status']),
-        'nights' => (int)$res['nights'],
-        'rate' => (float)$res['rate'],
+        'nights' => max(1, (int)$res['nights']),
+        'rate' => (float)($res['rate'] ?? 0),
         'guest_email' => $res['guest_email'] ?? null,
         'guest_phone' => $res['guest_phone'] ?? null,
-        'room_type' => $res['room_type'] ?? null,
-        'contact_number' => $res['contact_number'],
-        'special_requests' => $res['special_requests'],
-        'notes' => $res['notes']
+        'room_type' => $res['room_type'] ?? null
       ];
     }, $reservations);
   } catch (Throwable $e) {
@@ -312,11 +306,11 @@ function fetchDashboardStats(): array {
   if (!$pdo) return [];
   try {
     // Guests in-house: any reservation spanning today
-    $inHouse = (int)$pdo->query("SELECT COUNT(*) FROM reservations WHERE CURDATE() BETWEEN checkin AND checkout AND status IN ('checked-in','confirmed')")->fetchColumn();
+    $inHouse = (int)$pdo->query("SELECT COUNT(*) FROM reservations WHERE CURDATE() BETWEEN check_in_date AND check_out_date AND status IN ('checked-in','confirmed')")->fetchColumn();
     // ADR for current month
-    $avgRate = (float)$pdo->query("SELECT AVG(rate) FROM reservations WHERE MONTH(checkin)=MONTH(CURDATE()) AND YEAR(checkin)=YEAR(CURDATE())")->fetchColumn();
+    $avgRate = (float)$pdo->query("SELECT AVG(rm.rate) FROM reservations r LEFT JOIN rooms rm ON r.room_id = rm.id WHERE MONTH(r.check_in_date)=MONTH(CURDATE()) AND YEAR(r.check_in_date)=YEAR(CURDATE())")->fetchColumn();
     // Simple revenue proxy: sum of rate for stays that include today
-    $todayRevenue = (float)$pdo->query("SELECT SUM(rate) FROM reservations WHERE CURDATE() BETWEEN checkin AND checkout")->fetchColumn();
+    $todayRevenue = (float)$pdo->query("SELECT SUM(rm.rate) FROM reservations r LEFT JOIN rooms rm ON r.room_id = rm.id WHERE CURDATE() BETWEEN r.check_in_date AND r.check_out_date")->fetchColumn();
 
     // Occupancy: use rooms inventory if available
     $totalRooms = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name='rooms'")->fetchColumn() > 0
@@ -324,7 +318,7 @@ function fetchDashboardStats(): array {
       : 0;
     $occRooms = 0;
     if ($totalRooms > 0) {
-      $occRooms = (int)$pdo->query("SELECT COUNT(DISTINCT room) FROM reservations WHERE CURDATE() BETWEEN checkin AND checkout AND status IN ('checked-in','confirmed')")->fetchColumn();
+      $occRooms = (int)$pdo->query("SELECT COUNT(DISTINCT r.room_id) FROM reservations r WHERE CURDATE() BETWEEN r.check_in_date AND r.check_out_date AND r.status IN ('checked-in','confirmed')")->fetchColumn();
     }
     $occupancy = $totalRooms > 0 ? max(0, min(100, (int)round(($occRooms / $totalRooms) * 100))) : 87;
     return [
@@ -342,7 +336,21 @@ function fetchArrivals(): array {
   $pdo = getPdo();
   if (!$pdo) return [];
   try {
-    $stmt = $pdo->query("SELECT id, guest_name AS name, room, DATE_FORMAT(checkin, '%H:%i') AS time, 'pending' AS status FROM reservations WHERE checkin = CURDATE() ORDER BY time");
+    $query = "
+      SELECT
+        r.id,
+        CONCAT(g.first_name, ' ', g.last_name) AS name,
+        rm.room_number as room,
+        DATE_FORMAT(r.check_in_date, '%H:%i') AS time,
+        LOWER(r.status) AS status
+      FROM reservations r
+      LEFT JOIN guests g ON r.guest_id = g.id
+      LEFT JOIN rooms rm ON r.room_id = rm.id
+      WHERE DATE(r.check_in_date) = CURDATE()
+      AND r.status = 'Pending'
+      ORDER BY r.check_in_date
+    ";
+    $stmt = $pdo->query($query);
     return $stmt->fetchAll();
   } catch (Throwable $e) {
     return [];
@@ -353,14 +361,28 @@ function createGuest(array $data): bool {
   $pdo = getPdo();
   if (!$pdo) return false;
   try {
-    $stmt = $pdo->prepare('INSERT INTO guests (name, email, phone, stays, tier, last_visit) VALUES (:name,:email,:phone,:stays,:tier,:last_visit)');
+    $stmt = $pdo->prepare('
+      INSERT INTO guests (
+        first_name, last_name, email, phone, address, city, country,
+        id_type, id_number, date_of_birth, nationality, notes
+      ) VALUES (
+        :first_name, :last_name, :email, :phone, :address, :city, :country,
+        :id_type, :id_number, :date_of_birth, :nationality, :notes
+      )
+    ');
     return $stmt->execute([
-      ':name' => trim($data['name'] ?? ''),
+      ':first_name' => trim($data['first_name'] ?? ''),
+      ':last_name' => trim($data['last_name'] ?? ''),
       ':email' => trim($data['email'] ?? ''),
       ':phone' => trim($data['phone'] ?? ''),
-      ':stays' => (int)($data['stays'] ?? 0),
-      ':tier' => $data['tier'] ?? 'member',
-      ':last_visit' => $data['last_visit'] ?? null,
+      ':address' => trim($data['address'] ?? ''),
+      ':city' => trim($data['city'] ?? ''),
+      ':country' => trim($data['country'] ?? ''),
+      ':id_type' => $data['id_type'] ?? 'National ID',
+      ':id_number' => trim($data['id_number'] ?? ''),
+      ':date_of_birth' => $data['date_of_birth'] ?? null,
+      ':nationality' => trim($data['nationality'] ?? ''),
+      ':notes' => trim($data['notes'] ?? '')
     ]);
   } catch (Throwable $e) {
     return false;
@@ -371,25 +393,38 @@ function createReservation(array $data): bool {
   $pdo = getPdo();
   if (!$pdo) return false;
   try {
-    $checkin = $data['checkin'] ?? null;
-    $checkout = $data['checkout'] ?? null;
-    $nights = 1;
-    if ($checkin && $checkout) {
-      $nights = max(1, (int)round((strtotime($checkout) - strtotime($checkin)) / 86400));
-    }
-    $stmt = $pdo->prepare('INSERT INTO reservations (id, guest_name, room, checkin, checkout, status, nights, rate) VALUES (:id,:guest_name,:room,:checkin,:checkout,:status,:nights,:rate)');
-    $id = $data['id'] ?? ('RES-' . strtoupper(bin2hex(random_bytes(3))));
+    $stmt = $pdo->prepare("
+      INSERT INTO reservations (
+        id, guest_id, room_id, check_in_date, check_out_date, status, created_at, updated_at
+      ) VALUES (
+        :id, :guest_id, :room_id, :check_in_date, :check_out_date, :status, NOW(), NOW()
+      )
+    ");
+
+    $id = $data['id'] ?? ('RES-' . strtoupper(uniqid()));
+
     return $stmt->execute([
       ':id' => $id,
-      ':guest_name' => trim($data['guest_name'] ?? ''),
-      ':room' => trim($data['room'] ?? ''),
-      ':checkin' => $checkin,
-      ':checkout' => $checkout,
-      ':status' => $data['status'] ?? 'confirmed',
-      ':nights' => $nights,
-      ':rate' => (float)($data['rate'] ?? 0),
+      ':guest_id' => $data['guest_id'] ?? null,
+      ':room_id' => $data['room_id'] ?? null,
+      ':check_in_date' => $data['check_in_date'] ?? null,
+      ':check_out_date' => $data['check_out_date'] ?? null,
+      ':status' => $data['status'] ?? 'Pending'
     ]);
   } catch (Throwable $e) {
+    error_log('Error creating reservation: ' . $e->getMessage());
+    return false;
+  }
+}
+
+function updateReservationStatusSimple(string $reservationId, string $status): bool {
+  $pdo = getPdo();
+  if (!$pdo) return false;
+  try {
+    $stmt = $pdo->prepare('UPDATE reservations SET status = :status, updated_at = NOW() WHERE id = :id');
+    return $stmt->execute([':status' => $status, ':id' => $reservationId]);
+  } catch (Throwable $e) {
+    error_log('Error updating reservation status: ' . $e->getMessage());
     return false;
   }
 }
@@ -398,7 +433,21 @@ function fetchDepartures(): array {
   $pdo = getPdo();
   if (!$pdo) return [];
   try {
-    $stmt = $pdo->query("SELECT id, guest_name AS name, room, DATE_FORMAT(checkout, '%H:%i') AS time, 'pending' AS status FROM reservations WHERE checkout = CURDATE() ORDER BY time");
+    $query = "
+      SELECT
+        r.id,
+        CONCAT(g.first_name, ' ', g.last_name) AS name,
+        rm.room_number as room,
+        DATE_FORMAT(r.check_out_date, '%H:%i') AS time,
+        LOWER(r.status) AS status
+      FROM reservations r
+      LEFT JOIN guests g ON r.guest_id = g.id
+      LEFT JOIN rooms rm ON r.room_id = rm.id
+      WHERE DATE(r.check_out_date) = CURDATE()
+      AND r.status = 'Checked In'
+      ORDER BY r.check_out_date
+    ";
+    $stmt = $pdo->query($query);
     return $stmt->fetchAll();
   } catch (Throwable $e) {
     return [];

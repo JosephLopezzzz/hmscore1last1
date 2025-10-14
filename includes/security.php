@@ -327,10 +327,38 @@ class InputValidator {
         return preg_match('/^\+?[1-9]\d{1,14}$/', $phone);
     }
     
-    public static function sanitizeString(string $input, int $maxLength = 255): string {
-        $input = trim($input);
-        $input = htmlspecialchars($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        return substr($input, 0, $maxLength);
+    public static function validateDateOfBirth(string $dateOfBirth): array {
+        $errors = [];
+
+        if (empty($dateOfBirth)) {
+            return $errors; // Allow empty dates for optional fields
+        }
+
+        // Validate date format and check if it's a valid date
+        $date = DateTime::createFromFormat('Y-m-d', $dateOfBirth);
+        if (!$date || $date->format('Y-m-d') !== $dateOfBirth) {
+            $errors[] = 'Invalid date format';
+            return $errors;
+        }
+
+        $today = new DateTime();
+        $age = $today->diff($date)->y;
+
+        // Check for future dates
+        if ($date > $today) {
+            $errors[] = 'Date of birth cannot be in the future';
+        }
+
+        // Check for age under 18
+        if ($age < 18) {
+            $errors[] = 'Must be at least 18 years old';
+        }
+
+        // Check for age 80 or older
+        if ($age >= 80) {
+            $errors[] = 'Age 80 or older is not allowed';
+        }
+
+        return $errors;
     }
 }
-?>

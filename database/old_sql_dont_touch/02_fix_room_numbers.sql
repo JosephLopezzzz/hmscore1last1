@@ -4,18 +4,20 @@
 -- This script fixes NULL room numbers and ensures data consistency
 -- ================================================================
 
+-- ================================================================
+
 USE inn_nexus;
 
 -- First, try to copy from 'number' column if it exists
-UPDATE rooms 
-SET room_number = number 
-WHERE (room_number IS NULL OR room_number = '') 
+UPDATE rooms
+SET room_number = number
+WHERE (room_number IS NULL OR room_number = '')
   AND number IS NOT NULL;
 
 -- For any remaining NULL values, set sequential room numbers
 SET @row_number = 100;
 
-UPDATE rooms 
+UPDATE rooms
 SET room_number = (@row_number := @row_number + 1)
 WHERE room_number IS NULL OR room_number = '';
 
