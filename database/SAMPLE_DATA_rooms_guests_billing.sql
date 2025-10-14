@@ -138,18 +138,17 @@ ON DUPLICATE KEY UPDATE
 -- SAMPLE BILLING TRANSACTIONS
 -- ================================================================
 
-INSERT INTO billing_transactions (reservation_id, guest_name, room_number, transaction_type, amount, payment_method, status, transaction_date) VALUES
-(NULL, 'Sarah Johnson', '204', 'Room Charge', 555.00, 'Card', 'Paid', NOW()),
-(NULL, 'Michael Chen', '315', 'Room Charge', 840.00, 'Cash', 'Pending', NOW()),
-(NULL, 'Emma Williams', '102', 'Room Charge', 495.00, 'GCash', 'Paid', NOW()),
-(NULL, 'David Brown', '410', 'Room Charge', 900.00, 'Bank Transfer', 'Paid', NOW()),
-(NULL, 'Lisa Anderson', '208', 'Room Charge', 975.00, 'Card', 'Pending', NOW()),
-(NULL, 'James Wilson', '301', 'Room Charge', 1220.00, 'Card', 'Paid', NOW()),
-(NULL, 'Maria Garcia', '405', 'Room Charge', 680.00, 'Cash', 'Pending', NOW()),
-(NULL, 'Robert Taylor', '503', 'Room Charge', 2100.00, 'Bank Transfer', 'Paid', NOW())
+INSERT INTO billing_transactions (reservation_id, transaction_type, amount, payment_method, status, transaction_date) VALUES
+(NULL, 'Room Charge', 555.00, 'Card', 'Paid', NOW()),
+(NULL, 'Room Charge', 840.00, 'Cash', 'Pending', NOW()),
+(NULL, 'Room Charge', 495.00, 'GCash', 'Paid', NOW()),
+(NULL, 'Room Charge', 900.00, 'Bank Transfer', 'Paid', NOW()),
+(NULL, 'Room Charge', 975.00, 'Card', 'Pending', NOW()),
+(NULL, 'Room Charge', 1220.00, 'Card', 'Paid', NOW()),
+(NULL, 'Room Charge', 680.00, 'Cash', 'Pending', NOW()),
+(NULL, 'Room Charge', 2100.00, 'Bank Transfer', 'Paid', NOW())
 
 ON DUPLICATE KEY UPDATE
-    guest_name = VALUES(guest_name),
     amount = VALUES(amount),
     payment_method = VALUES(payment_method),
     status = VALUES(status);
@@ -291,8 +290,6 @@ INSERT INTO reservations (
 -- Corresponding billing transactions for these reservations
 INSERT INTO billing_transactions (
     reservation_id,
-    guest_name,
-    room_number,
     transaction_type,
     amount,
     payment_method,
@@ -300,11 +297,11 @@ INSERT INTO billing_transactions (
     transaction_date
 ) VALUES
 -- Transactions for Reservation 1
-('RSV-TEST-001', 'John Doe', '101', 'Room Charge', 150.00, 'Cash', 'Paid', CURDATE()),
+('RSV-TEST-001', 'Room Charge', 150.00, 'Cash', 'Paid', CURDATE()),
 -- Transactions for Reservation 2
-('RSV-TEST-002', 'Jane Smith', '102', 'Room Charge', 200.00, 'Card', 'Paid', CURDATE()),
-('RSV-TEST-002', 'Jane Smith', '102', 'Service', 50.00, 'Card', 'Paid', CURDATE()),
+('RSV-TEST-002', 'Room Charge', 200.00, 'Card', 'Paid', CURDATE()),
+('RSV-TEST-002', 'Service', 50.00, 'Card', 'Paid', CURDATE()),
 -- Transactions for Reservation 3
-('RSV-TEST-003', 'Bob Johnson', '103', 'Room Charge', 175.00, 'Cash', 'Paid', CURDATE());
+('RSV-TEST-003', 'Room Charge', 175.00, 'Cash', 'Paid', CURDATE());
 
 SELECT '✅ Sample reservations and billing data loaded successfully!' AS final_status;
