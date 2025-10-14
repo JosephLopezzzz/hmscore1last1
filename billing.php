@@ -41,19 +41,54 @@
     <?php include __DIR__ . '/includes/header.php'; ?>
     <?php include __DIR__ . '/includes/helpers.php'; ?>
     <?php
-      $folios = [
-        [ 'id' => 'FOL-001', 'guest' => 'Sarah Johnson', 'room' => '204', 'charges' => 555, 'paid' => 555, 'balance' => 0, 'status' => 'paid' ],
-        [ 'id' => 'FOL-002', 'guest' => 'Michael Chen', 'room' => '315', 'charges' => 840, 'paid' => 0, 'balance' => 840, 'status' => 'open' ],
-        [ 'id' => 'FOL-003', 'guest' => 'Emma Williams', 'room' => '102', 'charges' => 495, 'paid' => 250, 'balance' => 245, 'status' => 'partial' ],
-        [ 'id' => 'FOL-004', 'guest' => 'David Brown', 'room' => '410', 'charges' => 900, 'paid' => 900, 'balance' => 0, 'status' => 'paid' ],
-        [ 'id' => 'FOL-005', 'guest' => 'Lisa Anderson', 'room' => '208', 'charges' => 975, 'paid' => 0, 'balance' => 975, 'status' => 'open' ],
-      ];
-      $recent = [
-        [ 'id' => 'TXN-101', 'guest' => 'Sarah Johnson', 'type' => 'Room Charge', 'amount' => 185, 'method' => 'Card', 'time' => '10:30 AM' ],
-        [ 'id' => 'TXN-102', 'guest' => 'Emma Williams', 'type' => 'Mini Bar', 'amount' => 45, 'method' => 'Cash', 'time' => '11:15 AM' ],
-        [ 'id' => 'TXN-103', 'guest' => 'David Brown', 'type' => 'Restaurant', 'amount' => 120, 'method' => 'Card', 'time' => '12:00 PM' ],
-        [ 'id' => 'TXN-104', 'guest' => 'Michael Chen', 'type' => 'Spa Service', 'amount' => 250, 'method' => 'Card', 'time' => '2:30 PM' ],
-      ];
+      // Get PDO connection
+      $pdo = getPdo();
+
+      // Fetch guest folios with balance information
+      $foliosQuery = "
+        SELECT
+          reservation_id as id,
+          guest_name as guest,
+          room_number as room,
+          SUM(CASE WHEN transaction_type IN ('Room Charge', 'Service') THEN amount ELSE 0 END) as charges,
+          SUM(CASE WHEN transaction_type = 'Payment' THEN amount ELSE 0 END) as paid,
+          (SUM(CASE WHEN transaction_type IN ('Room Charge', 'Service') THEN amount ELSE 0 END) -
+           SUM(CASE WHEN transaction_type = 'Payment' THEN amount ELSE 0 END)) as balance,
+          CASE
+            WHEN (SUM(CASE WHEN transaction_type IN ('Room Charge', 'Service') THEN amount ELSE 0 END) -
+                  SUM(CASE WHEN transaction_type = 'Payment' THEN amount ELSE 0 END)) = 0 THEN 'paid'
+            WHEN SUM(CASE WHEN transaction_type = 'Payment' THEN amount ELSE 0 END) > 0 THEN 'partial'
+            ELSE 'open'
+          END as status
+        FROM billing_transactions
+        GROUP BY reservation_id, guest_name, room_number
+        ORDER BY MAX(created_at) DESC
+        LIMIT 10
+      ";
+
+      $stmt = $pdo->prepare($foliosQuery);
+      $stmt->execute();
+      $folios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+      // Fetch recent transactions
+      $recentQuery = "
+        SELECT
+          id,
+          guest_name as guest,
+          transaction_type as type,
+          amount,
+          payment_method as method,
+          DATE_FORMAT(transaction_date, '%l:%i %p') as time
+        FROM billing_transactions
+        WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        ORDER BY transaction_date DESC
+        LIMIT 5
+      ";
+
+      $stmt = $pdo->prepare($recentQuery);
+      $stmt->execute();
+      $recent = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
       $statusColors = [
         'paid' => 'bg-success/10 text-success border border-success/20',
         'open' => 'bg-warning/10 text-warning border border-warning/20',
@@ -63,6 +98,24 @@
       $totalRevenue = array_sum(array_map(fn($f) => $f['charges'], $folios));
       $totalPaid = array_sum(array_map(fn($f) => $f['paid'], $folios));
       $totalOutstanding = array_sum(array_map(fn($f) => $f['balance'], $folios));
+      // Fetch billing data for JavaScript export functionality
+      $billingDataQuery = "
+        SELECT
+          id,
+          guest_name as guest,
+          room_number as room,
+          payment_method as method,
+          amount,
+          DATE(transaction_date) as date,
+          status
+        FROM billing_transactions
+        ORDER BY transaction_date DESC
+        LIMIT 100
+      ";
+
+      $stmt = $pdo->prepare($billingDataQuery);
+      $stmt->execute();
+      $billingData = $stmt->fetchAll(PDO::FETCH_ASSOC);
     ?>
     <main class="container mx-auto px-4 py-6">
       <div class="flex items-center justify-between mb-6">
@@ -254,14 +307,8 @@
     <script>window.lucide && window.lucide.createIcons();</script>
     
     <script>
-      // Billing data (in a real app, this would come from the server)
-      const billingData = <?php echo json_encode([
-        ['id' => 'FOL-001', 'guest' => 'Sarah Johnson', 'room' => '204', 'method' => 'Card', 'amount' => 555, 'date' => date('Y-m-d'), 'status' => 'paid'],
-        ['id' => 'FOL-002', 'guest' => 'Michael Chen', 'room' => '315', 'method' => 'Cash', 'amount' => 840, 'date' => date('Y-m-d', strtotime('-1 day')), 'status' => 'open'],
-        ['id' => 'FOL-003', 'guest' => 'Emma Williams', 'room' => '102', 'method' => 'GCash', 'amount' => 495, 'date' => date('Y-m-d', strtotime('-2 days')), 'status' => 'partial'],
-        ['id' => 'FOL-004', 'guest' => 'David Brown', 'room' => '410', 'method' => 'Bank Transfer', 'amount' => 900, 'date' => date('Y-m-d', strtotime('-3 days')), 'status' => 'paid'],
-        ['id' => 'FOL-005', 'guest' => 'Lisa Anderson', 'room' => '208', 'method' => 'Card', 'amount' => 975, 'date' => date('Y-m-d', strtotime('-4 days')), 'status' => 'open']
-      ]); ?>;
+      // Billing data (fetched from database)
+      const billingData = <?php echo json_encode($billingData); ?>;
 
       // Helper functions
       function formatCurrency(val) {
@@ -438,28 +485,35 @@
         // Handle payment form submission
         document.getElementById('paymentForm').addEventListener('submit', function(e) {
           e.preventDefault();
-          
-          const formData = {
-            guest: currentPaymentData.guest,
-            room: currentPaymentData.room,
-            folioId: currentPaymentData.folioId,
-            balance: currentPaymentData.balance,
-            paymentMethod: document.getElementById('paymentMethod').value,
-            amountReceived: parseFloat(document.getElementById('amountReceived').value),
-            notes: document.getElementById('paymentNotes').value
-          };
 
-          // In a real app, this would make an AJAX request to process the payment
-          console.log('Processing payment:', formData);
-          
-          // Close modal and show success
-          closePaymentModal();
-          showToast('✅ Payment processed successfully!');
-          
-          // Reload page to show updated data
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+          const formData = new FormData();
+          formData.append('folio_id', currentPaymentData.folioId);
+          formData.append('method', document.getElementById('paymentMethod').value);
+          formData.append('amount', document.getElementById('amountReceived').value);
+          formData.append('notes', document.getElementById('paymentNotes').value);
+          formData.append('guest_name', currentPaymentData.guest);
+          formData.append('room_number', currentPaymentData.room);
+
+          fetch('process_payment.php', {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              closePaymentModal();
+              showToast('✅ Payment processed successfully!');
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
+            } else {
+              showToast('❌ Error: ' + data.message);
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            showToast('❌ Error processing payment');
+          });
         });
 
         // Close modal on Escape key

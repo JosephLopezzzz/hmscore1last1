@@ -245,7 +245,7 @@ function fetchAllGuests(): array {
   $pdo = getPdo();
   if (!$pdo) return [];
   try {
-    $sql = 'SELECT id, first_name, last_name, email, phone, created_at FROM guests ORDER BY first_name, last_name';
+    $sql = 'SELECT id, first_name, last_name, email, phone, address, city, country, id_type, id_number, date_of_birth, nationality, notes FROM guests ORDER BY first_name, last_name';
     return $pdo->query($sql)->fetchAll();
   } catch (Throwable $e) {
     return [];
