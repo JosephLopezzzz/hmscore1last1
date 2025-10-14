@@ -47,9 +47,13 @@
       .priority-normal {
         border-left: 4px solid #6b7280;
       }
+      /* Force cleaning cards to use orange left border like maintenance */
+      .cleaning-left-border { border-left: 4px solid #f59e0b !important; }
+      .maintenance-left-border { border-left: 4px solid #ef4444 !important; }
+      
     </style>
   </head>
-  <body class="min-h-screen bg-background">
+  <body class="min-h-screen bg-background hk-page">
     <?php include __DIR__ . '/includes/header.php'; ?>
     
     <main class="container mx-auto px-4 py-6">
@@ -98,60 +102,25 @@
       </div>
 
       <!-- Task Sections -->
-      <div class="grid gap-6 lg:grid-cols-2">
-        <!-- Pending Tasks -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 pb-3 border-b">
-            <div class="flex items-center gap-2">
-              <i data-lucide="circle" class="h-5 w-5 text-muted-foreground"></i>
-              <h3 class="text-lg font-semibold">Pending Tasks</h3>
-              <span class="ml-auto inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="pendingCount">0</span>
-            </div>
-          </div>
-          <div class="p-6 space-y-3" id="pendingTasks">
-            <p class="text-center text-muted-foreground py-8">Loading...</p>
+      <div class="housekeeping-columns">
+        <div class="status-column pending">
+          <h2>🧹 Pending Tasks</h2>
+          <div class="status-content" id="pendingTasks">
+            <p class="text-center text-muted-foreground py-6 text-sm">Loading...</p>
           </div>
         </div>
 
-        <!-- In Progress Tasks -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 pb-3 border-b">
-            <div class="flex items-center gap-2">
-              <i data-lucide="loader" class="h-5 w-5 text-warning"></i>
-              <h3 class="text-lg font-semibold">In Progress</h3>
-              <span class="ml-auto inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="inProgressCount">0</span>
-            </div>
-          </div>
-          <div class="p-6 space-y-3" id="inProgressTasks">
-            <p class="text-center text-muted-foreground py-8">Loading...</p>
+        <div class="status-column in-progress">
+          <h2>⚙️ In Progress</h2>
+          <div class="status-content" id="inProgressTasks">
+            <p class="text-center text-muted-foreground py-6 text-sm">Loading...</p>
           </div>
         </div>
 
-        <!-- Completed Tasks -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 pb-3 border-b">
-            <div class="flex items-center gap-2">
-              <i data-lucide="check-circle" class="h-5 w-5 text-success"></i>
-              <h3 class="text-lg font-semibold">Completed</h3>
-              <span class="ml-auto inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="completedCount">0</span>
-            </div>
-          </div>
-          <div class="p-6 space-y-3" id="completedTasks">
-            <p class="text-center text-muted-foreground py-8">Loading...</p>
-          </div>
-        </div>
-
-        <!-- Maintenance Tasks -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 pb-3 border-b">
-            <div class="flex items-center gap-2">
-              <i data-lucide="wrench" class="h-5 w-5 text-destructive"></i>
-              <h3 class="text-lg font-semibold">Maintenance</h3>
-              <span class="ml-auto inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="maintenanceCount">0</span>
-            </div>
-          </div>
-          <div class="p-6 space-y-3" id="maintenanceTasks">
-            <p class="text-center text-muted-foreground py-8">Loading...</p>
+        <div class="status-column completed">
+          <h2>✅ Completed</h2>
+          <div class="status-content" id="completedTasks">
+            <p class="text-center text-muted-foreground py-6 text-sm">Loading...</p>
           </div>
         </div>
       </div>
@@ -221,24 +190,20 @@
 
         // Render tasks
         function renderTasks() {
+          // Merge all tasks by workflow status only
+          // Some legacy tasks may have status 'maintenance' – treat them as pending
           const groupedTasks = {
-            pending: tasks.filter(t => t.status === 'pending'),
+            pending: tasks.filter(t => t.status === 'pending' || t.status === 'maintenance'),
             'in-progress': tasks.filter(t => t.status === 'in-progress'),
-            completed: tasks.filter(t => t.status === 'completed'),
-            maintenance: tasks.filter(t => t.status === 'maintenance')
+            completed: tasks.filter(t => t.status === 'completed')
           };
 
-          // Update counts
-          document.getElementById('pendingCount').textContent = `${groupedTasks.pending.length} rooms`;
-          document.getElementById('inProgressCount').textContent = `${groupedTasks['in-progress'].length} rooms`;
-          document.getElementById('completedCount').textContent = `${groupedTasks.completed.length} rooms`;
-          document.getElementById('maintenanceCount').textContent = `${groupedTasks.maintenance.length} rooms`;
+          // Counts removed from headers per design update
 
-          // Render each section
+          // Render each section (maintenance tasks are part of lists above already)
           renderTaskSection('pendingTasks', groupedTasks.pending, 'pending');
           renderTaskSection('inProgressTasks', groupedTasks['in-progress'], 'in-progress');
           renderTaskSection('completedTasks', groupedTasks.completed, 'completed');
-          renderTaskSection('maintenanceTasks', groupedTasks.maintenance, 'maintenance');
         }
 
         // Render task section
@@ -252,20 +217,32 @@
           }
 
           container.innerHTML = '';
+          const grid = document.createElement('div');
+          grid.className = 'grid gap-2';
           tasks.forEach(task => {
             const card = createTaskCard(task, status);
-            container.appendChild(card);
+            grid.appendChild(card);
           });
+          container.appendChild(grid);
+          // Re-render icons inside newly created elements
+          if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+          }
         }
 
         // Create task card
         function createTaskCard(task, status) {
           const card = document.createElement('div');
-          card.className = `task-card p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors ${priorityClasses[task.priority] || ''}`;
+          const typeLabel = ((task.task_type || '').toLowerCase() === 'maintenance' || task.status === 'maintenance') ? 'maintenance' : 'cleaning';
+          card.className = 'room-card';
 
-          const priorityBadge = `
-            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs ${priorityClasses[task.priority] || ''}">
-              ${task.priority}
+          const typeClasses = {
+            maintenance: 'bg-red-500/10 text-red-400 border border-red-500/20',
+            cleaning: 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+          };
+          const typeBadge = `
+            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs ${typeClasses[typeLabel] || ''}">
+              ${typeLabel}
             </span>
           `;
 
@@ -273,34 +250,26 @@
             <p class="text-sm text-muted-foreground">Guest: ${task.guest_name}</p>
           ` : '';
 
-          const notes = task.notes ? `
-            <p class="text-sm text-muted-foreground mb-3">${task.notes}</p>
-          ` : '';
+          // Notes removed from card per design request
 
           const buttons = status === 'pending' ? `
-            <button class="btn-start-task h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm w-full hover:bg-primary/90" data-task-id="${task.id}">
-              Start Task
-            </button>
+            <button class=\"icon-btn btn-start-task\" title=\"Start Task\" aria-label=\"Start Task\" data-task-id=\"${task.id}\">\n              <i data-lucide=\"play\"></i>\n            </button>
           ` : status === 'in-progress' ? `
-            <button class="btn-complete-task h-8 px-3 rounded-md bg-success text-white text-sm w-full hover:bg-success/90 transition-colors" data-task-id="${task.id}">
-              Mark Complete
-            </button>
+            <button class=\"icon-btn success btn-complete-task\" title=\"Mark Complete\" aria-label=\"Mark Complete\" data-task-id=\"${task.id}\">\n              <i data-lucide=\"check\"></i>\n            </button>
           ` : '';
 
           card.innerHTML = `
             <div class="flex items-start justify-between mb-2">
               <div>
-                <p class="font-bold text-lg">Room ${task.room_number}</p>
-                <p class="text-sm text-muted-foreground">${task.room_type || 'Standard'} • Floor ${task.floor_number || '—'}</p>
+                <h3>Room ${task.room_number}</h3>
+                <p>${task.room_type || 'Standard'} • Floor ${task.floor_number || '—'}</p>
                 ${guestInfo}
               </div>
-              ${priorityBadge}
+              ${typeBadge}
             </div>
-            ${notes}
-            ${buttons}
+            <div class=\"card-actions\">${buttons}</div>
           `;
 
-          // Add event listeners
           const startBtn = card.querySelector('.btn-start-task');
           const completeBtn = card.querySelector('.btn-complete-task');
 

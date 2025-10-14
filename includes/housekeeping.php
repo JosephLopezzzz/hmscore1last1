@@ -20,7 +20,7 @@ function fetchHousekeepingTasks(?string $status = null): array {
                 ht.room_id,
                 ht.room_number,
                 ht.task_type,
-                ht.status,
+                CASE WHEN ht.status = 'maintenance' THEN 'pending' ELSE ht.status END AS status,
                 ht.priority,
                 ht.assigned_to,
                 ht.guest_name,
@@ -37,7 +37,7 @@ function fetchHousekeepingTasks(?string $status = null): array {
         ";
         
         if ($status !== null) {
-            $sql .= " WHERE ht.status = :status";
+            $sql .= " WHERE (CASE WHEN ht.status = 'maintenance' THEN 'pending' ELSE ht.status END) = :status";
         }
         
         $sql .= " ORDER BY 
@@ -71,8 +71,8 @@ function updateHousekeepingTask(int $taskId, string $status, ?string $assignedTo
     try {
         $pdo->beginTransaction();
         
-        // Fetch task info
-        $stmt = $pdo->prepare("SELECT room_id, room_number, status as old_status FROM housekeeping_tasks WHERE id = :id");
+        // Fetch task info (include task_type so we can reflect the right room status)
+        $stmt = $pdo->prepare("SELECT room_id, room_number, task_type, status as old_status FROM housekeeping_tasks WHERE id = :id");
         $stmt->execute([':id' => $taskId]);
         $task = $stmt->fetch();
         
@@ -119,11 +119,21 @@ function updateHousekeepingTask(int $taskId, string $status, ?string $assignedTo
         } elseif ($status === 'in-progress') {
             $roomStmt = $pdo->prepare("
                 UPDATE rooms 
-                SET status = 'Cleaning',
-                    housekeeping_status = 'cleaning'
+                SET status = :room_status,
+                    housekeeping_status = :hk_status
                 WHERE id = :room_id
             ");
-            $roomStmt->execute([':room_id' => $task['room_id']]);
+            $isMaintenance = strtolower((string)($task['task_type'] ?? '')) === 'maintenance';
+            $roomStmt->execute([
+                ':room_id' => $task['room_id'],
+                ':room_status' => $isMaintenance ? 'Maintenance' : 'Cleaning',
+                ':hk_status' => $isMaintenance ? 'maintenance' : 'cleaning',
+            ]);
+            // Ensure task_type is normalized if missing
+            if (!$task['task_type']) {
+                $fix = $pdo->prepare("UPDATE housekeeping_tasks SET task_type = :type WHERE id = :id");
+                $fix->execute([':type' => $isMaintenance ? 'maintenance' : 'cleaning', ':id' => $taskId]);
+            }
         }
         
         $pdo->commit();

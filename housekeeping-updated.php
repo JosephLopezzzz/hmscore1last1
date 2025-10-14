@@ -34,6 +34,9 @@
       .priority-normal {
         border-left: 4px solid #6b7280;
       }
+      .cleaning-left-border { border-left: 4px solid #f59e0b !important; }
+      .maintenance-left-border { border-left: 4px solid #ef4444 !important; }
+      
     </style>
   </head>
   <body class="min-h-screen bg-background">
@@ -90,62 +93,56 @@
       </div>
 
       <!-- Task Sections -->
-      <div class="grid gap-6 lg:grid-cols-2">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
         <!-- Pending Tasks -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 pb-3 border-b">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm h-full flex flex-col">
+          <div class="px-4 py-3 border-b min-h-12 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <i data-lucide="circle" class="h-5 w-5 text-muted-foreground"></i>
-              <h3 class="text-lg font-semibold">Pending Tasks</h3>
-              <span class="ml-auto inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="pendingCount">0</span>
+              <h3 class="text-base font-semibold">Pending Tasks</h3>
             </div>
+            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="pendingCount">0</span>
           </div>
-          <div class="p-6 space-y-3" id="pendingTasks">
-            <p class="text-center text-muted-foreground py-8">Loading...</p>
+          <div class="p-3 grow overflow-auto" id="pendingTasks">
+            <div class="grid gap-2 w-full">
+              <p class="text-center text-muted-foreground py-6 text-sm">Loading...</p>
+            </div>
           </div>
         </div>
 
         <!-- In Progress Tasks -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 pb-3 border-b">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm h-full flex flex-col">
+          <div class="px-4 py-3 border-b min-h-12 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <i data-lucide="loader" class="h-5 w-5 text-warning"></i>
-              <h3 class="text-lg font-semibold">In Progress</h3>
-              <span class="ml-auto inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="inProgressCount">0</span>
+              <h3 class="text-base font-semibold">In Progress</h3>
             </div>
+            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="inProgressCount">0</span>
           </div>
-          <div class="p-6 space-y-3" id="inProgressTasks">
-            <p class="text-center text-muted-foreground py-8">Loading...</p>
+          <div class="p-3 grow overflow-auto" id="inProgressTasks">
+            <div class="grid gap-2 w-full">
+              <p class="text-center text-muted-foreground py-6 text-sm">Loading...</p>
+            </div>
           </div>
         </div>
 
         <!-- Completed Tasks -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 pb-3 border-b">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm h-full flex flex-col">
+          <div class="px-4 py-3 border-b min-h-12 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <i data-lucide="check-circle" class="h-5 w-5 text-success"></i>
-              <h3 class="text-lg font-semibold">Completed</h3>
-              <span class="ml-auto inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="completedCount">0</span>
+              <h3 class="text-base font-semibold">Completed</h3>
             </div>
+            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="completedCount">0</span>
           </div>
-          <div class="p-6 space-y-3" id="completedTasks">
-            <p class="text-center text-muted-foreground py-8">Loading...</p>
+          <div class="p-3 grow overflow-auto" id="completedTasks">
+            <div class="grid gap-2 w-full">
+              <p class="text-center text-muted-foreground py-6 text-sm">Loading...</p>
+            </div>
           </div>
         </div>
 
-        <!-- Maintenance Tasks -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 pb-3 border-b">
-            <div class="flex items-center gap-2">
-              <i data-lucide="wrench" class="h-5 w-5 text-destructive"></i>
-              <h3 class="text-lg font-semibold">Maintenance</h3>
-              <span class="ml-auto inline-flex items-center rounded-md border px-2 py-0.5 text-xs" id="maintenanceCount">0</span>
-            </div>
-          </div>
-          <div class="p-6 space-y-3" id="maintenanceTasks">
-            <p class="text-center text-muted-foreground py-8">Loading...</p>
-          </div>
-        </div>
+        
       </div>
     </main>
 
@@ -213,24 +210,22 @@
 
         // Render tasks
         function renderTasks() {
+          // Include legacy 'maintenance' status as pending
           const groupedTasks = {
-            pending: tasks.filter(t => t.status === 'pending'),
+            pending: tasks.filter(t => t.status === 'pending' || t.status === 'maintenance'),
             'in-progress': tasks.filter(t => t.status === 'in-progress'),
-            completed: tasks.filter(t => t.status === 'completed'),
-            maintenance: tasks.filter(t => t.status === 'maintenance')
+            completed: tasks.filter(t => t.status === 'completed')
           };
 
           // Update counts
           document.getElementById('pendingCount').textContent = `${groupedTasks.pending.length} rooms`;
           document.getElementById('inProgressCount').textContent = `${groupedTasks['in-progress'].length} rooms`;
           document.getElementById('completedCount').textContent = `${groupedTasks.completed.length} rooms`;
-          document.getElementById('maintenanceCount').textContent = `${groupedTasks.maintenance.length} rooms`;
 
-          // Render each section
+          // Render each section (maintenance tasks included via grouping above)
           renderTaskSection('pendingTasks', groupedTasks.pending, 'pending');
           renderTaskSection('inProgressTasks', groupedTasks['in-progress'], 'in-progress');
           renderTaskSection('completedTasks', groupedTasks.completed, 'completed');
-          renderTaskSection('maintenanceTasks', groupedTasks.maintenance, 'maintenance');
         }
 
         // Render task section
@@ -244,20 +239,29 @@
           }
 
           container.innerHTML = '';
+          const grid = document.createElement('div');
+          grid.className = 'grid gap-2';
           tasks.forEach(task => {
             const card = createTaskCard(task, status);
-            container.appendChild(card);
+            grid.appendChild(card);
           });
+          container.appendChild(grid);
         }
 
         // Create task card
         function createTaskCard(task, status) {
           const card = document.createElement('div');
-          card.className = `task-card p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors ${priorityClasses[task.priority] || ''}`;
+          const typeLabel = ((task.task_type || '').toLowerCase() === 'maintenance' || task.status === 'maintenance') ? 'maintenance' : 'cleaning';
+          const borderClass = typeLabel === 'maintenance' ? 'maintenance-left-border' : 'cleaning-left-border';
+          card.className = `task-card p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors ${borderClass} ${priorityClasses[task.priority] || ''} flex flex-col justify-between min-h-[148px]`;
 
-          const priorityBadge = `
-            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs ${priorityClasses[task.priority] || ''}">
-              ${task.priority}
+          const typeClasses = {
+            maintenance: 'bg-red-500/10 text-red-400 border border-red-500/20',
+            cleaning: 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+          };
+          const typeBadge = `
+            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs ${typeClasses[typeLabel] || ''}">
+              ${typeLabel}
             </span>
           `;
 
@@ -266,15 +270,15 @@
           ` : '';
 
           const notes = task.notes ? `
-            <p class="text-sm text-muted-foreground mb-3">${task.notes}</p>
+            <p class="text-xs text-muted-foreground mb-2">${task.notes}</p>
           ` : '';
 
           const buttons = status === 'pending' ? `
-            <button class="btn-start-task h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm w-full hover:bg-primary/90" data-task-id="${task.id}">
+            <button class="btn-start-task w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm hover:bg-primary/90" data-task-id="${task.id}">
               Start Task
             </button>
           ` : status === 'in-progress' ? `
-            <button class="btn-complete-task h-8 px-3 rounded-md border text-sm w-full hover:bg-accent" data-task-id="${task.id}">
+            <button class="btn-complete-task w-full h-10 rounded-lg border text-sm hover:bg-accent" data-task-id="${task.id}">
               Mark Complete
             </button>
           ` : '';
@@ -286,7 +290,7 @@
                 <p class="text-sm text-muted-foreground">${task.room_type || 'Standard'} • Floor ${task.floor_number || '—'}</p>
                 ${guestInfo}
               </div>
-              ${priorityBadge}
+              ${typeBadge}
             </div>
             ${notes}
             ${buttons}
