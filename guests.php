@@ -69,7 +69,7 @@
                 <div class="flex-1">
                   <div class="flex items-center gap-3 mb-3">
                     <h3 class="text-lg font-bold"><?php echo htmlspecialchars($guest['first_name'] . ' ' . $guest['last_name']); ?></h3>
-                  </div>
+                  </div>  
                   <div class="grid gap-2 text-sm mb-4">
                     <div class="flex items-center gap-2 text-muted-foreground">
                       <i data-lucide="mail" class="h-4 w-4"></i>
