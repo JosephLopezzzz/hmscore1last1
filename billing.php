@@ -140,10 +140,6 @@
           <p class="text-muted-foreground">Manage guest folios and transactions</p>
         </div>
         <div class="flex gap-3">
-          <button id="exportBtn" class="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-muted">
-            <i data-lucide="download" class="h-4 w-4"></i>
-            Export CSV
-          </button>
         </div>
       </div>
 
@@ -361,64 +357,6 @@
         showToast('Filters cleared!');
       }
 
-      // CSV Export functionality
-      function exportCSV() {
-        const from = document.getElementById('fromDate').value || 'all';
-        const to = document.getElementById('toDate').value || 'all';
-        const status = document.getElementById('statusFilter').value;
-        const method = document.getElementById('methodFilter').value;
-        const search = document.getElementById('searchGuest').value.trim().toLowerCase();
-
-        // Filter data (in a real app, this would be server-side)
-        const filtered = billingData.filter(item => {
-          let matchDate = true;
-          if (from !== 'all') matchDate = item.date >= from;
-          if (to !== 'all') matchDate = matchDate && item.date <= to;
-          const matchStatus = status === 'All' ? true : item.status === status;
-          const matchMethod = method === 'All' ? true : item.method === method;
-          const matchSearch = !search ? true : item.guest.toLowerCase().includes(search);
-          return matchDate && matchStatus && matchMethod && matchSearch;
-        });
-
-        // Build CSV content
-        const header = ['Transaction ID', 'Guest Name', 'Room', 'Payment Method', 'Amount', 'Date', 'Status'];
-        const rows = filtered.map(r => [r.id, r.guest, r.room, r.method, r.amount, r.date, r.status]);
-
-        // Summary
-        const totalRevenue = filtered.reduce((sum, r) => sum + (r.status === 'paid' || r.status === 'partial' ? r.amount : 0), 0);
-        const paid = filtered.filter(r => r.status === 'paid').length;
-        const partial = filtered.filter(r => r.status === 'partial').length;
-        const unpaid = filtered.filter(r => r.status === 'open').length;
-
-        // CSV string
-        let csv = header.join(',') + '\n';
-        rows.forEach(r => {
-          const safe = r.map(cell => `"${String(cell).replace(/"/g,'""')}"`);
-          csv += safe.join(',') + '\n';
-        });
-
-        // Add summary
-        csv += '\n';
-        csv += `"Total Revenue","${totalRevenue}"\n`;
-        csv += `"Paid Transactions","${paid}"\n`;
-        csv += `"Partial Transactions","${partial}"\n`;
-        csv += `"Unpaid Transactions","${unpaid}"\n`;
-
-        // Download
-        const filename = `BillingReport_${from}_to_${to}.csv`;
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        showToast('✅ Billing report exported successfully!');
-      }
 
       // Payment processing functionality
       let currentPaymentData = {};
@@ -465,9 +403,6 @@
 
       // Event listeners
       document.addEventListener('DOMContentLoaded', function() {
-        // Export functionality
-        document.getElementById('exportBtn').addEventListener('click', exportCSV);
-
         // Process Payment buttons
         document.querySelectorAll('.process-payment-btn').forEach(btn => {
           btn.addEventListener('click', function() {
