@@ -146,39 +146,6 @@ require_once __DIR__ . '/includes/security.php';
                 </div>
               </div>
 
-              <!-- Payment Section -->
-              <div>
-                <h3 class="text-lg font-medium mb-3 border-b pb-2">Payment Information</h3>
-                <div class="grid grid-cols-1 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Invoice Method</label>
-                    <div class="space-y-2">
-                      <label class="flex items-center">
-                        <input type="radio" name="invoice_method" value="print" class="mr-2" checked>
-                        <span class="text-sm">Print</span>
-                      </label>
-                      <label class="flex items-center">
-                        <input type="radio" name="invoice_method" value="email" class="mr-2">
-                        <span class="text-sm">Email</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Source</label>
-                    <div class="space-y-2">
-                      <label class="flex items-center">
-                        <input type="radio" name="payment_source" value="cash" class="mr-2" checked>
-                        <span class="text-sm">Cash</span>
-                      </label>
-                      <label class="flex items-center">
-                        <input type="radio" name="payment_source" value="online" class="mr-2" disabled>
-                        <span class="text-sm text-gray-400">Online (Coming Soon)</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <!-- Status Section -->
               <div>
                 <h3 class="text-lg font-medium mb-3 border-b pb-2">Reservation Status</h3>
@@ -597,9 +564,7 @@ document.addEventListener('DOMContentLoaded', function() {
           room_id: document.getElementById('room_id').value,
           check_in_date: document.getElementById('check_in_date').value,
           check_out_date: document.getElementById('check_out_date').value,
-          status: document.getElementById('status').value,
-          invoice_method: document.querySelector('input[name="invoice_method"]:checked').value,
-          payment_source: document.querySelector('input[name="payment_source"]:checked').value
+          status: document.getElementById('status').value
         };
 
         const reservationResponse = await fetch('http://localhost/hmscore1last1/api/reservations', {
