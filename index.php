@@ -71,7 +71,7 @@
 
       <?php include __DIR__ . '/partials/stats-overview.php'; ?>
       <?php include __DIR__ . '/partials/arrivals-departures.php'; ?>
-      <?php include __DIR__ . '/partials/room-grid.php'; ?>
+      <!-- Room grid removed per design cleanup -->
     </main>
 
     <script src="https://unpkg.com/lucide@latest"></script>

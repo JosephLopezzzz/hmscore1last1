@@ -1,23 +1,32 @@
 <?php
 require_once __DIR__ . '/../includes/db.php';
 $dbStats = fetchDashboardStats();
-$stats = [];
-
-if ($dbStats) {
-  $stats = [
-    [ 'label' => 'Occupancy Rate', 'value' => ($dbStats['occupancy'] ?? 0) . '%', 'change' => '+5%', 'icon' => 'building-2' ],
-    [ 'label' => 'Guests In-House', 'value' => (string)($dbStats['inHouse'] ?? 0), 'change' => '+12', 'icon' => 'users' ],
-    [ 'label' => "Today's Revenue", 'value' => formatCurrencyPhpPeso((float)($dbStats['todayRevenue'] ?? 0), 2), 'change' => '+18%', 'icon' => 'banknote' ],
-    [ 'label' => 'Avg. Daily Rate', 'value' => formatCurrencyPhpPeso((float)($dbStats['avgRate'] ?? 0), 2), 'change' => '+8%', 'icon' => 'trending-up' ],
-  ];
-} else {
-  $stats = [
-    [ 'label' => 'Occupancy Rate', 'value' => '87%', 'change' => '+5%', 'icon' => 'building-2' ],
-    [ 'label' => 'Guests In-House', 'value' => '142', 'change' => '+12', 'icon' => 'users' ],
-    [ 'label' => "Today's Revenue", 'value' => '₱24,580', 'change' => '+18%', 'icon' => 'banknote' ],
-    [ 'label' => 'Avg. Daily Rate', 'value' => '₱185', 'change' => '+8%', 'icon' => 'trending-up' ],
-  ];
-}
+$stats = [
+  [
+    'label' => 'Occupancy Rate',
+    'value' => (isset($dbStats['occupancy']) ? (int)$dbStats['occupancy'] : 0) . '%',
+    'change' => ((int)($dbStats['changes']['occupancy'] ?? 0) >= 0 ? '+' : '') . (int)($dbStats['changes']['occupancy'] ?? 0) . '%',
+    'icon' => 'building-2'
+  ],
+  [
+    'label' => 'Guests In-House',
+    'value' => (string)($dbStats['inHouse'] ?? 0),
+    'change' => ((int)($dbStats['changes']['inHouse'] ?? 0) >= 0 ? '+' : '') . (int)($dbStats['changes']['inHouse'] ?? 0),
+    'icon' => 'users'
+  ],
+  [
+    'label' => "Today's Revenue",
+    'value' => formatCurrencyPhpPeso((float)($dbStats['todayRevenue'] ?? 0), 2),
+    'change' => ((int)($dbStats['changes']['todayRevenue'] ?? 0) >= 0 ? '+' : '') . (int)($dbStats['changes']['todayRevenue'] ?? 0) . '%',
+    'icon' => 'banknote'
+  ],
+  [
+    'label' => 'Avg. Daily Rate',
+    'value' => formatCurrencyPhpPeso((float)($dbStats['avgRate'] ?? 0), 2),
+    'change' => ((int)($dbStats['changes']['avgRate'] ?? 0) >= 0 ? '+' : '') . (int)($dbStats['changes']['avgRate'] ?? 0) . '%',
+    'icon' => 'trending-up'
+  ],
+];
 ?>
 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
   <?php foreach ($stats as $stat): ?>

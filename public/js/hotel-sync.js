@@ -15,6 +15,7 @@ class HotelDataSync {
         };
         this.pollInterval = 5000; // Poll every 5 seconds
         this.pollTimer = null;
+        this.apiBase = null;
     }
 
     /**
@@ -44,16 +45,22 @@ class HotelDataSync {
      * Get base API URL
      */
     getApiBase() {
-        // Robustly derive base: find '/inn-nexus-main' in path if present
-        const path = window.location.pathname;
-        const idx = path.indexOf('/inn-nexus-main');
-        if (idx !== -1) {
-            const root = path.substring(0, idx + '/inn-nexus-main'.length);
-            return window.location.origin + root + '/api';
+        if (this.apiBase) return this.apiBase;
+        const origin = window.location.origin;
+        const path = window.location.pathname || '/';
+        const hasProjectRoot = path.indexOf('/inn-nexus-main') !== -1;
+        const dir = path.endsWith('/') ? path.slice(0, -1) : path;
+        const parent = dir.substring(0, dir.lastIndexOf('/')) || '';
+        const candidates = [];
+        if (hasProjectRoot) {
+            const root = path.substring(0, path.indexOf('/inn-nexus-main') + '/inn-nexus-main'.length);
+            candidates.push(origin + root + '/api');
         }
-        // Fallback to current directory api
-        const basePath = path.substring(0, path.lastIndexOf('/'));
-        return window.location.origin + basePath + '/api';
+        candidates.push(origin + parent + '/api');
+        candidates.push(origin + '/api');
+        // Choose first candidate; endpoints are normalized in PHP router anyway
+        this.apiBase = candidates[0];
+        return this.apiBase;
     }
 
     /**
