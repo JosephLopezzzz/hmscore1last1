@@ -566,3 +566,40 @@ function fetchDepartures(): array {
     return [];
   }
 }
+
+/**
+ * Sync rooms with today's pending arrivals by setting rooms to Reserved and attaching guest name.
+ * This helps Rooms Overview reflect imminent check-ins.
+ */
+function syncRoomsWithTodaysPendingArrivals(): void {
+  $pdo = getPdo();
+  if (!$pdo) return;
+  try {
+    $sql = "
+      SELECT r.id as res_id, r.room_id, rm.room_number, rm.status AS room_status,
+             g.first_name, g.last_name
+      FROM reservations r
+      LEFT JOIN rooms rm ON r.room_id = rm.id
+      LEFT JOIN guests g ON r.guest_id = g.id
+      WHERE DATE(r.check_in_date) = CURDATE()
+        AND r.status = 'Pending'
+        AND r.room_id IS NOT NULL
+        AND rm.id IS NOT NULL
+        AND (rm.status IS NULL OR rm.status NOT IN ('Occupied','Maintenance'))
+    ";
+    $rows = $pdo->query($sql)->fetchAll();
+    if (!$rows) return;
+    $upd = $pdo->prepare("UPDATE rooms SET status = 'Reserved', guest_name = :guest_name WHERE id = :room_id");
+    foreach ($rows as $row) {
+      $guestName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+      $upd->execute([':guest_name' => $guestName !== '' ? $guestName : null, ':room_id' => (int)$row['room_id']]);
+      // Log only if changing from something other than Reserved
+      if (($row['room_status'] ?? '') !== 'Reserved') {
+        logRoomStatusChange($row['room_number'] ?? '', (string)($row['room_status'] ?? 'Vacant'), 'Reserved', 'Auto-reserved for today\'s arrival', 'System');
+      }
+    }
+  } catch (Throwable $e) {
+    // best-effort; do not throw
+    error_log('syncRoomsWithTodaysPendingArrivals failed: ' . $e->getMessage());
+  }
+}
