@@ -347,6 +347,7 @@ function fetchArrivals(): array {
       LEFT JOIN guests g ON r.guest_id = g.id
       LEFT JOIN rooms rm ON r.room_id = rm.id
       WHERE DATE(r.check_in_date) = CURDATE()
+      AND r.status = 'Pending'
       ORDER BY r.check_in_date
     ";
     $stmt = $pdo->query($query);
@@ -443,6 +444,7 @@ function fetchDepartures(): array {
       LEFT JOIN guests g ON r.guest_id = g.id
       LEFT JOIN rooms rm ON r.room_id = rm.id
       WHERE DATE(r.check_out_date) = CURDATE()
+      AND r.status = 'Checked In'
       ORDER BY r.check_out_date
     ";
     $stmt = $pdo->query($query);
