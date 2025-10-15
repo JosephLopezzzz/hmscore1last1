@@ -17,6 +17,11 @@ DirectoryIndex index.php
   # Route well-known top-level pages to their PHP counterparts
   RewriteRule ^(index|reservations|housekeeping|billing|guests|analytics)$ $1.php [L,QSA]
 
+  # Channel management routes
+  RewriteRule ^channels/ota$ channels/ota.php [L,QSA]
+  RewriteRule ^channels/rates$ channels/rates.php [L,QSA]
+  RewriteRule ^channels/availability$ channels/availability.php [L,QSA]
+
   # API routing
   RewriteRule ^api(/.*)?$ api/index.php [L,QSA]
 

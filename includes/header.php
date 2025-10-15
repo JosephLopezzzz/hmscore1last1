@@ -10,8 +10,11 @@
     [ 'label' => 'Reservations', 'path' => 'reservations.php' ],
     [ 'label' => 'Rooms', 'path' => 'rooms-overview.php' ],
     [ 'label' => 'Housekeeping', 'path' => 'housekeeping.php' ],
+    [ 'label' => 'Inventory', 'path' => 'inventory.php' ],
     [ 'label' => 'Billing', 'path' => 'billing.php' ],
     [ 'label' => 'Guests', 'path' => 'guests.php' ],
+    [ 'label' => 'Channels', 'path' => 'channel-management.php' ],
+    [ 'label' => 'Marketing', 'path' => 'marketing.php' ],
     [ 'label' => 'Analytics', 'path' => 'analytics.php' ],
   ];
 ?>
