@@ -44,7 +44,7 @@
       // Get PDO connection
       $pdo = getPdo();
 
-      // Fetch pending reservations for billing
+      // Fetch only pending reservations for billing (exclude fully paid)
       $foliosQuery = "
         SELECT
           r.id,
@@ -58,7 +58,7 @@
         FROM reservations r
         JOIN rooms rm ON r.room_id = rm.id
         JOIN guests g ON r.guest_id = g.id
-        WHERE r.payment_status IN ('PENDING', 'DOWNPAYMENT', 'FULLY PAID', 'CANCELLED')
+        WHERE r.payment_status IN ('PENDING', 'DOWNPAYMENT')
         ORDER BY r.created_at DESC
         LIMIT 10
       ";
@@ -123,7 +123,7 @@
       $stmt->execute();
       $billingData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-      // Fetch only PAID transactions for the second section
+      // Fetch PAID transactions and fully paid reservations for the second section
       $paidTransactionsQuery = "
         SELECT
           bt.id,
@@ -135,9 +135,15 @@
           bt.payment_method,
           bt.status,
           bt.notes,
-          bt.transaction_date
+          bt.transaction_date,
+          CONCAT(g.first_name, ' ', g.last_name) as guest_name,
+          rm.room_number,
+          r.id as reservation_id
         FROM billing_transactions bt
-        WHERE bt.status = 'Paid'
+        LEFT JOIN reservations r ON bt.reservation_id = r.id
+        LEFT JOIN guests g ON r.guest_id = g.id
+        LEFT JOIN rooms rm ON r.room_id = rm.id
+        WHERE bt.status = 'Paid' OR r.payment_status = 'FULLY PAID'
         ORDER BY bt.transaction_date DESC
         LIMIT 10
       ";
@@ -206,19 +212,23 @@
                     <p class="font-bold">Reservation #<?php echo $folio['id']; ?></p>
                     <p class="text-sm text-muted-foreground"><?php echo $folio['guest_name']; ?> • Room <?php echo $folio['room_number']; ?></p>
                   </div>
-                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusColors[$folio['payment_status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['payment_status'] ?? 'Pending'); ?></span>
+                  <?php if ($folio['payment_status'] !== 'FULLY PAID'): ?>
+                    <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusColors[$folio['payment_status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['payment_status'] ?? 'Pending'); ?></span>
+                  <?php endif; ?>
                 </div>
                 <div class="flex justify-between items-center text-sm mt-3">
                   <span class="text-muted-foreground">Amount: <?php echo formatCurrencyPhpPeso($folio['amount'] ?? 0, 2); ?></span>
                   <span class="font-medium">Check-in: <?php echo date('M d, Y', strtotime($folio['check_in_date'])); ?></span>
-                  <button class="process-payment-btn inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs text-primary-foreground hover:bg-primary/90"
-                          data-guest="<?php echo htmlspecialchars($folio['guest_name']); ?>"
-                          data-room="<?php echo htmlspecialchars($folio['room_number']); ?>"
-                          data-balance="<?php echo $folio['amount'] ?? 0; ?>"
-                          data-reservation-id="<?php echo $folio['id']; ?>">
-                    <i data-lucide="credit-card" class="h-3 w-3"></i>
-                    PAY
-                  </button>
+                  <?php if ($folio['payment_status'] !== 'FULLY PAID'): ?>
+                    <button class="process-payment-btn inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs text-primary-foreground hover:bg-primary/90"
+                            data-guest="<?php echo htmlspecialchars($folio['guest_name']); ?>"
+                            data-room="<?php echo htmlspecialchars($folio['room_number']); ?>"
+                            data-balance="<?php echo $folio['amount'] ?? 0; ?>"
+                            data-reservation-id="<?php echo $folio['id']; ?>">
+                      <i data-lucide="credit-card" class="h-3 w-3"></i>
+                      PAY
+                    </button>
+                  <?php endif; ?>
                 </div>
               </div>
             <?php endforeach; ?>
@@ -234,8 +244,12 @@
               <div class="p-4 rounded-lg bg-muted/50">
                 <div class="flex items-start justify-between mb-2">
                   <div class="flex-1">
-                    <p class="font-medium">Transaction #<?php echo $txn['id']; ?></p>
-                    <p class="text-sm text-muted-foreground"><?php echo ucfirst($txn['transaction_type']); ?> • <?php echo $txn['payment_method']; ?></p>
+                    <?php if (!empty($txn['guest_name'])): ?>
+                      <p class="font-medium"><?php echo $txn['guest_name']; ?> • Room <?php echo $txn['room_number']; ?></p>
+                      <p class="text-sm text-muted-foreground"><?php echo ucfirst($txn['transaction_type']); ?> • <?php echo $txn['payment_method']; ?></p>
+                    <?php else: ?>
+                      <p class="font-medium"><?php echo ucfirst($txn['transaction_type']); ?> • <?php echo $txn['payment_method']; ?></p>
+                    <?php endif; ?>
                   </div>
                   <div class="text-right">
                     <p class="font-bold"><?php echo formatCurrencyPhpPeso($txn['amount'], 2); ?></p>

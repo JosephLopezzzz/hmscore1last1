@@ -34,10 +34,6 @@
     </div>
 
     <div class="flex items-center gap-6">
-      <div class="relative hidden sm:block w-48 mr-4">
-        <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
-        <input type="text" placeholder="Search guests, rooms..." class="pl-9 h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50" />
-      </div>
       <button class="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-accent/10">
         <i data-lucide="bell" class="h-5 w-5"></i>
       </button>
