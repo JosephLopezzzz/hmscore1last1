@@ -146,11 +146,11 @@ require_once __DIR__ . '/includes/security.php';
                 </div>
               </div>
 
-              <!-- Status Section -->
-              <div>
+              <!-- Status Section (hidden: always pending on create) -->
+              <div class="hidden">
                 <h3 class="text-lg font-medium mb-3 border-b pb-2">Reservation Status</h3>
                 <select id="status" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                  <option value="Pending">Pending</option>
+                  <option value="Pending" selected>Pending</option>
                   <option value="Checked In">Checked In</option>
                   <option value="Checked Out">Checked Out</option>
                   <option value="Cancelled">Cancelled</option>
@@ -631,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
           room_id: document.getElementById('room_id').value,
           check_in_date: document.getElementById('check_in_date').value,
           check_out_date: document.getElementById('check_out_date').value,
-          status: document.getElementById('status').value
+          status: 'Pending'
         };
 
         const reservationResponse = await fetch('http://localhost/hmscore1last1/api/reservations', {

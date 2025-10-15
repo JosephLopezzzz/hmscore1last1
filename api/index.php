@@ -61,6 +61,52 @@ switch (true) {
       }
     }
 
+  // Get single guest with metrics
+  case preg_match('#^/api/guests/(\\d+)$#', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'GET':
+    $guestId = (int)$m[1];
+    $pdo = getPdo(); if (!$pdo) sendJson(['error' => 'no_db'], 500);
+    try {
+      $g = $pdo->prepare('SELECT id, first_name, last_name, email, phone, address, city, country, id_type, id_number, date_of_birth, nationality, notes FROM guests WHERE id = :id');
+      $g->execute([':id' => $guestId]);
+      $guest = $g->fetch();
+      if (!$guest) sendJson(['error' => 'not_found'], 404);
+
+      $timesStmt = $pdo->prepare("SELECT COUNT(DISTINCT r.id) FROM reservations r WHERE r.guest_id = :id AND r.status = 'Checked In'");
+      $timesStmt->execute([':id' => $guestId]);
+      $timesCheckedIn = (int)$timesStmt->fetchColumn();
+
+      $paidStmt = $pdo->prepare("SELECT COALESCE(SUM(CASE WHEN bt.transaction_type IN ('Room Charge','Service') THEN bt.amount WHEN bt.transaction_type = 'Refund' THEN -bt.amount ELSE 0 END),0)
+        FROM billing_transactions bt
+        JOIN reservations r ON bt.reservation_id = r.id
+        WHERE r.guest_id = :id AND bt.status = 'Paid'");
+      $paidStmt->execute([':id' => $guestId]);
+      $totalPaid = (float)$paidStmt->fetchColumn();
+
+      sendJson(['data' => $guest, 'metrics' => [ 'timesCheckedIn' => $timesCheckedIn, 'totalPaid' => $totalPaid ]]);
+    } catch (Throwable $e) {
+      sendJson(['error' => 'guest_query_failed', 'message' => $e->getMessage()], 500);
+    }
+
+  // Update guest (partial)
+  case preg_match('#^/api/guests/(\\d+)$#', $path, $m) && in_array($_SERVER['REQUEST_METHOD'], ['PATCH','PUT'], true):
+    $guestId = (int)$m[1];
+    $pdo = getPdo(); if (!$pdo) sendJson(['error' => 'no_db'], 500);
+    $payload = json_decode(file_get_contents('php://input') ?: '{}', true) ?: [];
+    $allowed = ['first_name','last_name','email','phone','address','city','country','id_type','id_number','date_of_birth','nationality','notes'];
+    $update = array_intersect_key($payload, array_flip($allowed));
+    if (!$update) sendJson(['error' => 'invalid_input'], 422);
+    try {
+      $sets = [];
+      $params = [ ':id' => $guestId ];
+      foreach ($update as $k => $v) { $sets[] = "$k = :$k"; $params[":$k"] = $v; }
+      $sql = 'UPDATE guests SET ' . implode(',', $sets) . ' WHERE id = :id';
+      $stmt = $pdo->prepare($sql);
+      $stmt->execute($params);
+      sendJson(['ok' => true]);
+    } catch (Throwable $e) {
+      sendJson(['error' => 'guest_update_failed', 'message' => $e->getMessage()], 500);
+    }
+
     try {
       $pdo->beginTransaction();
 

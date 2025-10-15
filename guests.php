@@ -71,7 +71,7 @@
                   </div>
                 </div>
                 <div class="flex gap-2">
-                  <button class="inline-flex items-center rounded-md border px-3 py-2 text-sm">View Profile</button>
+                  <button class="inline-flex items-center rounded-md border px-3 py-2 text-sm" onclick="openGuestProfileModal(<?php echo (int)($guest['id'] ?? 0); ?>)">View Profile</button>
                   <?php 
                     $guestPayload = [
                       'first_name' => $guest['first_name'] ?? '',
@@ -113,7 +113,113 @@
           card.style.display = text.includes(q) ? '' : 'none';
         });
       });
+
+      // Guest Profile Modal
+      function openGuestProfileModal(guestId){
+        const modal = document.getElementById('guestProfileModal');
+        const body = document.getElementById('guestProfileBody');
+        const metrics = document.getElementById('guestProfileMetrics');
+        modal.classList.remove('hidden');
+        body.innerHTML = '<div class="text-sm text-muted-foreground">Loading...</div>';
+        metrics.innerHTML = '';
+        if (window.lucide && window.lucide.createIcons) { window.lucide.createIcons(); }
+        fetch(`<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/api/guests/` + guestId)
+          .then(r => r.json())
+          .then(data => {
+            const g = data.data || {};
+            const m = data.metrics || { timesCheckedIn: 0, totalPaid: 0 };
+            body.innerHTML = `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                ${inputField('First Name','first_name', g.first_name)}
+                ${inputField('Last Name','last_name', g.last_name)}
+                ${inputField('Email','email', g.email, 'email')}
+                ${inputField('Phone','phone', g.phone)}
+                ${inputField('Address','address', g.address)}
+                ${inputField('City','city', g.city)}
+                ${inputField('Country','country', g.country)}
+                ${inputField('ID Type','id_type', g.id_type || 'National ID')}
+                ${inputField('ID Number','id_number', g.id_number)}
+                ${inputField('Date of Birth','date_of_birth', (g.date_of_birth||'').substring(0,10), 'date')}
+                ${inputField('Nationality','nationality', g.nationality)}
+              </div>
+              <div>
+                <label class="block text-xs text-muted-foreground mb-1">Notes</label>
+                <textarea id="notes" class="w-full px-3 py-2 rounded-md border bg-background" rows="3">${escapeHtml(g.notes||'')}</textarea>
+              </div>
+              <div class="flex justify-end">
+                <button id="saveGuestBtn" class="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">Save Changes</button>
+              </div>
+            `;
+            metrics.innerHTML = `
+              <div class="flex items-center justify-between"><span>Times Checked In</span><span class="font-semibold">${m.timesCheckedIn||0}</span></div>
+              <div class="flex items-center justify-between"><span>Total Paid</span><span class="font-semibold">₱${Number(m.totalPaid||0).toFixed(2)}</span></div>
+            `;
+            document.getElementById('saveGuestBtn').onclick = () => saveGuest(guestId);
+            if (window.lucide && window.lucide.createIcons) { window.lucide.createIcons(); }
+          });
+      }
+
+      function inputField(label, id, value, type='text'){
+        return `
+          <div>
+            <label class="block text-xs text-muted-foreground mb-1">${label}</label>
+            <input id="${id}" type="${type}" value="${escapeHtml(value||'')}" class="w-full px-3 py-2 rounded-md border bg-background" />
+          </div>
+        `;
+      }
+      function escapeHtml(str){
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+      }
+      function closeGuestProfileModal(){
+        document.getElementById('guestProfileModal').classList.add('hidden');
+      }
+      // minimize/maximize removed per request
+      function saveGuest(guestId){
+        const payload = {
+          first_name: document.getElementById('first_name').value,
+          last_name: document.getElementById('last_name').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          address: document.getElementById('address').value,
+          city: document.getElementById('city').value,
+          country: document.getElementById('country').value,
+          id_type: document.getElementById('id_type').value,
+          id_number: document.getElementById('id_number').value,
+          date_of_birth: document.getElementById('date_of_birth').value,
+          nationality: document.getElementById('nationality').value,
+          notes: document.getElementById('notes').value,
+        };
+        fetch(`<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/api/guests/` + guestId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(r => r.json()).then(() => closeGuestProfileModal());
+      }
     </script>
+    <!-- Guest Profile Modal -->
+    <div id="guestProfileModal" class="hidden fixed inset-0 bg-black/60 z-50">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div id="guestProfilePanel" class="bg-card text-card-foreground rounded-lg shadow-2xl w-full max-w-3xl overflow-hidden border">
+          <div class="flex items-center justify-between p-2 pl-4 border-b">
+            <h2 class="text-sm md:text-lg font-semibold">Guest Profile</h2>
+            <div class="flex items-center gap-1">
+              <button title="Close" onclick="closeGuestProfileModal()" class="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-accent/10 text-muted-foreground hover:text-foreground">
+                <i data-lucide="x" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </div>
+          <div id="guestProfileContent" class="grid lg:grid-cols-3 gap-0">
+            <div class="p-4 lg:col-span-2" id="guestProfileBody"></div>
+            <div class="p-4 border-t lg:border-t-0 lg:border-l">
+              <h3 class="text-sm font-semibold mb-2">Metrics</h3>
+              <div id="guestProfileMetrics" class="space-y-2 text-sm"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>window.lucide && window.lucide.createIcons && window.lucide.createIcons();</script>
     <?php include __DIR__ . '/reservation-modal.php'; ?>
   </body>
   </html>
