@@ -255,8 +255,18 @@
       });
       
       function exportData() {
-        // Simple export functionality - could be enhanced with actual data export
-        alert('Export functionality would generate reports based on current filters.');
+        // Get current period filter
+        const period = document.getElementById('periodFilter').value;
+        const startDate = '<?php echo $startDate; ?>';
+        const endDate = '<?php echo $endDate; ?>';
+
+        // Build URL with current parameters
+        let url = 'export-pdf.php?period=' + period;
+        if (startDate) url += '&start_date=' + startDate;
+        if (endDate) url += '&end_date=' + endDate;
+
+        // Open PDF in new tab
+        window.open(url, '_blank');
       }
     </script>
 
