@@ -3,107 +3,107 @@ require_once __DIR__ . '/includes/security.php';
 ?>
 
 <!-- Reservation Modal -->
-<div id="reservationModal" class="fixed inset-0 bg-black/60 z-50 hidden">
+<div id="reservationModal" class="fixed inset-0 modal-overlay z-50 hidden">
   <div class="flex items-center justify-center min-h-screen p-4">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+    <div class="modal-content rounded-lg w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between p-4 border-b flex-shrink-0 bg-gray-50">
-        <h2 class="text-lg font-semibold text-gray-800">New Reservation</h2>
-        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-100 rounded-full">
+      <div class="flex items-center justify-between p-4 border-b border-border flex-shrink-0 bg-card">
+        <h2 class="text-lg font-semibold text-card-foreground">New Reservation</h2>
+        <button id="closeModalBtn" class="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded-full">
           <i data-lucide="x" class="h-5 w-5"></i>
         </button>
       </div>
 
       <!-- Modal Body - Scrollable Content -->
-      <div class="flex-1 overflow-y-auto bg-white">
+      <div class="flex-1 overflow-y-auto bg-card">
         <form id="reservationForm" class="p-4">
           <!-- Two Column Layout -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Left Column: Guest Information -->
             <div class="space-y-4">
-              <h3 class="text-lg font-medium mb-4 border-b pb-2">Guest Information</h3>
+              <h3 class="text-lg font-medium mb-4 border-b border-border pb-2 text-card-foreground">Guest Information</h3>
 
               <!-- Search Section -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search Existing Guests</label>
+                <label class="block text-sm font-medium text-card-foreground mb-2">Search Existing Guests</label>
                 <div class="relative">
-                  <input type="text" id="guestSearch" placeholder="Search guests by name, email, or phone..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <div id="guestSearchResults" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden">
-                    <div id="guestsLoading" class="p-3 text-sm text-gray-500">Loading guests...</div>
-                    <div id="noGuestsFound" class="p-3 text-sm text-gray-500 hidden">No guests found</div>
+                  <input type="text" id="guestSearch" placeholder="Search guests by name, email, or phone..." class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                  <div id="guestSearchResults" class="search-results absolute z-10 w-full mt-1 rounded-md max-h-60 overflow-y-auto hidden">
+                    <div id="guestsLoading" class="p-3 text-sm text-muted-foreground">Loading guests...</div>
+                    <div id="noGuestsFound" class="p-3 text-sm text-muted-foreground hidden">No guests found</div>
                   </div>
                 </div>
-                <div id="selectedGuestInfo" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded hidden">
-                  <p class="text-sm text-blue-600">Selected: <span id="selectedGuestName" class="font-medium"></span></p>
+                <div id="selectedGuestInfo" class="mt-2 p-3 bg-primary/10 border border-primary/20 rounded hidden">
+                  <p class="text-sm text-primary">Selected: <span id="selectedGuestName" class="font-medium"></span></p>
                   <input type="hidden" id="guest_id" name="guest_id">
                 </div>
-                <div id="guestsFetchStatus" class="mt-2 text-xs text-gray-500">Guests: <span id="guestsStatus">Not loaded</span></div>
+                <div id="guestsFetchStatus" class="mt-2 text-xs text-muted-foreground">Guests: <span id="guestsStatus">Not loaded</span></div>
               </div>
 
               <!-- New Guest Form -->
               <div id="newGuestSection">
                 <div class="mb-3">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Or Create New Guest</label>
+                  <label class="block text-sm font-medium text-card-foreground mb-1">Or Create New Guest</label>
                 </div>
                 <div class="grid grid-cols-1 gap-3">
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                      <input type="text" id="first_name" name="first_name" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">First Name *</label>
+                      <input type="text" id="first_name" name="first_name" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                      <input type="text" id="last_name" name="last_name" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                      <input type="email" id="email" name="email" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                      <input type="tel" id="phone" name="phone" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Last Name *</label>
+                      <input type="text" id="last_name" name="last_name" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                     </div>
                   </div>
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                      <input type="text" id="address" name="address" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Email *</label>
+                      <input type="email" id="email" name="email" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                      <input type="text" id="city" name="city" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                      <input type="text" id="country" name="country" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
-                      <input type="text" id="nationality" name="nationality" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Phone</label>
+                      <input type="tel" id="phone" name="phone" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
                     </div>
                   </div>
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">ID Type</label>
-                      <select id="id_type" name="id_type" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Address</label>
+                      <input type="text" id="address" name="address" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">City</label>
+                      <input type="text" id="city" name="city" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Country</label>
+                      <input type="text" id="country" name="country" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Nationality</label>
+                      <input type="text" id="nationality" name="nationality" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">ID Type</label>
+                      <select id="id_type" name="id_type" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
                         <option value="National ID">National ID</option>
                         <option value="Passport">Passport</option>
                         <option value="Driver License">Driver License</option>
                       </select>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
-                      <input type="text" id="id_number" name="id_number" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">ID Number *</label>
+                      <input type="text" id="id_number" name="id_number" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                     </div>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth *</label>
-                    <input type="date" id="date_of_birth" name="date_of_birth" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
-                    <div id="dateOfBirthError" class="mt-1 text-sm text-red-600 hidden"></div>
+                    <label class="block text-sm font-medium text-card-foreground mb-1">Date of Birth *</label>
+                    <input type="date" id="date_of_birth" name="date_of_birth" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
+                    <div id="dateOfBirthError" class="mt-1 text-sm text-destructive hidden"></div>
                   </div>
                 </div>
               </div>
@@ -113,44 +113,44 @@ require_once __DIR__ . '/includes/security.php';
             <div class="space-y-4">
               <!-- Room Selection Section -->
               <div>
-                <h3 class="text-lg font-medium mb-3 border-b pb-2">Room Selection</h3>
+                <h3 class="text-lg font-medium mb-3 border-b border-border pb-2 text-card-foreground">Room Selection</h3>
                 <div class="grid grid-cols-1 gap-3">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Room</label>
-                    <select id="room_id" name="room_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required>
+                    <label class="block text-sm font-medium text-card-foreground mb-2">Select Room</label>
+                    <select id="room_id" name="room_id" class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                       <option value="">Loading rooms...</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Room Preview</label>
-                    <div id="selectedRoomInfo" class="p-3 bg-gray-50 rounded min-h-[40px] flex items-center text-sm">
-                      <span class="text-sm text-gray-500">Select a room to see details</span>
+                    <label class="block text-sm font-medium text-card-foreground mb-2">Room Preview</label>
+                    <div id="selectedRoomInfo" class="p-3 bg-muted rounded min-h-[40px] flex items-center text-sm">
+                      <span class="text-sm text-muted-foreground">Select a room to see details</span>
                     </div>
                   </div>
                 </div>
-                <div id="roomsFetchStatus" class="mt-2 text-xs text-gray-500">Rooms: <span id="roomsStatus">Not loaded</span></div>
+                <div id="roomsFetchStatus" class="mt-2 text-xs text-muted-foreground">Rooms: <span id="roomsStatus">Not loaded</span></div>
               </div>
 
               <!-- Date and Time Section -->
               <div>
-                <h3 class="text-lg font-medium mb-3 border-b pb-2">Reservation Dates</h3>
+                <h3 class="text-lg font-medium mb-3 border-b border-border pb-2 text-card-foreground">Reservation Dates</h3>
                 <div class="grid grid-cols-1 gap-3">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Check-in Date & Time *</label>
-                    <input type="datetime-local" id="check_in_date" name="check_in_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required min="">
+                    <label class="block text-sm font-medium text-card-foreground mb-2">Check-in Date & Time *</label>
+                    <input type="datetime-local" id="check_in_date" name="check_in_date" class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required min="">
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Check-out Date & Time *</label>
-                    <input type="datetime-local" id="check_out_date" name="check_out_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required min="">
+                    <label class="block text-sm font-medium text-card-foreground mb-2">Check-out Date & Time *</label>
+                    <input type="datetime-local" id="check_out_date" name="check_out_date" class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required min="">
                   </div>
                 </div>
                 
                 <!-- Buttons moved to right column -->
                 <div class="mt-6 flex justify-end gap-3">
-                  <button type="button" id="cancelBtn" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">
+                  <button type="button" id="cancelBtn" class="btn-secondary px-4 py-2 text-sm rounded transition-colors">
                     Cancel
                   </button>
-                  <button type="submit" id="submitBtn" class="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  <button type="submit" id="submitBtn" class="btn-primary px-4 py-2 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                     Create Reservation
                   </button>
                 </div>
@@ -158,8 +158,8 @@ require_once __DIR__ . '/includes/security.php';
 
               <!-- Status Section (hidden: always pending on create) -->
               <div class="hidden">
-                <h3 class="text-lg font-medium mb-3 border-b pb-2">Reservation Status</h3>
-                <select id="status" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <h3 class="text-lg font-medium mb-3 border-b border-border pb-2 text-card-foreground">Reservation Status</h3>
+                <select id="status" name="status" class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
                   <option value="Pending" selected>Pending</option>
                   <option value="Checked In">Checked In</option>
                   <option value="Checked Out">Checked Out</option>
