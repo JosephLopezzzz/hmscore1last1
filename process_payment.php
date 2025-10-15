@@ -119,8 +119,8 @@ try {
         exit;
     }
 
-    // Update reservation payment status to fully paid
-    $updateStmt = $pdo->prepare("UPDATE reservations SET status = 'Checked In', payment_status = 'FULLY PAID', updated_at = NOW() WHERE id = ?");
+    // Update reservation payment status to fully paid (do NOT change check-in status here)
+    $updateStmt = $pdo->prepare("UPDATE reservations SET payment_status = 'FULLY PAID', updated_at = NOW() WHERE id = ?");
     $updateStmt->execute([$reservation_id]);
 
     echo json_encode([
