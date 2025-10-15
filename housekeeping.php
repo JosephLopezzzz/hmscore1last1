@@ -12,6 +12,7 @@
       (function() {
         const theme = localStorage.getItem('theme') || 'light';
         document.documentElement.classList.toggle('dark', theme === 'dark');
+        document.documentElement.classList.toggle('light-mode', theme === 'light');
       })();
     </script>
     <meta charset="UTF-8" />
@@ -29,6 +30,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
     <script src="./public/js/hotel-sync.js"></script>
+    <script src="./public/js/light-mode-improvements.js"></script>
     
     <style>
       .task-card {
@@ -39,17 +41,27 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       }
       .priority-urgent {
-        border-left: 4px solid #ef4444;
+        border-left: 4px solid hsl(var(--destructive));
       }
       .priority-high {
-        border-left: 4px solid #f59e0b;
+        border-left: 4px solid hsl(var(--warning));
       }
       .priority-normal {
-        border-left: 4px solid #6b7280;
+        border-left: 4px solid hsl(var(--muted-foreground));
       }
       /* Force cleaning cards to use orange left border like maintenance */
-      .cleaning-left-border { border-left: 4px solid #f59e0b !important; }
-      .maintenance-left-border { border-left: 4px solid #ef4444 !important; }
+      .cleaning-left-border { border-left: 4px solid hsl(var(--warning)) !important; }
+      .maintenance-left-border { border-left: 4px solid hsl(var(--destructive)) !important; }
+      
+      /* Light mode specific improvements */
+      .light-mode .task-card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      }
+      .light-mode .task-card:hover {
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
       
     </style>
   </head>
@@ -237,8 +249,8 @@
           card.className = 'room-card';
 
           const typeClasses = {
-            maintenance: 'bg-red-500/10 text-red-400 border border-red-500/20',
-            cleaning: 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+            maintenance: 'bg-destructive/10 text-destructive border border-destructive/20',
+            cleaning: 'bg-warning/10 text-warning border border-warning/20'
           };
           const typeBadge = `
             <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs ${typeClasses[typeLabel] || ''}">

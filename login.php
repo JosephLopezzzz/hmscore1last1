@@ -106,6 +106,14 @@ if (($_POST['_action'] ?? '') === 'login') {
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Theme initialization (must be first to prevent flash) -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        document.documentElement.classList.toggle('light-mode', theme === 'light');
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Inn Nexus Hotel Management System</title>
@@ -114,39 +122,94 @@ if (($_POST['_action'] ?? '') === 'login') {
   </head>
 
   <body class="min-h-screen bg-background flex items-center justify-center">
-    <div class="w-full max-w-sm rounded-lg border bg-card p-6 shadow-sm">
-      <h1 class="text-2xl font-bold mb-4 text-center">Sign in</h1>
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="fixed top-4 right-4 p-2 rounded-md bg-card border border-border hover:bg-muted transition-colors z-10">
+      <i data-lucide="sun" class="h-5 w-5 text-foreground hidden dark:block"></i>
+      <i data-lucide="moon" class="h-5 w-5 text-foreground block dark:hidden"></i>
+    </button>
+
+    <div class="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-lg">
+      <div class="text-center mb-6">
+        <div class="flex items-center justify-center mb-4">
+          <i data-lucide="hotel" class="h-8 w-8 text-primary mr-2"></i>
+          <span class="text-xl font-bold text-card-foreground">Inn Nexus</span>
+        </div>
+        <h1 class="text-2xl font-bold text-card-foreground">Sign in</h1>
+        <p class="text-sm text-muted-foreground mt-2">Welcome back to your dashboard</p>
+      </div>
 
       <?php if (!empty($error)): ?>
-        <p class="text-red-500 text-sm mb-3 text-center"><?= htmlspecialchars($error) ?></p>
+        <div class="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+          <p class="text-destructive text-sm text-center"><?= htmlspecialchars($error) ?></p>
+        </div>
       <?php endif; ?>
 
-      <form method="post" class="space-y-3">
+      <form method="post" class="space-y-4">
         <input type="hidden" name="_action" value="login" />
         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>" />
 
         <div>
-          <label class="text-xs text-muted-foreground">Email</label>
+          <label class="block text-sm font-medium text-card-foreground mb-2">Email</label>
           <input name="email" type="email" required
-                 class="h-10 w-full rounded-md border bg-background px-3 text-sm" />
+                 class="h-10 w-full rounded-md border border-border bg-background text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
         </div>
 
         <div>
-          <label class="text-xs text-muted-foreground">Password</label>
+          <label class="block text-sm font-medium text-card-foreground mb-2">Password</label>
           <input name="password" type="password" required
-                 class="h-10 w-full rounded-md border bg-background px-3 text-sm" />
+                 class="h-10 w-full rounded-md border border-border bg-background text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
         </div>
 
-        <button class="w-full h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition">
-          Login
+        <button class="w-full h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium">
+          Sign In
         </button>
       </form>
 
-      <div class="mt-4 text-center">
-        <a href="forgot_password.php" class="text-sm text-blue-600 hover:underline">
+      <div class="mt-6 text-center">
+        <a href="forgot_password.php" class="text-sm text-primary hover:text-primary/80 hover:underline transition-colors">
           Forgot password?
         </a>
       </div>
     </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      window.lucide && window.lucide.createIcons();
+
+      // Theme toggle functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        if (themeToggle) {
+          themeToggle.addEventListener('click', function() {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            // Update localStorage
+            localStorage.setItem('theme', newTheme);
+            
+            // Update DOM classes
+            document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            document.documentElement.classList.toggle('light-mode', newTheme === 'light');
+            
+            // Update icons
+            const sunIcon = themeToggle.querySelector('[data-lucide="sun"]');
+            const moonIcon = themeToggle.querySelector('[data-lucide="moon"]');
+            
+            if (newTheme === 'dark') {
+              sunIcon.classList.remove('hidden');
+              sunIcon.classList.add('block');
+              moonIcon.classList.remove('block');
+              moonIcon.classList.add('hidden');
+            } else {
+              sunIcon.classList.remove('block');
+              sunIcon.classList.add('hidden');
+              moonIcon.classList.remove('hidden');
+              moonIcon.classList.add('block');
+            }
+          });
+        }
+      });
+    </script>
   </body>
 </html>

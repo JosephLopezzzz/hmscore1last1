@@ -15,7 +15,7 @@
     [ 'label' => 'Analytics', 'path' => 'analytics.php' ],
   ];
 ?>
-<header class="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+<header class="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 light-mode-header">
   <div class="max-w-7xl mx-auto flex h-16 items-center justify-between px-6 w-full">
     <div class="flex items-center gap-6">
       <a href="<?php echo $basePath; ?>/index.php" class="flex items-center gap-2">

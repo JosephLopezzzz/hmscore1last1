@@ -102,19 +102,19 @@
     </main>
 
     <!-- Add Guest Modal -->
-    <div id="addGuestModal" class="fixed inset-0 bg-black/60 z-50 hidden">
+    <div id="addGuestModal" class="fixed inset-0 modal-overlay z-50 hidden">
       <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
+        <div class="modal-content rounded-lg w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
           <!-- Modal Header -->
-          <div class="flex items-center justify-between p-4 border-b flex-shrink-0 bg-gray-50">
-            <h2 class="text-lg font-semibold text-gray-800">Create New Guest</h2>
-            <button id="closeAddGuestModalBtn" class="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-100 rounded-full">
+          <div class="flex items-center justify-between p-4 border-b border-border flex-shrink-0 bg-card">
+            <h2 class="text-lg font-semibold text-card-foreground">Create New Guest</h2>
+            <button id="closeAddGuestModalBtn" class="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded-full">
               <i data-lucide="x" class="h-5 w-5"></i>
             </button>
           </div>
 
           <!-- Modal Body -->
-          <div class="flex-1 overflow-y-auto bg-white">
+          <div class="flex-1 overflow-y-auto bg-card">
             <form id="addGuestForm" class="p-4">
               <!-- Two Column Layout -->
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -122,42 +122,42 @@
                 <div class="space-y-4">
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                      <input type="text" id="add_first_name" name="first_name" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">First Name *</label>
+                      <input type="text" id="add_first_name" name="first_name" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                      <input type="text" id="add_last_name" name="last_name" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                      <input type="email" id="add_email" name="email" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                      <input type="tel" id="add_phone" name="phone" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Last Name *</label>
+                      <input type="text" id="add_last_name" name="last_name" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                     </div>
                   </div>
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                      <input type="text" id="add_address" name="address" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Email *</label>
+                      <input type="email" id="add_email" name="email" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                      <input type="text" id="add_city" name="city" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Phone</label>
+                      <input type="tel" id="add_phone" name="phone" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
                     </div>
                   </div>
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                      <input type="text" id="add_country" name="country" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Address</label>
+                      <input type="text" id="add_address" name="address" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
-                      <input type="text" id="add_nationality" name="nationality" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">City</label>
+                      <input type="text" id="add_city" name="city" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Country</label>
+                      <input type="text" id="add_country" name="country" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">Nationality</label>
+                      <input type="text" id="add_nationality" name="nationality" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
                     </div>
                   </div>
                 </div>
@@ -166,29 +166,29 @@
                 <div class="space-y-4">
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">ID Type</label>
-                      <select id="add_id_type" name="id_type" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                      <label class="block text-sm font-medium text-card-foreground mb-1">ID Type</label>
+                      <select id="add_id_type" name="id_type" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
                         <option value="National ID">National ID</option>
                         <option value="Passport">Passport</option>
                         <option value="Driver License">Driver License</option>
                       </select>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
-                      <input type="text" id="add_id_number" name="id_number" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                      <label class="block text-sm font-medium text-card-foreground mb-1">ID Number *</label>
+                      <input type="text" id="add_id_number" name="id_number" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                     </div>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth *</label>
-                    <input type="date" id="add_date_of_birth" name="date_of_birth" class="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+                    <label class="block text-sm font-medium text-card-foreground mb-1">Date of Birth *</label>
+                    <input type="date" id="add_date_of_birth" name="date_of_birth" class="w-full px-2 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
                   </div>
                   
                   <!-- Buttons in right column -->
                   <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" id="cancelAddGuestBtn" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">
+                    <button type="button" id="cancelAddGuestBtn" class="btn-secondary px-4 py-2 text-sm rounded transition-colors">
                       Cancel
                     </button>
-                    <button type="submit" id="submitAddGuestBtn" class="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <button type="submit" id="submitAddGuestBtn" class="btn-primary px-4 py-2 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                       Create Guest
                     </button>
                   </div>

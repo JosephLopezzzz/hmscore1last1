@@ -15,27 +15,29 @@ $departures = fetchDepartures();
     </div>
     <div class="space-y-3">
       <?php foreach ($arrivals as $reservation): ?>
-        <div class="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-          <div class="flex-1">
-            <p class="font-medium"><?php echo $reservation['name']; ?></p>
-            <div class="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Room <?php echo $reservation['room']; ?></span>
-              <span>•</span>
-              <i data-lucide="clock" class="h-3 w-3"></i>
-              <span><?php echo $reservation['time']; ?></span>
+        <div class="guest-card arrival bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex-1">
+              <h3 class="font-bold text-card-foreground text-lg"><?php echo $reservation['name']; ?></h3>
+              <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Room <?php echo $reservation['room']; ?></span>
+                <span>•</span>
+                <i data-lucide="clock" class="h-3 w-3"></i>
+                <span><?php echo $reservation['time']; ?></span>
+              </div>
             </div>
+            <?php
+            $status = strtolower($reservation['status']);
+            if ($status === 'pending'): ?>
+              <button onclick="checkInGuest('<?php echo $reservation['id']; ?>')" class="h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">Check In</button>
+            <?php elseif ($status === 'checked in'): ?>
+              <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-success/10 text-success">Checked In</span>
+            <?php elseif ($status === 'checked out'): ?>
+              <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-muted text-muted-foreground">Checked Out</span>
+            <?php else: ?>
+              <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground"><?php echo ucfirst($status); ?></span>
+            <?php endif; ?>
           </div>
-          <?php
-          $status = strtolower($reservation['status']);
-          if ($status === 'pending'): ?>
-            <button onclick="checkInGuest('<?php echo $reservation['id']; ?>')" class="h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm">Check In</button>
-          <?php elseif ($status === 'checked in'): ?>
-            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs bg-success/10 text-success border-success/20">Checked In</span>
-          <?php elseif ($status === 'checked out'): ?>
-            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs bg-muted text-muted-foreground">Checked Out</span>
-          <?php else: ?>
-            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs bg-secondary text-secondary-foreground"><?php echo ucfirst($status); ?></span>
-          <?php endif; ?>
         </div>
       <?php endforeach; ?>
     </div>
@@ -55,20 +57,22 @@ $departures = fetchDepartures();
         $status = strtolower($reservation['status']);
         if ($status !== 'checked in') continue;
         ?>
-        <div class="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-          <div class="flex-1">
-            <p class="font-medium"><?php echo $reservation['name']; ?></p>
-            <div class="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Room <?php echo $reservation['room']; ?></span>
-              <span>•</span>
-              <i data-lucide="clock" class="h-3 w-3"></i>
-              <span><?php echo $reservation['time']; ?></span>
+        <div class="guest-card departure bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex-1">
+              <h3 class="font-bold text-card-foreground text-lg"><?php echo $reservation['name']; ?></h3>
+              <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Room <?php echo $reservation['room']; ?></span>
+                <span>•</span>
+                <i data-lucide="clock" class="h-3 w-3"></i>
+                <span><?php echo $reservation['time']; ?></span>
+              </div>
             </div>
+            <?php
+            if ($status === 'checked in'): ?>
+              <button onclick="checkOutGuest('<?php echo $reservation['id']; ?>')" class="h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">Check Out</button>
+            <?php endif; ?>
           </div>
-          <?php
-          if ($status === 'checked in'): ?>
-            <button onclick="checkOutGuest('<?php echo $reservation['id']; ?>')" class="h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm">Check Out</button>
-          <?php endif; ?>
         </div>
       <?php endforeach; ?>
     </div>
