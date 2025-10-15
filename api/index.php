@@ -128,7 +128,31 @@ switch (true) {
       $paidStmt->execute([':id' => $guestId]);
       $totalPaid = (float)$paidStmt->fetchColumn();
 
-      sendJson(['data' => $guest, 'metrics' => [ 'timesCheckedIn' => $timesCheckedIn, 'totalPaid' => $totalPaid ]]);
+      // Calculate tier based on paid transactions count
+      $paidCountStmt = $pdo->prepare("SELECT COUNT(*) as paid_count FROM billing_transactions bt JOIN reservations r ON bt.reservation_id = r.id WHERE r.guest_id = :id AND bt.status = 'Paid'");
+      $paidCountStmt->execute([':id' => $guestId]);
+      $paidCount = (int)$paidCountStmt->fetch()['paid_count'];
+
+      $tier = 'NORMAL';
+      $discountPercentage = 0;
+      if ($paidCount >= 100) {
+        $tier = 'PLATINUM';
+        $discountPercentage = 40;
+      } elseif ($paidCount >= 50) {
+        $tier = 'GOLD';
+        $discountPercentage = 30;
+      } elseif ($paidCount >= 20) {
+        $tier = 'SILVER';
+        $discountPercentage = 20;
+      }
+
+      sendJson(['data' => $guest, 'metrics' => [
+        'timesCheckedIn' => $timesCheckedIn,
+        'totalPaid' => $totalPaid,
+        'paidTransactionsCount' => $paidCount,
+        'tier' => $tier,
+        'discountPercentage' => $discountPercentage
+      ]]);
     } catch (Throwable $e) {
       sendJson(['error' => 'guest_query_failed', 'message' => $e->getMessage()], 500);
     }
@@ -335,8 +359,60 @@ switch (true) {
       sendJson(['error' => 'rooms_update_failed', 'message' => $e->getMessage()], 500);
     }
 
-  // Get housekeeping tasks
-  case $path === '/api/housekeeping' && $_SERVER['REQUEST_METHOD'] === 'GET':
+  // Get guest billing info for payment modal
+  case preg_match('#^/api/billing/guest-info#', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'GET':
+    $reservationId = $_GET['reservation_id'] ?? null;
+    if (!$reservationId) {
+      sendJson(['error' => 'invalid_input', 'message' => 'Reservation ID is required'], 422);
+    }
+
+    $pdo = getPdo();
+    if (!$pdo) sendJson(['error' => 'no_db'], 500);
+
+    try {
+      // Get guest ID from reservation
+      $guestStmt = $pdo->prepare('SELECT guest_id FROM reservations WHERE id = :reservation_id');
+      $guestStmt->execute([':reservation_id' => $reservationId]);
+      $guestData = $guestStmt->fetch();
+
+      if (!$guestData) {
+        sendJson(['error' => 'not_found', 'message' => 'Reservation not found'], 404);
+      }
+
+      $guestId = $guestData['guest_id'];
+
+      // Get paid transaction count and total
+      $paidCountStmt = $pdo->prepare("
+        SELECT COUNT(*) as paid_count, COALESCE(SUM(payment_amount), 0) as total_paid
+        FROM billing_transactions bt
+        JOIN reservations r ON bt.reservation_id = r.id
+        WHERE r.guest_id = ? AND bt.status = 'Paid'
+      ");
+      $paidCountStmt->execute([$guestId]);
+      $paidData = $paidCountStmt->fetch();
+
+      // Calculate tier based on paid transaction count
+      $paidCount = (int)$paidData['paid_count'];
+      $tier = 'NORMAL';
+      if ($paidCount >= 100) {
+        $tier = 'PLATINUM';
+      } elseif ($paidCount >= 50) {
+        $tier = 'GOLD';
+      } elseif ($paidCount >= 20) {
+        $tier = 'SILVER';
+      }
+
+      sendJson([
+        'success' => true,
+        'billing_info' => [
+          'paid_count' => $paidCount,
+          'total_paid' => (float)$paidData['total_paid'],
+          'tier' => $tier
+        ]
+      ]);
+    } catch (Throwable $e) {
+      sendJson(['error' => 'billing_info_failed', 'message' => $e->getMessage()], 500);
+    }
     $status = $_GET['status'] ?? null;
     $tasks = fetchHousekeepingTasks($status);
     $stats = getHousekeepingStats();

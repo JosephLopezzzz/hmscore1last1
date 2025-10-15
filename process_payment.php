@@ -69,17 +69,19 @@ try {
     $countStmt->execute([$reservation['guest_id']]);
     $paidCount = (int)$countStmt->fetch()['paid_count'];
 
-    // Determine discount percentage based on paid transaction count
-    if ($paidCount >= 50) {
-        $discountPercentage = 0.50; // 50% discount for 50+ transactions
+    // Determine discount percentage based on paid transaction count (new tier system)
+    if ($paidCount >= 100) {
+        $discountPercentage = 0.40; // 40% discount for PLATINUM (100+ transactions)
+        $tier = 'PLATINUM';
+    } elseif ($paidCount >= 50) {
+        $discountPercentage = 0.30; // 30% discount for GOLD (50-99 transactions)
+        $tier = 'GOLD';
     } elseif ($paidCount >= 20) {
-        $discountPercentage = 0.25; // 25% discount for 20-49 transactions
-    } elseif ($paidCount >= 10) {
-        $discountPercentage = 0.15; // 15% discount for 10-19 transactions
-    } elseif ($paidCount >= 5) {
-        $discountPercentage = 0.10; // 10% discount for 5-9 transactions
+        $discountPercentage = 0.20; // 20% discount for SILVER (20-49 transactions)
+        $tier = 'SILVER';
     } else {
-        $discountPercentage = 0.0; // No discount for less than 5 transactions
+        $discountPercentage = 0.0; // No discount for NORMAL (0-19 transactions)
+        $tier = 'NORMAL';
     }
 
     // Calculate discount amount and discounted balance

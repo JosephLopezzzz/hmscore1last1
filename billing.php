@@ -92,10 +92,9 @@
 
       $statusColors = [
         'Paid' => 'bg-success/10 text-success border border-success/20',
-        'Pending' => 'bg-warning/10 text-warning border border-warning/20',
-        'Failed' => 'bg-danger/10 text-danger border border-danger/20',
-        'Refunded' => 'bg-accent/10 text-accent border border-accent/20',
-        'Open' => 'bg-warning/10 text-warning border border-warning/20',
+        'Pending' => 'bg-warning/10 text      $totalOutstanding = (float)$rawOutstanding;
+      error_log("After float conversion: " . gettype($totalOutstanding) . ", value: {$totalOutstanding}");
+rning/10 text-warning border border-warning/20',
       ];
 
       $totalRevenue = 0;
@@ -151,9 +150,27 @@
       $stmt = $pdo->prepare($paidTransactionsQuery);
       $stmt->execute();
       $paidTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+      // Calculate billing totals
+      $totalsQuery = "
+        SELECT
+          SUM(CASE WHEN bt.status = 'Paid' THEN bt.amount ELSE 0 END) as total_paid,
+          SUM(CASE WHEN bt.status = 'Paid' THEN bt.payment_amount ELSE 0 END) as total_paid_amount,
+          SUM(CASE WHEN bt.status = 'Pending' THEN bt.balance ELSE 0 END) as total_outstanding,
+          SUM(bt.amount) as total_revenue
+        FROM billing_transactions bt
+      ";
+
+      $stmt = $pdo->prepare($totalsQuery);
+      $stmt->execute();
+      $totals = $stmt->fetch(PDO::FETCH_ASSOC);
+
+      $totalRevenue = (float)($totals['total_revenue'] ?? 0);
+      $totalPaid = (float)($totals['total_paid_amount'] ?? 0);
+      $totalOutstanding = (float)($totals['total_outstanding'] ?? 0);
     ?>
-    <main class="container mx-auto px-4 py-6">
-      <div class="flex items-center justify-between mb-6">
+    <main class="container mx-auto px-4 py-3">
+      <div class="flex items-center justify-between mb-4">
         <div>
           <h1 class="text-3xl font-bold">Billing & Payments</h1>
           <p class="text-muted-foreground">Manage guest folios and transactions</p>
@@ -163,54 +180,54 @@
       </div>
 
 
-      <div class="grid gap-6 mb-6 md:grid-cols-3">
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <div class="flex items-center gap-3">
-            <div class="p-2 rounded-lg bg-accent/10">
-              <i data-lucide="dollar-sign" class="h-5 w-5 text-accent"></i>
+      <div class="grid gap-4 mb-4 md:grid-cols-3">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-accent/10">
+              <i data-lucide="dollar-sign" class="h-4 w-4 text-accent"></i>
             </div>
             <div>
-              <p class="text-sm text-muted-foreground">Total Revenue</p>
-              <p class="text-2xl font-bold"><?php echo formatCurrencyPhpPeso($totalRevenue, 2); ?></p>
+              <p class="text-xs text-muted-foreground">Total Revenue</p>
+              <p class="text-xl font-bold"><?php echo formatCurrencyPhpPeso($totalRevenue, 2); ?></p>
             </div>
           </div>
         </div>
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <div class="flex items-center gap-3">
-            <div class="p-2 rounded-lg bg-success/10">
-              <i data-lucide="credit-card" class="h-5 w-5 text-success"></i>
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-success/10">
+              <i data-lucide="credit-card" class="h-4 w-4 text-success"></i>
             </div>
             <div>
-              <p class="text-sm text-muted-foreground">Paid</p>
-              <p class="text-2xl font-bold"><?php echo formatCurrencyPhpPeso($totalPaid, 2); ?></p>
+              <p class="text-xs text-muted-foreground">Paid</p>
+              <p class="text-xl font-bold"><?php echo formatCurrencyPhpPeso($totalPaid, 2); ?></p>
             </div>
           </div>
         </div>
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <div class="flex items-center gap-3">
-            <div class="p-2 rounded-lg bg-warning/10">
-              <i data-lucide="file-text" class="h-5 w-5 text-warning"></i>
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-warning/10">
+              <i data-lucide="alert-circle" class="h-4 w-4 text-warning"></i>
             </div>
             <div>
-              <p class="text-sm text-muted-foreground">Outstanding</p>
-              <p class="text-2xl font-bold"><?php echo formatCurrencyPhpPeso($totalOutstanding, 2); ?></p>
+              <p class="text-xs text-muted-foreground">Outstanding</p>
+              <p class="text-xl font-bold"><?php echo formatCurrencyPhpPeso($totalOutstanding, 2); ?></p>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div class="mb-4">
-            <h3 class="text-lg font-semibold">Pending Transactions</h3>
+      <div class="grid gap-4 lg:grid-cols-2">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
+          <div class="mb-3">
+            <h3 class="text-base font-semibold">Pending Transactions</h3>
           </div>
-          <div class="space-y-3">
+          <div class="space-y-2">
             <?php foreach ($folios as $folio): ?>
-              <div class="transaction-card pending bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1">
-                <div class="flex items-start justify-between mb-3">
+              <div class="transaction-card pending bg-card border border-border rounded-lg p-3 hover:shadow-sm transition-all duration-200">
+                <div class="flex items-start justify-between mb-2">
                   <div class="flex-1">
-                    <h3 class="font-bold text-card-foreground text-lg">Reservation #<?php echo $folio['id']; ?></h3>
-                    <p class="text-sm text-muted-foreground"><?php echo $folio['guest_name']; ?> • Room <?php echo $folio['room_number']; ?></p>
+                    <h3 class="font-semibold text-card-foreground text-base">Reservation #<?php echo $folio['id']; ?></h3>
+                    <p class="text-xs text-muted-foreground"><?php echo $folio['guest_name']; ?> • Room <?php echo $folio['room_number']; ?></p>
                   </div>
                   <?php if ($folio['payment_status'] !== 'FULLY PAID'): ?>
                     <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium <?php echo $statusColors[$folio['payment_status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['payment_status'] ?? 'Pending'); ?></span>
@@ -222,12 +239,12 @@
                     <span class="text-muted-foreground">Check-in: <?php echo date('M d, Y', strtotime($folio['check_in_date'])); ?></span>
                   </div>
                   <?php if ($folio['payment_status'] !== 'FULLY PAID'): ?>
-                    <button class="process-payment-btn inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    <button class="process-payment-btn inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                             data-guest="<?php echo htmlspecialchars($folio['guest_name']); ?>"
                             data-room="<?php echo htmlspecialchars($folio['room_number']); ?>"
                             data-balance="<?php echo $folio['amount'] ?? 0; ?>"
                             data-reservation-id="<?php echo $folio['id']; ?>">
-                      <i data-lucide="credit-card" class="h-4 w-4"></i>
+                      <i data-lucide="credit-card" class="h-3 w-3"></i>
                       PAY
                     </button>
                   <?php endif; ?>
@@ -270,100 +287,106 @@
           </div>
         </div>
       </div>
+
     </main>
 
     <!-- Payment Processing Modal -->
     <div id="paymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-      <div class="bg-card text-card-foreground border border-border rounded-lg p-6 w-full max-w-lg mx-4">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold">Process Payment</h2>
+      <div class="bg-card text-card-foreground border border-border rounded-lg p-3 sm:p-4 w-full max-w-lg mx-2 sm:mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-2 sm:mb-3">
+          <h2 class="text-base sm:text-lg font-bold">Process Payment</h2>
           <button id="closePaymentModal" class="text-muted-foreground hover:text-foreground">
-            <i data-lucide="x" class="h-5 w-5"></i>
+            <i data-lucide="x" class="h-4 w-4 sm:h-5 sm:w-5"></i>
           </button>
         </div>
         
-        <!-- Guest Information -->
-        <div class="mb-4 p-3 bg-muted rounded-md">
-          <p><strong>Guest:</strong> <span id="modalGuestName"></span></p>
-          <p><strong>Room No:</strong> <span id="modalRoomNo"></span></p>
-          <p><strong>Outstanding Balance:</strong> <span id="modalBalance"></span></p>
+        <!-- Guest Information - Responsive Layout -->
+        <div class="mb-2 sm:mb-3 p-2 sm:p-3 bg-muted rounded-md">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 text-xs sm:text-sm">
+            <p><strong>Guest:</strong> <span id="modalGuestName"></span></p>
+            <p><strong>Room:</strong> <span id="modalRoomNo"></span></p>
+            <p class="col-span-1 sm:col-span-2"><strong>Balance:</strong> <span id="modalBalance"></span></p>
+          </div>
+          <div id="guestBillingInfo" class="mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-border text-xs">
+            <!-- Billing information will be populated by JavaScript -->
+          </div>
         </div>
 
-        <!-- Payment Form -->
-        <form id="paymentForm" class="space-y-3">
+        <!-- Payment Form - Responsive Layout -->
+        <form id="paymentForm" class="space-y-2 sm:space-y-2">
           <div>
             <label class="text-xs text-muted-foreground">Payment Method</label>
-            <div id="paymentMethodGroup" class="mt-2 grid grid-cols-2 gap-2">
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+            <div id="paymentMethodGroup" class="mt-1 grid grid-cols-2 gap-1">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs">
                 <input type="radio" name="paymentMethod" value="Cash" />
-                <span>Cash</span>
+                <span class="truncate">Cash</span>
               </label>
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs">
                 <input type="radio" name="paymentMethod" value="Card" />
-                <span>Card</span>
+                <span class="truncate">Card</span>
               </label>
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs">
                 <input type="radio" name="paymentMethod" value="GCash" />
-                <span>GCash</span>
+                <span class="truncate">GCash</span>
               </label>
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs">
                 <input type="radio" name="paymentMethod" value="Bank Transfer" />
-                <span>Bank Transfer</span>
+                <span class="truncate">Bank Transfer</span>
               </label>
             </div>
           </div>
 
-          <div class="mt-2">
+          <div class="mt-1 sm:mt-2">
             <label class="text-xs text-muted-foreground">Amount Received (₱)</label>
             <input type="number" id="amountReceived" step="0.01" min="0" required
-                   class="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                   class="h-7 sm:h-8 w-full rounded-md border bg-background px-2 text-sm"
                    placeholder="Enter amount received...">
             <p id="amountError" class="mt-1 text-xs text-danger hidden"></p>
           </div>
 
-          <div id="changeSection" class="p-3 bg-primary/10 rounded-md hidden opacity-0 transform scale-95 transition-all duration-200">
-            <p><strong>Change Due:</strong> <span id="changeAmount" class="text-primary">₱0.00</span></p>
+          <div id="changeSection" class="p-1.5 sm:p-2 bg-primary/10 rounded-md hidden opacity-0 transform scale-95 transition-all duration-200">
+            <p class="text-xs"><strong>Change:</strong> <span id="changeAmount" class="text-primary text-sm">₱0.00</span></p>
           </div>
 
-          <div id="bankOptions" class="mt-2 hidden opacity-0 transform scale-95 transition-all duration-200">
+          <div id="bankOptions" class="mt-1 sm:mt-2 hidden opacity-0 transform scale-95 transition-all duration-200">
             <label class="text-xs text-muted-foreground">Bank Service</label>
-            <div class="mt-2 grid grid-cols-2 gap-2">
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+            <div class="mt-2 grid grid-cols-2 gap-1">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs">
                 <input type="radio" name="bankService" value="BPI" />
-                <span>BPI</span>
+                <span class="truncate">BPI</span>
               </label>
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs">
                 <input type="radio" name="bankService" value="BDO" />
-                <span>BDO</span>
+                <span class="truncate">BDO</span>
               </label>
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs">
                 <input type="radio" name="bankService" value="Metrobank" />
-                <span>Metrobank</span>
+                <span class="truncate">Metrobank</span>
               </label>
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs">
                 <input type="radio" name="bankService" value="UnionBank" />
-                <span>UnionBank</span>
+                <span class="truncate">UnionBank</span>
               </label>
-              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors col-span-2">
+              <label class="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 sm:px-2 py-1 sm:py-1.5 cursor-pointer hover:bg-muted transition-colors text-xs col-span-2">
                 <input type="radio" name="bankService" value="Others" />
-                <span>Others</span>
+                <span class="truncate">Others</span>
               </label>
             </div>
-            <p class="mt-2 text-xs text-muted-foreground">Ensure the transfer reference number is added in the notes section.</p>
+            <p class="mt-1 text-xs text-muted-foreground">Ensure the transfer reference number is added in the notes section.</p>
             <p id="bankError" class="mt-1 text-xs text-danger hidden">Please select a bank service.</p>
           </div>
 
           <div>
             <label class="text-xs text-muted-foreground">Payment Reference/Notes</label>
-            <textarea id="paymentNotes" rows="2" class="h-10 w-full rounded-md border bg-background px-3 text-sm"
+            <textarea id="paymentNotes" rows="2" class="h-7 sm:h-8 w-full rounded-md border bg-background px-2 text-sm"
                       placeholder="Transaction reference, notes..."></textarea>
           </div>
 
-          <div class="flex gap-3 pt-4">
-            <button type="submit" class="flex-1 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90">
+          <div class="flex gap-1 sm:gap-2 pt-2 sm:pt-3">
+            <button type="submit" class="flex-1 h-7 sm:h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm">
               Confirm Payment
             </button>
-            <button type="button" id="cancelPayment" class="flex-1 h-10 rounded-md border hover:bg-muted">
+            <button type="button" id="cancelPayment" class="flex-1 h-7 sm:h-8 rounded-md border hover:bg-muted text-sm">
               Cancel
             </button>
           </div>
@@ -433,6 +456,9 @@
         document.getElementById('modalRoomNo').textContent = room;
         document.getElementById('modalBalance').textContent = formatCurrency(balance);
 
+        // Fetch and display guest billing information
+        fetchGuestBillingInfo(guest, reservationId);
+
         // Reset form
         document.getElementById('paymentForm').reset();
         document.getElementById('changeAmount').textContent = '₱0.00';
@@ -444,6 +470,51 @@
         // Show modal
         document.getElementById('paymentModal').classList.remove('hidden');
         document.getElementById('paymentModal').classList.add('flex');
+      }
+
+      function fetchGuestBillingInfo(guestName, reservationId) {
+        // Extract guest ID from reservation ID (assuming guest name contains ID or we need to fetch it)
+        // For now, we'll make a request to get guest billing info by reservation
+        fetch(`<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/api/billing/guest-info?reservation_id=${reservationId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.billing_info) {
+              displayGuestBillingInfo(data.billing_info);
+            } else {
+              // Show default info if no data available
+              displayGuestBillingInfo(null);
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching guest billing info:', error);
+            displayGuestBillingInfo(null);
+          });
+      }
+
+      function displayGuestBillingInfo(billingInfo) {
+        const billingContainer = document.getElementById('guestBillingInfo');
+        if (!billingContainer) return;
+
+        if (billingInfo && billingInfo.paid_count > 0) {
+          billingContainer.innerHTML = `
+            <p class="text-xs"><strong>Total:</strong> <span class="text-success font-semibold">${formatCurrency(billingInfo.total_paid)}</span></p>
+            <p class="text-xs"><strong>Payments:</strong> <span class="font-semibold">${billingInfo.paid_count}</span></p>
+            ${billingInfo.tier ? `<p class="text-xs"><strong>Tier:</strong> <span class="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium ${getTierBadgeClass(billingInfo.tier)}">${billingInfo.tier}</span></p>` : ''}
+          `;
+        } else {
+          billingContainer.innerHTML = `
+            <p class="text-xs text-muted-foreground">No payment history</p>
+          `;
+        }
+      }
+
+      function getTierBadgeClass(tier) {
+        return {
+          'PLATINUM': 'bg-purple-100 text-purple-800',
+          'GOLD': 'bg-yellow-100 text-yellow-800',
+          'SILVER': 'bg-gray-100 text-gray-800',
+          'NORMAL': 'bg-blue-100 text-blue-800'
+        }[tier] || 'bg-blue-100 text-blue-800';
       }
 
       function closePaymentModal() {

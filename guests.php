@@ -52,6 +52,37 @@
                 <div class="flex-1">
                   <div class="flex items-center gap-3 mb-3">
                     <h3 class="text-lg font-bold"><?php echo htmlspecialchars($guest['first_name'] . ' ' . $guest['last_name']); ?></h3>
+                    <?php
+                      // Calculate guest tier based on paid transactions
+                      $guestTier = 'NORMAL';
+                      $guestDiscount = 0;
+                      if (isset($guest['paid_transactions_count'])) {
+                        $paidCount = (int)$guest['paid_transactions_count'];
+                        if ($paidCount >= 100) {
+                          $guestTier = 'PLATINUM';
+                          $guestDiscount = 40;
+                        } elseif ($paidCount >= 50) {
+                          $guestTier = 'GOLD';
+                          $guestDiscount = 30;
+                        } elseif ($paidCount >= 20) {
+                          $guestTier = 'SILVER';
+                          $guestDiscount = 20;
+                        }
+                      }
+                    ?>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?php 
+                      echo match($guestTier) {
+                        'PLATINUM' => 'bg-purple-100 text-purple-800',
+                        'GOLD' => 'bg-yellow-100 text-yellow-800',
+                        'SILVER' => 'bg-gray-100 text-gray-800',
+                        default => 'bg-blue-100 text-blue-800'
+                      }; 
+                    ?>">
+                      <?php echo htmlspecialchars($guestTier); ?>
+                      <?php if ($guestDiscount > 0): ?>
+                        (<?php echo $guestDiscount; ?>%)
+                      <?php endif; ?>
+                    </span>
                   </div>  
                   <div class="grid gap-2 text-sm mb-4">
                     <div class="flex items-center gap-2 text-muted-foreground">
@@ -252,6 +283,13 @@
             metrics.innerHTML = `
               <div class="flex items-center justify-between"><span>Times Checked In</span><span class="font-semibold">${m.timesCheckedIn||0}</span></div>
               <div class="flex items-center justify-between"><span>Total Paid</span><span class="font-semibold">₱${Number(m.totalPaid||0).toFixed(2)}</span></div>
+              <div class="flex items-center justify-between"><span>Paid Transactions</span><span class="font-semibold">${m.paidTransactionsCount||0}</span></div>
+              <div class="flex items-center justify-between">
+                <span>Tier</span>
+                <span class="font-semibold inline-flex items-center px-2 py-1 rounded-full text-xs ${getTierBadgeClass(m.tier||'NORMAL')}">
+                  ${m.tier||'NORMAL'} ${m.discountPercentage > 0 ? `(${m.discountPercentage}%)` : ''}
+                </span>
+              </div>
             `;
             document.getElementById('saveGuestBtn').onclick = () => saveGuest(guestId);
             if (window.lucide && window.lucide.createIcons) { window.lucide.createIcons(); }
@@ -266,8 +304,13 @@
           </div>
         `;
       }
-      function escapeHtml(str){
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+      function getTierBadgeClass(tier) {
+        return {
+          'PLATINUM': 'bg-purple-100 text-purple-800',
+          'GOLD': 'bg-yellow-100 text-yellow-800',
+          'SILVER': 'bg-gray-100 text-gray-800',
+          'NORMAL': 'bg-blue-100 text-blue-800'
+        }[tier] || 'bg-blue-100 text-blue-800';
       }
       function closeGuestProfileModal(){
         document.getElementById('guestProfileModal').classList.add('hidden');
