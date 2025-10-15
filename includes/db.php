@@ -264,6 +264,7 @@ function fetchAllReservations(): array {
         r.check_in_date as checkin,
         r.check_out_date as checkout,
         LOWER(r.status) as status,
+        r.payment_status,
         TIMESTAMPDIFF(HOUR, r.check_in_date, r.check_out_date) DIV 24 as nights,
         rm.rate,
         g.email as guest_email,
@@ -287,6 +288,7 @@ function fetchAllReservations(): array {
         'checkin' => $res['checkin'],
         'checkout' => $res['checkout'],
         'status' => strtolower($res['status']),
+        'payment_status' => strtolower($res['payment_status'] ?? 'pending'),
         'nights' => max(1, (int)$res['nights']),
         'rate' => (float)($res['rate'] ?? 0),
         'guest_email' => $res['guest_email'] ?? null,
@@ -509,9 +511,9 @@ function createReservation(array $data): bool {
   try {
     $stmt = $pdo->prepare("
       INSERT INTO reservations (
-        id, guest_id, room_id, check_in_date, check_out_date, status, created_at, updated_at
+        id, guest_id, room_id, check_in_date, check_out_date, status, payment_status, created_at, updated_at
       ) VALUES (
-        :id, :guest_id, :room_id, :check_in_date, :check_out_date, :status, NOW(), NOW()
+        :id, :guest_id, :room_id, :check_in_date, :check_out_date, :status, :payment_status, NOW(), NOW()
       )
     ");
 
@@ -523,7 +525,8 @@ function createReservation(array $data): bool {
       ':room_id' => $data['room_id'] ?? null,
       ':check_in_date' => $data['check_in_date'] ?? null,
       ':check_out_date' => $data['check_out_date'] ?? null,
-      ':status' => $data['status'] ?? 'Pending'
+      ':status' => $data['status'] ?? 'Pending',
+      ':payment_status' => $data['payment_status'] ?? 'PENDING'
     ]);
   } catch (Throwable $e) {
     error_log('Error creating reservation: ' . $e->getMessage());

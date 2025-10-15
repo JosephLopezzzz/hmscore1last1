@@ -138,20 +138,24 @@ ON DUPLICATE KEY UPDATE
 -- SAMPLE BILLING TRANSACTIONS
 -- ================================================================
 
-INSERT INTO billing_transactions (reservation_id, transaction_type, amount, payment_method, status, transaction_date) VALUES
-(NULL, 'Room Charge', 555.00, 'Card', 'Paid', NOW()),
-(NULL, 'Room Charge', 840.00, 'Cash', 'Pending', NOW()),
-(NULL, 'Room Charge', 495.00, 'GCash', 'Paid', NOW()),
-(NULL, 'Room Charge', 900.00, 'Bank Transfer', 'Paid', NOW()),
-(NULL, 'Room Charge', 975.00, 'Card', 'Pending', NOW()),
-(NULL, 'Room Charge', 1220.00, 'Card', 'Paid', NOW()),
-(NULL, 'Room Charge', 680.00, 'Cash', 'Pending', NOW()),
-(NULL, 'Room Charge', 2100.00, 'Bank Transfer', 'Paid', NOW())
+INSERT INTO billing_transactions (reservation_id, transaction_type, amount, payment_amount, balance, `change`, payment_method, status, transaction_date, notes) VALUES
+(NULL, 'Room Charge', 555.00, 555.00, 0.00, 0.00, 'Card', 'Paid', NOW(), 'Room charge for stay'),
+(NULL, 'Room Charge', 840.00, NULL, 840.00, NULL, 'Cash', 'Pending', NOW(), 'Pending payment for room'),
+(NULL, 'Room Charge', 495.00, 495.00, 0.00, 0.00, 'GCash', 'Paid', NOW(), 'Mobile payment for room'),
+(NULL, 'Room Charge', 900.00, 900.00, 0.00, 0.00, 'Bank Transfer', 'Paid', NOW(), 'Bank transfer payment'),
+(NULL, 'Room Charge', 975.00, NULL, 975.00, NULL, 'Card', 'Pending', NOW(), 'Credit card payment pending'),
+(NULL, 'Room Charge', 1220.00, 1220.00, 0.00, 0.00, 'Card', 'Paid', NOW(), 'Room charge settled'),
+(NULL, 'Room Charge', 680.00, NULL, 680.00, NULL, 'Cash', 'Pending', NOW(), 'Cash payment pending'),
+(NULL, 'Room Charge', 2100.00, 2100.00, 0.00, 0.00, 'Bank Transfer', 'Paid', NOW(), 'Full payment received')
 
 ON DUPLICATE KEY UPDATE
     amount = VALUES(amount),
+    payment_amount = VALUES(payment_amount),
+    balance = VALUES(balance),
+    `change` = VALUES(`change`),
     payment_method = VALUES(payment_method),
-    status = VALUES(status);
+    status = VALUES(status),
+    notes = VALUES(notes);
 
 -- ================================================================
 -- DYNAMIC HOUSEKEEPING TASKS GENERATION
@@ -243,14 +247,16 @@ INSERT INTO reservations (
     room_id,
     check_in_date,
     check_out_date,
-    status
+    status,
+    payment_status
 ) VALUES (
     'RSV-TEST-001',
     1,
     1,
     DATE_SUB(CURDATE(), INTERVAL 2 DAY),
     CURDATE(),
-    'Checked In'
+    'Checked In',
+    'FULLY PAID'
 );
 
 -- Sample Reservation 2
@@ -260,14 +266,16 @@ INSERT INTO reservations (
     room_id,
     check_in_date,
     check_out_date,
-    status
+    status,
+    payment_status
 ) VALUES (
     'RSV-TEST-002',
     2,
     2,
     DATE_SUB(CURDATE(), INTERVAL 1 DAY),
     CURDATE(),
-    'Checked In'
+    'Checked In',
+    'FULLY PAID'
 );
 
 -- Sample Reservation 3
@@ -277,31 +285,36 @@ INSERT INTO reservations (
     room_id,
     check_in_date,
     check_out_date,
-    status
+    status,
+    payment_status
 ) VALUES (
     'RSV-TEST-003',
     3,
     3,
     DATE_SUB(CURDATE(), INTERVAL 3 DAY),
     CURDATE(),
-    'Checked In'
+    'Checked In',
+    'FULLY PAID'
 );
 
--- Corresponding billing transactions for these reservations
 INSERT INTO billing_transactions (
     reservation_id,
     transaction_type,
     amount,
+    payment_amount,
+    balance,
+    `change`,
     payment_method,
     status,
-    transaction_date
+    transaction_date,
+    notes
 ) VALUES
 -- Transactions for Reservation 1
-('RSV-TEST-001', 'Room Charge', 150.00, 'Cash', 'Paid', CURDATE()),
+('RSV-TEST-001', 'Room Charge', 150.00, 150.00, 0.00, 0.00, 'Cash', 'Paid', CURDATE(), 'Room charge for reservation RSV-TEST-001'),
 -- Transactions for Reservation 2
-('RSV-TEST-002', 'Room Charge', 200.00, 'Card', 'Paid', CURDATE()),
-('RSV-TEST-002', 'Service', 50.00, 'Card', 'Paid', CURDATE()),
+('RSV-TEST-002', 'Room Charge', 200.00, 200.00, 0.00, 0.00, 'Card', 'Paid', CURDATE(), 'Room charge for reservation RSV-TEST-002'),
+('RSV-TEST-002', 'Service', 50.00, 50.00, 0.00, 0.00, 'Card', 'Paid', CURDATE(), 'Additional service for reservation RSV-TEST-002'),
 -- Transactions for Reservation 3
-('RSV-TEST-003', 'Room Charge', 175.00, 'Cash', 'Paid', CURDATE());
+('RSV-TEST-003', 'Room Charge', 175.00, 175.00, 0.00, 0.00, 'Cash', 'Paid', CURDATE(), 'Room charge for reservation RSV-TEST-003');
 
 SELECT '✅ Sample reservations and billing data loaded successfully!' AS final_status;

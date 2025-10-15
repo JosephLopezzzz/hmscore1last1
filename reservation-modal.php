@@ -147,16 +147,18 @@ require_once __DIR__ . '/includes/security.php';
               </div>
 
               <!-- Status Section -->
-              <div>
+              <div class="hidden">
                 <h3 class="text-lg font-medium mb-3 border-b pb-2">Reservation Status</h3>
                 <select id="status" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                  <option value="Pending">Pending</option>
+                  <option value="Pending" selected>Pending</option>
                   <option value="Checked In">Checked In</option>
                   <option value="Checked Out">Checked Out</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
-            </div>
+
+              <!-- Hidden Payment Status Field -->
+              <input type="hidden" id="payment_status" name="payment_status" value="PENDING">
           </div>
 
           <!-- Submit Section - Full Width -->

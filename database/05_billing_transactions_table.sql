@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS billing_transactions (
     reservation_id VARCHAR(50) NULL, -- Guest info and room info is here
     transaction_type ENUM('Room Charge', 'Service', 'Payment', 'Refund') DEFAULT 'Room Charge',
     amount DECIMAL(10,2) NOT NULL,
+    payment_amount DECIMAL(10,2) DEFAULT NULL COMMENT 'Money the customer given to pay',
+    balance DECIMAL(10,2) DEFAULT NULL COMMENT 'Amount to be paid by the payment_amount',
+    `change` DECIMAL(10,2) DEFAULT NULL COMMENT 'payment_amount - balance (calculated)',
     payment_method ENUM('Cash', 'Card', 'GCash', 'Bank Transfer') DEFAULT 'Cash',
     status ENUM('Pending', 'Paid', 'Failed', 'Refunded') DEFAULT 'Pending',
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

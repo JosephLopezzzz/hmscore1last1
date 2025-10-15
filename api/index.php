@@ -152,7 +152,8 @@ switch (true) {
         'room_id' => $payload['room_id'],
         'check_in_date' => $payload['check_in_date'],
         'check_out_date' => $payload['check_out_date'],
-        'status' => $payload['status'] ?? 'Pending'
+        'status' => $payload['status'] ?? 'Pending',
+        'payment_status' => $payload['payment_status'] ?? 'PENDING'
       ];
 
       $success = createReservation($reservationData);

@@ -54,11 +54,11 @@
           r.check_in_date,
           r.check_out_date,
           rm.rate as amount,
-          r.status
+          r.payment_status
         FROM reservations r
         JOIN rooms rm ON r.room_id = rm.id
         JOIN guests g ON r.guest_id = g.id
-        WHERE r.status = 'Pending'
+        WHERE r.payment_status IN ('PENDING', 'DOWNPAYMENT', 'FULLY PAID', 'CANCELLED')
         ORDER BY r.created_at DESC
         LIMIT 10
       ";
@@ -73,7 +73,12 @@
           bt.id,
           bt.transaction_type as type,
           bt.amount,
+          bt.payment_amount,
+          bt.balance,
+          bt.change,
           bt.payment_method as method,
+          bt.status,
+          bt.notes,
           bt.transaction_date
         FROM billing_transactions bt
         WHERE bt.transaction_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
@@ -102,9 +107,13 @@
           bt.id,
           bt.transaction_type,
           bt.amount,
+          bt.payment_amount,
+          bt.balance,
+          bt.change,
           bt.payment_method as method,
-          bt.transaction_date,
-          bt.status
+          bt.status,
+          bt.notes,
+          bt.transaction_date
         FROM billing_transactions bt
         ORDER BY bt.transaction_date DESC
         LIMIT 100
@@ -120,9 +129,13 @@
           bt.id,
           bt.transaction_type,
           bt.amount,
+          bt.payment_amount,
+          bt.balance,
+          bt.change,
           bt.payment_method,
-          bt.transaction_date,
-          bt.status
+          bt.status,
+          bt.notes,
+          bt.transaction_date
         FROM billing_transactions bt
         WHERE bt.status = 'Paid'
         ORDER BY bt.transaction_date DESC
@@ -193,7 +206,7 @@
                     <p class="font-bold">Reservation #<?php echo $folio['id']; ?></p>
                     <p class="text-sm text-muted-foreground"><?php echo $folio['guest_name']; ?> • Room <?php echo $folio['room_number']; ?></p>
                   </div>
-                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusColors[$folio['status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['status'] ?? 'Pending'); ?></span>
+                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusColors[$folio['payment_status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['payment_status'] ?? 'Pending'); ?></span>
                 </div>
                 <div class="flex justify-between items-center text-sm mt-3">
                   <span class="text-muted-foreground">Amount: <?php echo formatCurrencyPhpPeso($folio['amount'] ?? 0, 2); ?></span>
