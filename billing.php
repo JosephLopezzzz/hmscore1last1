@@ -206,26 +206,28 @@
           </div>
           <div class="space-y-3">
             <?php foreach ($folios as $folio): ?>
-              <div class="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                <div class="flex items-start justify-between mb-2">
-                  <div>
-                    <p class="font-bold">Reservation #<?php echo $folio['id']; ?></p>
+              <div class="transaction-card pending bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex-1">
+                    <h3 class="font-bold text-card-foreground text-lg">Reservation #<?php echo $folio['id']; ?></h3>
                     <p class="text-sm text-muted-foreground"><?php echo $folio['guest_name']; ?> • Room <?php echo $folio['room_number']; ?></p>
                   </div>
                   <?php if ($folio['payment_status'] !== 'FULLY PAID'): ?>
-                    <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs <?php echo $statusColors[$folio['payment_status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['payment_status'] ?? 'Pending'); ?></span>
+                    <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium <?php echo $statusColors[$folio['payment_status']] ?? $statusColors['Pending']; ?>"><?php echo ucfirst($folio['payment_status'] ?? 'Pending'); ?></span>
                   <?php endif; ?>
                 </div>
-                <div class="flex justify-between items-center text-sm mt-3">
-                  <span class="text-muted-foreground">Amount: <?php echo formatCurrencyPhpPeso($folio['amount'] ?? 0, 2); ?></span>
-                  <span class="font-medium">Check-in: <?php echo date('M d, Y', strtotime($folio['check_in_date'])); ?></span>
+                <div class="flex justify-between items-center text-sm">
+                  <div class="flex flex-col space-y-1">
+                    <span class="text-muted-foreground">Amount: <span class="font-semibold text-card-foreground"><?php echo formatCurrencyPhpPeso($folio['amount'] ?? 0, 2); ?></span></span>
+                    <span class="text-muted-foreground">Check-in: <?php echo date('M d, Y', strtotime($folio['check_in_date'])); ?></span>
+                  </div>
                   <?php if ($folio['payment_status'] !== 'FULLY PAID'): ?>
-                    <button class="process-payment-btn inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs text-primary-foreground hover:bg-primary/90"
+                    <button class="process-payment-btn inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                             data-guest="<?php echo htmlspecialchars($folio['guest_name']); ?>"
                             data-room="<?php echo htmlspecialchars($folio['room_number']); ?>"
                             data-balance="<?php echo $folio['amount'] ?? 0; ?>"
                             data-reservation-id="<?php echo $folio['id']; ?>">
-                      <i data-lucide="credit-card" class="h-3 w-3"></i>
+                      <i data-lucide="credit-card" class="h-4 w-4"></i>
                       PAY
                     </button>
                   <?php endif; ?>
@@ -241,20 +243,27 @@
           </div>
           <div class="space-y-3">
             <?php foreach ($paidTransactions as $txn): ?>
-              <div class="p-4 rounded-lg bg-muted/50">
-                <div class="flex items-start justify-between mb-2">
+              <div class="transaction-card paid bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1">
+                <div class="flex items-start justify-between mb-3">
                   <div class="flex-1">
                     <?php if (!empty($txn['guest_name'])): ?>
-                      <p class="font-medium"><?php echo $txn['guest_name']; ?> • Room <?php echo $txn['room_number']; ?></p>
+                      <h3 class="font-bold text-card-foreground text-lg"><?php echo $txn['guest_name']; ?> • Room <?php echo $txn['room_number']; ?></h3>
                       <p class="text-sm text-muted-foreground"><?php echo ucfirst($txn['transaction_type']); ?> • <?php echo $txn['payment_method']; ?></p>
                     <?php else: ?>
-                      <p class="font-medium"><?php echo ucfirst($txn['transaction_type']); ?> • <?php echo $txn['payment_method']; ?></p>
+                      <h3 class="font-bold text-card-foreground text-lg"><?php echo ucfirst($txn['transaction_type']); ?> • <?php echo $txn['payment_method']; ?></h3>
                     <?php endif; ?>
                   </div>
                   <div class="text-right">
-                    <p class="font-bold"><?php echo formatCurrencyPhpPeso($txn['amount'], 2); ?></p>
+                    <p class="font-bold text-lg text-card-foreground"><?php echo formatCurrencyPhpPeso($txn['amount'], 2); ?></p>
                     <p class="text-xs text-muted-foreground"><?php echo date('M d, Y H:i', strtotime($txn['transaction_date'])); ?></p>
                   </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="h-4 w-4 text-success"></i>
+                    <span class="text-sm text-success font-medium">Payment Completed</span>
+                  </div>
+                  <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-success/10 text-success">PAID</span>
                 </div>
               </div>
             <?php endforeach; ?>

@@ -413,6 +413,129 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   background: #93c5fd; /* Lighter blue on hover */
 }
 
+/* Billing transaction cards styling */
+.transaction-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+  color: hsl(var(--card-foreground));
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.transaction-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.transaction-card h3 {
+  color: hsl(var(--card-foreground));
+  margin-bottom: 0.25rem;
+}
+
+.transaction-card p {
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.5rem;
+}
+
+/* Pending transaction cards with left border accent */
+.transaction-card.pending {
+  border-left: 4px solid hsl(var(--warning));
+}
+
+.transaction-card.paid {
+  border-left: 4px solid hsl(var(--success));
+}
+
+/* Enhanced button styling for transaction cards */
+.transaction-card .process-payment-btn {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--primary));
+  transition: all 0.2s ease;
+}
+
+.transaction-card .process-payment-btn:hover {
+  background: hsl(var(--primary) / 0.9);
+  transform: scale(1.05);
+}
+
+/* Status badges for transactions */
+.transaction-card .status-badge {
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Guest cards styling for arrivals/departures */
+.guest-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+  color: hsl(var(--card-foreground));
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.guest-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.guest-card h3 {
+  color: hsl(var(--card-foreground));
+  margin-bottom: 0.25rem;
+}
+
+.guest-card p {
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.5rem;
+}
+
+/* Arrival cards with left border accent */
+.guest-card.arrival {
+  border-left: 4px solid hsl(var(--success));
+}
+
+/* Departure cards with left border accent */
+.guest-card.departure {
+  border-left: 4px solid hsl(var(--warning));
+}
+
+/* Stat cards styling */
+.stat-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: hsl(var(--card-foreground));
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.stat-card h3 {
+  color: hsl(var(--card-foreground));
+  margin-bottom: 0.25rem;
+}
+
+.stat-card p {
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.5rem;
+}
+
 @media (max-width:640px){
   .hk-page .housekeeping-columns{grid-template-columns:1fr;}
 }
