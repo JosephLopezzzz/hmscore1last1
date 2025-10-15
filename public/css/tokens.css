@@ -536,6 +536,26 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   margin-bottom: 0.5rem;
 }
 
+/* Modal responsive adjustments */
+@media (max-width: 1024px) {
+  .modal-content {
+    max-width: 95vw;
+    height: 85vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 98vw;
+    height: 90vh;
+    margin: 0.5rem;
+  }
+  
+  .modal-content .grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width:640px){
   .hk-page .housekeeping-columns{grid-template-columns:1fr;}
 }
