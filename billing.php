@@ -273,17 +273,17 @@
     </main>
 
     <!-- Payment Processing Modal -->
-    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-      <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+    <div id="paymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+      <div class="bg-card text-card-foreground border border-border rounded-lg p-6 w-full max-w-lg mx-4">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-xl font-bold">Process Payment</h2>
-          <button id="closePaymentModal" class="text-gray-500 hover:text-gray-700">
+          <button id="closePaymentModal" class="text-muted-foreground hover:text-foreground">
             <i data-lucide="x" class="h-5 w-5"></i>
           </button>
         </div>
         
         <!-- Guest Information -->
-        <div class="mb-4 p-3 bg-gray-50 rounded-md">
+        <div class="mb-4 p-3 bg-muted rounded-md">
           <p><strong>Guest:</strong> <span id="modalGuestName"></span></p>
           <p><strong>Room No:</strong> <span id="modalRoomNo"></span></p>
           <p><strong>Outstanding Balance:</strong> <span id="modalBalance"></span></p>
@@ -309,8 +309,8 @@
                    placeholder="Enter amount received...">
           </div>
 
-          <div class="p-3 bg-blue-50 rounded-md">
-            <p><strong>Change Due:</strong> <span id="changeAmount" class="text-blue-600">₱0.00</span></p>
+          <div class="p-3 bg-primary/10 rounded-md">
+            <p><strong>Change Due:</strong> <span id="changeAmount" class="text-primary">₱0.00</span></p>
           </div>
 
           <div>
@@ -415,14 +415,14 @@
         
         document.getElementById('changeAmount').textContent = formatCurrency(Math.max(0, change));
         
-        // Change color based on amount
+        // Change color based on amount (theme-friendly semantic classes)
         const changeElement = document.getElementById('changeAmount');
         if (change < 0) {
-          changeElement.className = 'text-red-600';
+          changeElement.className = 'text-danger';
         } else if (change > 0) {
-          changeElement.className = 'text-green-600';
+          changeElement.className = 'text-success';
         } else {
-          changeElement.className = 'text-blue-600';
+          changeElement.className = 'text-primary';
         }
       }
 
