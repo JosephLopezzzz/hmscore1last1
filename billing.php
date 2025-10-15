@@ -293,24 +293,64 @@
         <form id="paymentForm" class="space-y-3">
           <div>
             <label class="text-xs text-muted-foreground">Payment Method</label>
-            <select id="paymentMethod" required class="h-10 w-full rounded-md border bg-background px-3 text-sm">
-              <option value="">Select payment method...</option>
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-              <option value="GCash">GCash</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-            </select>
+            <div id="paymentMethodGroup" class="mt-2 grid grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+                <input type="radio" name="paymentMethod" value="Cash" />
+                <span>Cash</span>
+              </label>
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+                <input type="radio" name="paymentMethod" value="Card" />
+                <span>Card</span>
+              </label>
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+                <input type="radio" name="paymentMethod" value="GCash" />
+                <span>GCash</span>
+              </label>
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+                <input type="radio" name="paymentMethod" value="Bank Transfer" />
+                <span>Bank Transfer</span>
+              </label>
+            </div>
           </div>
 
-          <div>
+          <div class="mt-2">
             <label class="text-xs text-muted-foreground">Amount Received (₱)</label>
             <input type="number" id="amountReceived" step="0.01" min="0" required
                    class="h-10 w-full rounded-md border bg-background px-3 text-sm"
                    placeholder="Enter amount received...">
+            <p id="amountError" class="mt-1 text-xs text-danger hidden"></p>
           </div>
 
-          <div class="p-3 bg-primary/10 rounded-md">
+          <div id="changeSection" class="p-3 bg-primary/10 rounded-md hidden opacity-0 transform scale-95 transition-all duration-200">
             <p><strong>Change Due:</strong> <span id="changeAmount" class="text-primary">₱0.00</span></p>
+          </div>
+
+          <div id="bankOptions" class="mt-2 hidden opacity-0 transform scale-95 transition-all duration-200">
+            <label class="text-xs text-muted-foreground">Bank Service</label>
+            <div class="mt-2 grid grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+                <input type="radio" name="bankService" value="BPI" />
+                <span>BPI</span>
+              </label>
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+                <input type="radio" name="bankService" value="BDO" />
+                <span>BDO</span>
+              </label>
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+                <input type="radio" name="bankService" value="Metrobank" />
+                <span>Metrobank</span>
+              </label>
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
+                <input type="radio" name="bankService" value="UnionBank" />
+                <span>UnionBank</span>
+              </label>
+              <label class="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted transition-colors col-span-2">
+                <input type="radio" name="bankService" value="Others" />
+                <span>Others</span>
+              </label>
+            </div>
+            <p class="mt-2 text-xs text-muted-foreground">Ensure the transfer reference number is added in the notes section.</p>
+            <p id="bankError" class="mt-1 text-xs text-danger hidden">Please select a bank service.</p>
           </div>
 
           <div>
@@ -396,6 +436,10 @@
         // Reset form
         document.getElementById('paymentForm').reset();
         document.getElementById('changeAmount').textContent = '₱0.00';
+        document.getElementById('amountError').classList.add('hidden');
+        document.getElementById('bankError').classList.add('hidden');
+        toggleChangeSection(false);
+        toggleBankOptions(false);
 
         // Show modal
         document.getElementById('paymentModal').classList.remove('hidden');
@@ -426,6 +470,96 @@
         }
       }
 
+      function toggleChangeSection(show) {
+        const el = document.getElementById('changeSection');
+        if (show) {
+          el.classList.remove('hidden', 'opacity-0', 'scale-95');
+          el.classList.add('opacity-100', 'scale-100');
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('opacity-100', 'scale-100');
+          el.classList.add('opacity-0', 'scale-95');
+        }
+      }
+
+      function toggleBankOptions(show) {
+        const el = document.getElementById('bankOptions');
+        if (show) {
+          el.classList.remove('hidden', 'opacity-0', 'scale-95');
+          el.classList.add('opacity-100', 'scale-100');
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('opacity-100', 'scale-100');
+          el.classList.add('opacity-0', 'scale-95');
+          // clear selected bank
+          document.querySelectorAll('input[name="bankService"]').forEach(r => r.checked = false);
+        }
+      }
+
+      function getSelectedPaymentMethod() {
+        const checked = document.querySelector('input[name="paymentMethod"]:checked');
+        return checked ? checked.value : '';
+      }
+
+      function validateAmountAndOptions() {
+        const method = getSelectedPaymentMethod();
+        const balance = Number(currentPaymentData.balance || 0);
+        const amountInput = document.getElementById('amountReceived');
+        const amount = parseFloat(amountInput.value || '0');
+        const amountError = document.getElementById('amountError');
+        const bankError = document.getElementById('bankError');
+
+        amountError.classList.add('hidden');
+        bankError.classList.add('hidden');
+
+        // Default allowances
+        let valid = true;
+
+        if (method === 'Cash') {
+          // Any amount >= balance; show change section
+          toggleChangeSection(true);
+          toggleBankOptions(false);
+          amountInput.min = '0';
+          if (amount < balance) {
+            // allow but show negative change via calculateChange; still valid submission allowed if they intend partial? Requirement says >= balance
+            if (amount < balance) {
+              amountError.textContent = 'For cash payments, amount must be at least the outstanding balance.';
+              amountError.classList.remove('hidden');
+              valid = false;
+            }
+          }
+        } else if (method === 'Card' || method === 'GCash') {
+          toggleChangeSection(false);
+          toggleBankOptions(false);
+          // Only exact amount allowed
+          if (!isNaN(amount) && amount !== balance) {
+            amountError.textContent = 'For card or GCash payments, please enter the exact amount.';
+            amountError.classList.remove('hidden');
+            valid = false;
+          }
+        } else if (method === 'Bank Transfer') {
+          toggleChangeSection(false);
+          toggleBankOptions(true);
+          // Require bank selection
+          const selectedBank = document.querySelector('input[name="bankService"]:checked');
+          if (!selectedBank) {
+            bankError.classList.remove('hidden');
+            valid = false;
+          }
+          if (!isNaN(amount) && amount !== balance) {
+            amountError.textContent = 'For bank transfers, please enter the exact amount.';
+            amountError.classList.remove('hidden');
+            valid = false;
+          }
+        } else {
+          toggleChangeSection(false);
+          toggleBankOptions(false);
+          valid = false; // no method selected
+        }
+
+        return valid;
+      }
+
       // Event listeners
       document.addEventListener('DOMContentLoaded', function() {
         // Process Payment buttons
@@ -451,18 +585,42 @@
           }
         });
 
-        // Calculate change when amount received changes
-        document.getElementById('amountReceived').addEventListener('input', calculateChange);
+        // Calculate change / validate when amount received changes
+        document.getElementById('amountReceived').addEventListener('input', function() {
+          const method = getSelectedPaymentMethod();
+          if (method === 'Cash') calculateChange();
+          validateAmountAndOptions();
+        });
+
+        // Handle method selection changes
+        document.getElementById('paymentMethodGroup').addEventListener('change', function() {
+          validateAmountAndOptions();
+        });
+
+        // Handle bank option changes
+        document.getElementById('bankOptions').addEventListener('change', function() {
+          validateAmountAndOptions();
+        });
 
         // Handle payment form submission
         document.getElementById('paymentForm').addEventListener('submit', function(e) {
           e.preventDefault();
+          // Validate method, amount, and bank options
+          const valid = validateAmountAndOptions();
+          if (!valid) return;
+
+          const method = getSelectedPaymentMethod();
+          const bankSelected = document.querySelector('input[name="bankService"]:checked');
+          const bankService = bankSelected ? bankSelected.value : '';
 
           const formData = new FormData();
           formData.append('folio_id', currentPaymentData.reservationId);
-          formData.append('method', document.getElementById('paymentMethod').value);
+          formData.append('method', method);
           formData.append('amount', document.getElementById('amountReceived').value);
           formData.append('notes', document.getElementById('paymentNotes').value);
+          if (method === 'Bank Transfer' && bankService) {
+            formData.append('bank_service', bankService);
+          }
 
           fetch('process_payment.php', {
             method: 'POST',
