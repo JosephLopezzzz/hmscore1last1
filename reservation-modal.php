@@ -144,6 +144,16 @@ require_once __DIR__ . '/includes/security.php';
                     <input type="datetime-local" id="check_out_date" name="check_out_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" required min="">
                   </div>
                 </div>
+                
+                <!-- Buttons moved to right column -->
+                <div class="mt-6 flex justify-end gap-3">
+                  <button type="button" id="cancelBtn" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" id="submitBtn" class="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Create Reservation
+                  </button>
+                </div>
               </div>
 
               <!-- Status Section (hidden: always pending on create) -->
@@ -161,17 +171,6 @@ require_once __DIR__ . '/includes/security.php';
               <input type="hidden" id="payment_status" name="payment_status" value="PENDING">
           </div>
 
-          <!-- Submit Section - Full Width -->
-          <div class="mt-6 pt-4 border-t bg-gray-50 -mx-4 px-4 -mb-4 pb-4">
-            <div class="flex justify-end gap-3">
-              <button type="button" id="cancelBtn" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">
-                Cancel
-              </button>
-              <button type="submit" id="submitBtn" class="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                Create Reservation
-              </button>
-            </div>
-          </div>
         </form>
       </div>
     </div>
