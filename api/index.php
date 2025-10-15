@@ -61,6 +61,52 @@ switch (true) {
       }
     }
 
+    try {
+      $pdo->beginTransaction();
+
+      // Use the database function for consistency
+      $guestData = [
+        'first_name' => trim($payload['first_name']),
+        'last_name' => trim($payload['last_name']),
+        'email' => trim($payload['email'] ?? ''),
+        'phone' => trim($payload['phone'] ?? ''),
+        'address' => trim($payload['address'] ?? ''),
+        'city' => trim($payload['city'] ?? ''),
+        'country' => trim($payload['country'] ?? ''),
+        'id_type' => $payload['id_type'] ?? 'National ID',
+        'id_number' => trim($payload['id_number'] ?? ''),
+        'date_of_birth' => $payload['date_of_birth'] ?? null,
+        'nationality' => trim($payload['nationality'] ?? ''),
+        'notes' => trim($payload['notes'] ?? '')
+      ];
+
+      $success = createGuest($guestData);
+
+      if (!$success) {
+        $pdo->rollBack();
+        sendJson(['error' => 'guest_creation_failed'], 500);
+      }
+
+      $guestId = $pdo->lastInsertId();
+      $pdo->commit();
+
+      sendJson([
+        'ok' => true,
+        'id' => (int)$guestId,
+        'message' => 'Guest created successfully',
+        'guest' => [
+          'id' => (int)$guestId,
+          'first_name' => trim($payload['first_name']),
+          'last_name' => trim($payload['last_name']),
+          'email' => trim($payload['email'] ?? ''),
+          'phone' => trim($payload['phone'] ?? '')
+        ]
+      ]);
+    } catch (Throwable $e) {
+      $pdo->rollBack();
+      sendJson(['error' => 'guest_creation_failed', 'message' => $e->getMessage()], 500);
+    }
+
   // Get single guest with metrics
   case preg_match('#^/api/guests/(\\d+)$#', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'GET':
     $guestId = (int)$m[1];
@@ -107,50 +153,6 @@ switch (true) {
       sendJson(['error' => 'guest_update_failed', 'message' => $e->getMessage()], 500);
     }
 
-    try {
-      $pdo->beginTransaction();
-
-      // Use the database function for consistency
-      $guestData = [
-        'first_name' => trim($payload['first_name']),
-        'last_name' => trim($payload['last_name']),
-        'email' => trim($payload['email'] ?? ''),
-        'phone' => trim($payload['phone'] ?? ''),
-        'address' => trim($payload['address'] ?? ''),
-        'city' => trim($payload['city'] ?? ''),
-        'country' => trim($payload['country'] ?? ''),
-        'id_type' => $payload['id_type'] ?? 'National ID',
-        'id_number' => trim($payload['id_number'] ?? ''),
-        'date_of_birth' => $payload['date_of_birth'] ?? null,
-        'nationality' => trim($payload['nationality'] ?? ''),
-        'notes' => trim($payload['notes'] ?? '')
-      ];
-
-      $success = createGuest($guestData);
-
-      if (!$success) {
-        sendJson(['error' => 'guest_creation_failed'], 500);
-      }
-
-      $guestId = $pdo->lastInsertId();
-      $pdo->commit();
-
-      sendJson([
-        'ok' => true,
-        'id' => (int)$guestId,
-        'message' => 'Guest created successfully',
-        'guest' => [
-          'id' => (int)$guestId,
-          'first_name' => trim($payload['first_name']),
-          'last_name' => trim($payload['last_name']),
-          'email' => trim($payload['email'] ?? ''),
-          'phone' => trim($payload['phone'] ?? '')
-        ]
-      ]);
-    } catch (Throwable $e) {
-      $pdo->rollBack();
-      sendJson(['error' => 'guest_creation_failed', 'message' => $e->getMessage()], 500);
-    }
 
   case $path === '/api/reservations' && $_SERVER['REQUEST_METHOD'] === 'GET':
     $rows = fetchAllReservations();
