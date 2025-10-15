@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     check_in_date DATETIME NOT NULL,
     check_out_date DATETIME NOT NULL,
     status ENUM('Pending', 'Checked In', 'Checked Out', 'Cancelled') DEFAULT 'Pending',
+    payment_status ENUM('PENDING', 'DOWNPAYMENT', 'FULLY PAID', 'CANCELLED') DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 

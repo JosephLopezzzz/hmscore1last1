@@ -59,19 +59,56 @@ try {
         exit;
     }
 
-    // Insert billing transaction
+    // Count paid transactions for this guest to determine discount
+    $countStmt = $pdo->prepare("
+        SELECT COUNT(*) as paid_count
+        FROM billing_transactions bt
+        JOIN reservations r ON bt.reservation_id = r.id
+        WHERE r.guest_id = ? AND bt.status = 'Paid'
+    ");
+    $countStmt->execute([$reservation['guest_id']]);
+    $paidCount = (int)$countStmt->fetch()['paid_count'];
+
+    // Determine discount percentage based on paid transaction count
+    if ($paidCount >= 50) {
+        $discountPercentage = 0.50; // 50% discount for 50+ transactions
+    } elseif ($paidCount >= 20) {
+        $discountPercentage = 0.25; // 25% discount for 20-49 transactions
+    } elseif ($paidCount >= 10) {
+        $discountPercentage = 0.15; // 15% discount for 10-19 transactions
+    } elseif ($paidCount >= 5) {
+        $discountPercentage = 0.10; // 10% discount for 5-9 transactions
+    } else {
+        $discountPercentage = 0.0; // No discount for less than 5 transactions
+    }
+
+    // Calculate discount amount and discounted balance
+    $roomRate = (float)$reservation['room_rate'];
+    $discountAmount = $roomRate * $discountPercentage;
+    $discountedBalance = $roomRate - $discountAmount;
+
+    // Calculate change (payment_amount - discounted_balance)
+    $change = $amountFloat - $discountedBalance;
+
+    // Insert billing transaction with discounted balance
     $stmt = $pdo->prepare("
         INSERT INTO billing_transactions (
-            reservation_id, transaction_type, amount, payment_method,
-            status, notes, transaction_date
-        ) VALUES (?, 'Payment', ?, ?, 'Paid', ?, NOW())
+            reservation_id, transaction_type, amount, payment_amount, balance, `change`,
+            payment_method, status, notes, transaction_date
+        ) VALUES (?, 'Payment', ?, ?, ?, ?, ?, 'Paid', ?, NOW())
     ");
+
+    $discountNote = $discountPercentage > 0 ? " | Discount: {$discountPercentage}% (₱{$discountAmount})" : '';
+    $notesWithDiscount = $notes . $discountNote;
 
     $result = $stmt->execute([
         $reservation_id,
-        $amountFloat,
+        $roomRate, // Original amount
+        $amountFloat, // payment_amount = amount received
+        $discountedBalance, // balance after discount
+        max(0, $change), // change (ensure non-negative)
         $payment_method,
-        $notes
+        $notesWithDiscount
     ]);
 
     if (!$result) {
@@ -82,8 +119,8 @@ try {
         exit;
     }
 
-    // Update reservation status to Checked In
-    $updateStmt = $pdo->prepare("UPDATE reservations SET status = 'Checked In', updated_at = NOW() WHERE id = ?");
+    // Update reservation payment status to fully paid
+    $updateStmt = $pdo->prepare("UPDATE reservations SET status = 'Checked In', payment_status = 'FULLY PAID', updated_at = NOW() WHERE id = ?");
     $updateStmt->execute([$reservation_id]);
 
     echo json_encode([
@@ -92,7 +129,13 @@ try {
         'data' => [
             'transaction_id' => $pdo->lastInsertId(),
             'reservation_id' => $reservation_id,
-            'amount_paid' => $amountFloat
+            'amount_paid' => $amountFloat,
+            'original_amount' => $roomRate,
+            'discount_amount' => $discountAmount,
+            'discounted_balance' => $discountedBalance,
+            'change' => max(0, $change),
+            'paid_transactions_count' => $paidCount,
+            'discount_percentage' => $discountPercentage * 100
         ]
     ]);
 

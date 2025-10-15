@@ -156,7 +156,9 @@ require_once __DIR__ . '/includes/security.php';
                   <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
-            </div>
+
+              <!-- Hidden Payment Status Field -->
+              <input type="hidden" id="payment_status" name="payment_status" value="PENDING">
           </div>
 
           <!-- Submit Section - Full Width -->
