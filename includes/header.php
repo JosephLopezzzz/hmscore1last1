@@ -51,12 +51,6 @@
                 <i data-lucide="moon" class="h-4 w-4" id="theme-icon-moon" style="display:none"></i>
                 <span class="theme-text">Light Mode</span>
               </button>
-              <a href="<?php echo $basePath; ?>/setup-2fa.php" class="block">
-                <button class="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent/10 rounded">
-                  <i data-lucide="shield" class="h-4 w-4"></i>
-                  <span>2FA Settings</span>
-                </button>
-              </a>
               <a href="<?php echo $basePath; ?>/logout.php" class="block">
                 <button class="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent/10 rounded">
                   <i data-lucide="log-out" class="h-4 w-4"></i>
