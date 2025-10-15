@@ -9,7 +9,7 @@
 CREATE DATABASE IF NOT EXISTS inn_nexus;
 USE inn_nexus;
 
--- ================================================================
+-- =================================================================
 -- COMPLETE USERS TABLE (from old file - includes all security columns)
 -- ================================================================
 
