@@ -1,298 +1,147 @@
 <?php
-session_start();
 require_once __DIR__ . '/includes/db.php';
-require_once __DIR__ . '/includes/security.php';
+require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/vendor/autoload.php';
+initSession();
 
-// Check if user is in 2FA verification state
-if (!isset($_SESSION['2fa_required']) || !$_SESSION['2fa_required']) {
-    header('Location: login.php');
-    exit;
+// Redirect if session expired or direct access
+if (empty($_SESSION['temp_user_id']) || empty($_SESSION['2fa_required'])) {
+  header('Location: login.php');
+  exit;
 }
 
-// Get user email for display
-$userEmail = $_SESSION['temp_email'] ?? 'your email';
+$userId = $_SESSION['temp_user_id'];
+$email  = $_SESSION['temp_email'] ?? '';
+$error = '';
+$success = '';
 
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $csrfToken = $_POST['csrf_token'] ?? '';
-    
-    if (!verifyCSRFToken($csrfToken)) {
-        $error = 'Invalid security token. Please try again.';
+if (($_POST['_action'] ?? '') === 'verify_otp') {
+  $otp = trim($_POST['otp'] ?? '');
+  if (empty($otp)) {
+    $error = 'Please enter your verification code.';
+  } elseif (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+    $error = 'Invalid CSRF token. Please refresh the page.';
+  } else {
+    $sessionOtp = $_SESSION['otp_code'] ?? null;
+    $expiry = $_SESSION['otp_expires'] ?? 0;
+
+    if ($sessionOtp && time() <= $expiry && $otp === (string)$sessionOtp) {
+      // ✅ OTP is valid — finalize login
+      $_SESSION['user_id'] = $userId;
+      $_SESSION['user_role'] = $_SESSION['temp_role'] ?? 'user';
+
+      // Clear temp 2FA session data
+      unset($_SESSION['2fa_required'], $_SESSION['temp_user_id'], $_SESSION['temp_email'], $_SESSION['temp_role'], $_SESSION['otp_code'], $_SESSION['otp_expires']);
+
+      header('Location: index.php');
+      exit;
     } else {
-        $code = '';
-        for ($i = 1; $i <= 6; $i++) {
-            $code .= $_POST["code_{$i}"] ?? '';
-        }
-        
-        if (strlen($code) !== 6 || !ctype_digit($code)) {
-            $error = 'Please enter a valid 6-digit code';
-        } else {
-            // Verify the 2FA code
-            $userId = $_SESSION['temp_user_id'] ?? null;
-            if ($userId && verifyTOTPCode($userId, $code)) {
-                // 2FA successful - complete login
-                $_SESSION['user_id'] = $userId;
-                $_SESSION['user_email'] = $_SESSION['temp_email'];
-                $_SESSION['user_role'] = $_SESSION['temp_role'];
-                $_SESSION['2fa_verified'] = true;
-                
-                // Clear temporary 2FA data
-                unset($_SESSION['2fa_required']);
-                unset($_SESSION['temp_user_id']);
-                unset($_SESSION['temp_email']);
-                unset($_SESSION['temp_role']);
-                
-                // 2FA verification successful
-                // Redirect to dashboard
-                header('Location: index.php');
-                exit;
-            } else {
-                $error = 'Invalid verification code. Please try again.';
-            }
-        }
+      $error = 'Invalid or expired code. Please try again.';
     }
+  }
 }
 
-// Handle resend code
-if (isset($_POST['resend_code'])) {
-    $csrfToken = $_POST['csrf_token'] ?? '';
-    if (verifyCSRFToken($csrfToken)) {
-        // Generate new code and send (in a real app, you'd send via email/SMS)
-        $userId = $_SESSION['temp_user_id'] ?? null;
-        if ($userId) {
-            // For demo purposes, we'll just log this
-            logSecurityEvent($userId, '2FA_CODE_RESENT', 'User requested new 2FA code');
-            $resendSuccess = 'New verification code has been sent to your email.';
-        }
-    }
-}
+if (($_POST['_action'] ?? '') === 'resend_otp') {
+  if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+    $error = 'Invalid CSRF token.';
+  } else {
+    $otp = random_int(100000, 999999);
+    $_SESSION['otp_code'] = $otp;
+    $_SESSION['otp_expires'] = time() + 300; // 5 minutes
 
-$csrfToken = generateCSRFToken();
+    // Resend OTP email using PHPMailer
+    $config = require __DIR__ . '/includes/smtp_config.php';
+
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    try {
+      $mail->isSMTP();
+      $mail->Host       = $config['host'];
+      $mail->SMTPAuth   = true;
+      $mail->Username   = $config['username'];
+      $mail->Password   = $config['password'];
+      $mail->SMTPSecure = $config['encryption'];
+      $mail->Port       = $config['port'];
+
+      $mail->setFrom($config['from_email'], $config['from_name']);
+      $mail->addAddress($email);
+
+      $mail->isHTML(true);
+      $mail->Subject = 'Your New Inn Nexus 2FA Verification Code';
+      $mail->Body    = "
+        <h2>New Verification Code</h2>
+        <p>Hello,</p>
+        <p>Your new login verification code is:</p>
+        <h1 style='font-size:24px; letter-spacing:4px; color: #3b82f6;'>$otp</h1>
+        <p>This code will expire in 5 minutes.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+        <hr>
+        <p><small>Inn Nexus Hotel Management System</small></p>
+      ";
+      $mail->AltBody = "Your new verification code is: $otp. This code expires in 5 minutes.";
+
+      $mail->send();
+      $success = 'A new verification code has been sent to your email.';
+    } catch (Exception $e) {
+      $error = 'Failed to resend verification code. Please try again.';
+    }
+  }
+}
 ?>
-<!DOCTYPE html>
-<html lang="en" class="h-full">
-<head>
-    <!-- Theme initialization (must be first to prevent flash) -->
-    <script>
-      (function() {
-        const theme = localStorage.getItem('theme') || 'light';
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-      })();
-    </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Primary Meta Tags -->
-    <title>Two-Factor Authentication - Inn Nexus Hotel Management System</title>
-    <meta name="title" content="Two-Factor Authentication - Inn Nexus Hotel Management System" />
-    <meta name="description" content="Secure two-factor authentication for Inn Nexus hotel management system. Enter your 6-digit verification code to access your account." />
-    <meta name="keywords" content="2FA, two factor authentication, hotel security, secure login, verification code" />
-    <meta name="author" content="Inn Nexus Team" />
-    <meta name="robots" content="noindex, nofollow" />
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
-    <link rel="icon" type="image/png" href="./public/favicon.ico" />
-    <link rel="apple-touch-icon" href="./public/favicon.svg" />
-    
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#3b82f6" />
-    
-    <!-- Stylesheets -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify OTP - Inn Nexus Hotel Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
-    
-    <!-- Security -->
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
-    <style>
-        .code-input {
-            transition: all 0.2s ease-in-out;
-        }
-        .code-input:focus {
-            transform: scale(1.05);
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .slide-up {
-            animation: slideUp 0.3s ease-in-out;
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-</head>
-<body class="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="fade-in sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="flex justify-center">
-            <svg class="w-12 h-12 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-            </svg>
+  </head>
+
+  <body class="min-h-screen bg-background flex items-center justify-center">
+    <div class="w-full max-w-sm rounded-lg border bg-card p-6 shadow-sm">
+      <h1 class="text-2xl font-bold mb-2 text-center">Two-Factor Verification</h1>
+      <p class="text-sm text-center text-muted-foreground mb-4">
+        Enter the 6-digit code sent to your email<br>
+        <strong><?= htmlspecialchars($email) ?></strong>
+      </p>
+
+      <?php if (!empty($error)): ?>
+        <p class="text-red-500 text-sm mb-3 text-center"><?= htmlspecialchars($error) ?></p>
+      <?php endif; ?>
+
+      <?php if (!empty($success)): ?>
+        <p class="text-green-600 text-sm mb-3 text-center"><?= htmlspecialchars($success) ?></p>
+      <?php endif; ?>
+
+      <form method="post" class="space-y-3">
+        <input type="hidden" name="_action" value="verify_otp" />
+        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>" />
+        <div>
+          <label class="text-xs text-muted-foreground">Verification Code</label>
+          <input
+            name="otp"
+            type="text"
+            required
+            maxlength="6"
+            pattern="[0-9]{6}"
+            class="h-10 w-full rounded-md border bg-background px-3 text-sm text-center tracking-widest font-semibold"
+            placeholder="Enter 6-digit code"
+          />
         </div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-white">
-            Two-Factor Authentication
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-400">
-            We've sent a verification code to <?php echo htmlspecialchars($userEmail); ?>
-        </p>
+        <button type="submit" class="w-full h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition">
+          Verify
+        </button>
+      </form>
+
+      <form method="post" class="mt-4 text-center">
+        <input type="hidden" name="_action" value="resend_otp" />
+        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>" />
+        <button type="submit" class="text-sm text-blue-600 hover:underline">Resend Code</button>
+      </form>
+
+      <div class="mt-4 text-center">
+        <a href="logout.php" class="text-xs text-muted-foreground hover:underline">Cancel login</a>
+      </div>
     </div>
-
-    <div class="slide-up mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <?php if (isset($error)): ?>
-                <div class="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded-md">
-                    <p class="text-sm text-red-400 text-center"><?php echo htmlspecialchars($error); ?></p>
-                </div>
-            <?php endif; ?>
-
-            <?php if (isset($resendSuccess)): ?>
-                <div class="mb-4 p-3 bg-green-900/20 border border-green-500/50 rounded-md">
-                    <p class="text-sm text-green-400 text-center"><?php echo htmlspecialchars($resendSuccess); ?></p>
-                </div>
-            <?php endif; ?>
-
-            <form class="space-y-6" method="POST" id="verifyForm">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
-                
-                <div>
-                    <div class="flex justify-center space-x-2">
-                        <?php for ($i = 1; $i <= 6; $i++): ?>
-                            <input
-                                type="text"
-                                name="code_<?php echo $i; ?>"
-                                id="code_<?php echo $i; ?>"
-                                maxlength="1"
-                                class="code-input w-12 h-12 text-center text-2xl font-semibold bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                autocomplete="off"
-                                <?php echo $i === 1 ? 'autofocus' : ''; ?>
-                                oninput="handleInput(this, <?php echo $i; ?>)"
-                                onkeydown="handleKeyDown(event, <?php echo $i; ?>)"
-                            />
-                        <?php endfor; ?>
-                    </div>
-                </div>
-
-                <div>
-                    <button
-                        type="submit"
-                        id="verifyBtn"
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled
-                    >
-                        <span id="btnText">Verify Code</span>
-                        <span id="btnSpinner" class="hidden">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Verifying...
-                        </span>
-                    </button>
-                </div>
-            </form>
-
-            <div class="mt-6">
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-600"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-gray-800 text-gray-400">
-                            Having trouble?
-                        </span>
-                    </div>
-                </div>
-
-                <div class="mt-6 text-center">
-                    <form method="POST" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
-                        <button
-                            type="submit"
-                            name="resend_code"
-                            id="resendBtn"
-                            class="text-sm font-medium text-blue-400 hover:text-blue-300"
-                        >
-                            Resend Code
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let resendCooldown = 30;
-        let cooldownTimer;
-
-        function handleInput(input, index) {
-            // Only allow numbers
-            if (!/^\d*$/.test(input.value)) {
-                input.value = '';
-                return;
-            }
-
-            // Auto-focus next input
-            if (input.value && index < 6) {
-                document.getElementById(`code_${index + 1}`).focus();
-            }
-
-            checkFormComplete();
-        }
-
-        function handleKeyDown(event, index) {
-            // Handle backspace
-            if (event.key === 'Backspace' && !event.target.value && index > 1) {
-                document.getElementById(`code_${index - 1}`).focus();
-            }
-        }
-
-        function checkFormComplete() {
-            const inputs = document.querySelectorAll('input[name^="code_"]');
-            const allFilled = Array.from(inputs).every(input => input.value);
-            const verifyBtn = document.getElementById('verifyBtn');
-            verifyBtn.disabled = !allFilled;
-        }
-
-        function startResendCooldown() {
-            const resendBtn = document.getElementById('resendBtn');
-            resendBtn.disabled = true;
-            resendBtn.textContent = `Resend code in ${resendCooldown}s`;
-            
-            cooldownTimer = setInterval(() => {
-                resendCooldown--;
-                if (resendCooldown <= 0) {
-                    clearInterval(cooldownTimer);
-                    resendBtn.disabled = false;
-                    resendBtn.textContent = 'Resend Code';
-                    resendCooldown = 30;
-                } else {
-                    resendBtn.textContent = `Resend code in ${resendCooldown}s`;
-                }
-            }, 1000);
-        }
-
-        // Handle form submission
-        document.getElementById('verifyForm').addEventListener('submit', function(e) {
-            const btnText = document.getElementById('btnText');
-            const btnSpinner = document.getElementById('btnSpinner');
-            const verifyBtn = document.getElementById('verifyBtn');
-            
-            btnText.classList.add('hidden');
-            btnSpinner.classList.remove('hidden');
-            verifyBtn.disabled = true;
-        });
-
-        // Start resend cooldown if page was reloaded after resend
-        <?php if (isset($resendSuccess)): ?>
-            startResendCooldown();
-        <?php endif; ?>
-    </script>
-</body>
+  </body>
 </html>
