@@ -3,6 +3,6 @@
     &copy; <?= date('Y') ?> Inn Nexus Hotel Management System. All rights reserved.
 </footer>
 
-<!-- Optional JS scripts -->
+<!-- Optional JS scripts --->
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>window.lucide && window.lucide.createIcons();</script>
