@@ -1120,13 +1120,11 @@ if ($pdo = getPdo()) {
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script>
         lucide.createIcons();
-
         function setTab(tab) {
             const url = new URL(window.location);
             url.searchParams.set('tab', tab);
             window.location.href = url.toString();
         }
-
         function showAddCategoryModal() {
             document.getElementById('category-modal-title').textContent = 'Add New Category';
             document.getElementById('category-form').action = 'inventory-actions.php?action=add_category';
@@ -1721,6 +1719,45 @@ if ($pdo = getPdo()) {
                 lucide.createIcons();
             });
         }
+
+
+        // Search functionality
+        document.getElementById('stock-search')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#stock-table tr');
+
+            rows.forEach(row => {
+                if (row.cells && row.cells[0]) {
+                    const text = row.cells[0].textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                }
+            });
+        });
+
+        document.getElementById('supplier-search')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#suppliers-table tr');
+
+            rows.forEach(row => {
+                if (row.cells && row.cells[0]) {
+                    const text = row.cells[0].textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                }
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('adjustment-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideAdjustmentModal();
+            }
+        });
+
+        document.getElementById('add-supplier-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideAddSupplierModal();
+            }
+        });
     </script>
 </body>
 </html>

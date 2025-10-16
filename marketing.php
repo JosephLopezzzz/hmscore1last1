@@ -120,6 +120,7 @@ if ($pdo) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Marketing & Promotion - Inn Nexus Hotel Management System</title>
+    <link rel="icon" href="./public/favicon.svg" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
