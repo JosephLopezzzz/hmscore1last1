@@ -245,7 +245,23 @@ function fetchAllGuests(): array {
   $pdo = getPdo();
   if (!$pdo) return [];
   try {
-    $sql = 'SELECT id, first_name, last_name, email, phone, address, city, country, id_type, id_number, date_of_birth, nationality, notes FROM guests ORDER BY first_name, last_name';
+    $sql = "
+      SELECT
+        g.id, g.first_name, g.last_name, g.email, g.phone, g.address, g.city, g.country,
+        g.id_type, g.id_number, g.date_of_birth, g.nationality, g.notes,
+        COALESCE(paid_counts.paid_count, 0) as paid_transactions_count
+      FROM guests g
+      LEFT JOIN (
+        SELECT
+          r.guest_id,
+          COUNT(bt.id) as paid_count
+        FROM billing_transactions bt
+        JOIN reservations r ON bt.reservation_id = r.id
+        WHERE bt.status = 'Paid'
+        GROUP BY r.guest_id
+      ) paid_counts ON g.id = paid_counts.guest_id
+      ORDER BY g.first_name, g.last_name
+    ";
     return $pdo->query($sql)->fetchAll();
   } catch (Throwable $e) {
     return [];
