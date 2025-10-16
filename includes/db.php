@@ -818,11 +818,47 @@ function fetchEventById(int $id): ?array {
   return $row;
 }
 
-function linkEventReservations(int $eventId, array $reservationIds): void {
-  $pdo = getPdo(); if (!$pdo) return;
-  $stmt = $pdo->prepare('INSERT IGNORE INTO event_reservations (event_id, reservation_id) VALUES (:e,:r)');
-  foreach ($reservationIds as $rid) {
-    $stmt->execute([':e'=>$eventId, ':r'=>$rid]);
+function fetchAllEvents(): array {
+  $pdo = getPdo();
+  if (!$pdo) return [];
+  try {
+    $query = "
+      SELECT
+        e.id, e.reservation_id, e.title, e.description, e.organizer_name, e.organizer_contact,
+        e.start_datetime, e.end_datetime, e.attendees_expected, e.setup_type, e.status,
+        e.created_by, e.created_at, e.updated_at, e.room_blocks, e.price_estimate
+      FROM events e
+      ORDER BY e.start_datetime DESC, e.created_at DESC
+    ";
+
+    $stmt = $pdo->query($query);
+    $events = $stmt->fetchAll();
+
+    // Format the data to match the expected structure
+    return array_map(function($event) {
+      return [
+        'id' => $event['id'],
+        'reservation_id' => $event['reservation_id'],
+        'title' => $event['title'],
+        'description' => $event['description'],
+        'organizer_name' => $event['organizer_name'],
+        'organizer_contact' => $event['organizer_contact'],
+        'start_datetime' => $event['start_datetime'],
+        'end_datetime' => $event['end_datetime'],
+        'attendees_expected' => (int)$event['attendees_expected'],
+        'setup_type' => $event['setup_type'],
+        'status' => strtolower($event['status']),
+        'created_by' => $event['created_by'],
+        'created_at' => $event['created_at'],
+        'updated_at' => $event['updated_at'],
+        'room_blocks' => $event['room_blocks'] ? json_decode($event['room_blocks'], true) : [],
+        'price_estimate' => (float)($event['price_estimate'] ?? 0)
+      ];
+    }, $events);
+  } catch (Throwable $e) {
+    // Log the error for debugging
+    error_log('Error fetching events: ' . $e->getMessage());
+    return [];
   }
 }
 
