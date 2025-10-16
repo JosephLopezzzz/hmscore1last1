@@ -560,3 +560,165 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   .hk-page .housekeeping-columns{grid-template-columns:1fr;}
 }
 
+/* Global Scrollbar Styling - Consistent Blue Theme */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b82f6; /* Blue-500 */
+  border-radius: 6px;
+  border: 2px solid hsl(var(--muted));
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb; /* Blue-600 */
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #1d4ed8; /* Blue-700 */
+}
+
+::-webkit-scrollbar-corner {
+  background: hsl(var(--muted));
+}
+
+/* Scrollbar buttons (arrows) */
+::-webkit-scrollbar-button {
+  background: #60a5fa; /* Light blue */
+  border-radius: 6px;
+  height: 12px;
+  width: 12px;
+}
+
+::-webkit-scrollbar-button:hover {
+  background: #93c5fd; /* Lighter blue */
+}
+
+::-webkit-scrollbar-button:vertical:start:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 15l7-7 7 7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+::-webkit-scrollbar-button:vertical:end:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+::-webkit-scrollbar-button:horizontal:start:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 19l-7-7 7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+::-webkit-scrollbar-button:horizontal:end:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 5l7 7-7 7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 hsl(var(--muted));
+}
+
+/* Specific scrollbar styling for different elements */
+.modal-content::-webkit-scrollbar,
+.modal-content .flex-1::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.modal-content .flex-1::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 6px;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.modal-content .flex-1::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 6px;
+  border: 2px solid hsl(var(--muted));
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.modal-content .flex-1::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* Table scrollbars */
+table::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  height: 8px;
+}
+
+table::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+table::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--muted));
+}
+
+table::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* Light mode scrollbar adjustments */
+.light-mode ::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+.light-mode ::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border: 2px solid hsl(var(--muted));
+}
+
+.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* Dark mode scrollbar adjustments */
+.dark ::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border: 2px solid hsl(var(--muted));
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+

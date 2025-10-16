@@ -15,9 +15,18 @@ $departures = fetchDepartures();
     </div>
     <div class="space-y-3">
       <?php foreach ($arrivals as $reservation): ?>
-        <div class="guest-card arrival bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1">
+<div class="guest-card arrival bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1 <?php echo $reservation['type'] === 'event' ? 'border-purple-200 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-800' : ''; ?>">
           <div class="flex items-center justify-between mb-3">
             <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <?php if ($reservation['type'] === 'event'): ?>
+                  <i data-lucide="calendar" class="h-4 w-4 text-purple-600 dark:text-purple-400"></i>
+                  <span class="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">Event</span>
+                <?php else: ?>
+                  <i data-lucide="user" class="h-4 w-4 text-blue-600 dark:text-blue-400"></i>
+                  <span class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Guest</span>
+                <?php endif; ?>
+              </div>
               <h3 class="font-bold text-card-foreground text-lg"><?php echo $reservation['name']; ?></h3>
               <div class="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Room <?php echo $reservation['room']; ?></span>
@@ -57,9 +66,18 @@ $departures = fetchDepartures();
         $status = strtolower($reservation['status']);
         if ($status !== 'checked in') continue;
         ?>
-        <div class="guest-card departure bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1">
+        <div class="guest-card departure bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:transform hover:-translate-y-1 <?php echo $reservation['type'] === 'event' ? 'border-purple-200 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-800' : ''; ?>">
           <div class="flex items-center justify-between mb-3">
             <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <?php if ($reservation['type'] === 'event'): ?>
+                  <i data-lucide="calendar" class="h-4 w-4 text-purple-600 dark:text-purple-400"></i>
+                  <span class="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">Event</span>
+                <?php else: ?>
+                  <i data-lucide="user" class="h-4 w-4 text-blue-600 dark:text-blue-400"></i>
+                  <span class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Guest</span>
+                <?php endif; ?>
+              </div>
               <h3 class="font-bold text-card-foreground text-lg"><?php echo $reservation['name']; ?></h3>
               <div class="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Room <?php echo $reservation['room']; ?></span>

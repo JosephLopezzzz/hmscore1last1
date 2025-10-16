@@ -28,14 +28,23 @@ if (!$reservation_id || !$payment_method || !$amount_received) {
 }
 
 try {
-    // Fetch reservation details
+    // Fetch reservation details (handle both guest and event reservations)
     $stmt = $pdo->prepare("
         SELECT r.id, r.guest_id, r.room_id, r.status as reservation_status,
-               CONCAT(g.first_name, ' ', g.last_name) as guest_name,
-               rm.room_number, rm.rate as room_rate
+               CASE 
+                 WHEN r.id LIKE 'EVT-%' THEN CONCAT('Event: ', e.title, ' - ', e.organizer_name)
+                 ELSE CONCAT(g.first_name, ' ', g.last_name)
+               END as guest_name,
+               rm.room_number, 
+               CASE 
+                 WHEN r.id LIKE 'EVT-%' THEN e.price_estimate
+                 ELSE rm.rate
+               END as room_rate
         FROM reservations r
-        JOIN guests g ON r.guest_id = g.id
+        LEFT JOIN guests g ON r.guest_id = g.id
         JOIN rooms rm ON r.room_id = rm.id
+        LEFT JOIN event_reservations er ON r.id = er.reservation_id
+        LEFT JOIN events e ON er.event_id = e.id
         WHERE r.id = ?
     ");
     $stmt->execute([$reservation_id]);
@@ -59,15 +68,18 @@ try {
         exit;
     }
 
-    // Count paid transactions for this guest to determine discount
-    $countStmt = $pdo->prepare("
-        SELECT COUNT(*) as paid_count
-        FROM billing_transactions bt
-        JOIN reservations r ON bt.reservation_id = r.id
-        WHERE r.guest_id = ? AND bt.status = 'Paid'
-    ");
-    $countStmt->execute([$reservation['guest_id']]);
-    $paidCount = (int)$countStmt->fetch()['paid_count'];
+    // Count paid transactions for this guest to determine discount (skip for event reservations)
+    $paidCount = 0;
+    if ($reservation['guest_id'] && !str_starts_with($reservation_id, 'EVT-')) {
+        $countStmt = $pdo->prepare("
+            SELECT COUNT(*) as paid_count
+            FROM billing_transactions bt
+            JOIN reservations r ON bt.reservation_id = r.id
+            WHERE r.guest_id = ? AND bt.status = 'Paid'
+        ");
+        $countStmt->execute([$reservation['guest_id']]);
+        $paidCount = (int)$countStmt->fetch()['paid_count'];
+    }
 
     // Determine discount percentage based on paid transaction count
     if ($paidCount >= 50) {

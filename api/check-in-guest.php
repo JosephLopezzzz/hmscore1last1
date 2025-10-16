@@ -24,11 +24,24 @@ if (updateReservationStatusSimple($reservationId, 'Checked In')) {
             $stmt->execute([':id' => $reservationId]);
             $row = $stmt->fetch();
             if ($row && (int)$row['room_id'] > 0) {
-                $guestName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
-                $upd = $pdo->prepare("UPDATE rooms SET status = 'Occupied', guest_name = :guest_name WHERE id = :room_id");
-                $upd->execute([':guest_name' => $guestName !== '' ? $guestName : null, ':room_id' => (int)$row['room_id']]);
-                // Log status change
-                logRoomStatusChange($row['room_number'] ?? '', (string)($row['room_status'] ?? 'Vacant'), 'Occupied', 'Guest checked in', 'Front Desk');
+                // Check if this is an event reservation
+                $isEventReservation = strpos($reservationId, 'EVT-') === 0;
+                
+                if ($isEventReservation) {
+                    // For event reservations, set status to "Event Ongoing"
+                    $guestName = 'Event: ' . ($row['first_name'] ?? 'Event');
+                    $upd = $pdo->prepare("UPDATE rooms SET status = 'Event Ongoing', guest_name = :guest_name WHERE id = :room_id");
+                    $upd->execute([':guest_name' => $guestName, ':room_id' => (int)$row['room_id']]);
+                    // Log status change
+                    logRoomStatusChange($row['room_number'] ?? '', (string)($row['room_status'] ?? 'Vacant'), 'Event Ongoing', 'Event checked in', 'Front Desk');
+                } else {
+                    // For regular guests, set status to "Occupied"
+                    $guestName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+                    $upd = $pdo->prepare("UPDATE rooms SET status = 'Occupied', guest_name = :guest_name WHERE id = :room_id");
+                    $upd->execute([':guest_name' => $guestName !== '' ? $guestName : null, ':room_id' => (int)$row['room_id']]);
+                    // Log status change
+                    logRoomStatusChange($row['room_number'] ?? '', (string)($row['room_status'] ?? 'Vacant'), 'Occupied', 'Guest checked in', 'Front Desk');
+                }
             }
         }
     } catch (Throwable $e) {

@@ -7,10 +7,12 @@ class HotelDataSync {
     constructor() {
         this.rooms = [];
         this.housekeepingTasks = [];
+        this.events = [];
         this.stats = {};
         this.listeners = {
             roomsUpdate: [],
             housekeepingUpdate: [],
+            eventsUpdate: [],
             statsUpdate: []
         };
         this.pollInterval = 5000; // Poll every 5 seconds
@@ -34,11 +36,32 @@ class HotelDataSync {
         try {
             await Promise.all([
                 this.fetchRooms(),
-                this.fetchHousekeepingTasks()
+                this.fetchHousekeepingTasks(),
+                this.fetchEvents()
             ]);
+            
+            // Force refresh of all modules after data load
+            this.notifyAllModules();
         } catch (error) {
             console.error('Failed to load hotel data:', error);
         }
+    }
+    
+    /**
+     * Notify all modules of data updates
+     */
+    notifyAllModules() {
+        // Notify rooms update
+        this.notifyListeners('roomsUpdate', this.rooms);
+        
+        // Notify events update
+        this.notifyListeners('eventsUpdate', this.events);
+        
+        // Notify housekeeping update
+        this.notifyListeners('housekeepingUpdate', this.housekeepingTasks);
+        
+        // Notify stats update
+        this.notifyListeners('statsUpdate', this.stats);
     }
 
     /**
@@ -94,6 +117,23 @@ class HotelDataSync {
             return this.housekeepingTasks;
         } catch (error) {
             console.error('Failed to fetch housekeeping tasks:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Fetch events data
+     */
+    async fetchEvents(status = null) {
+        try {
+            const url = status ? `${this.getApiBase()}/events?status=${status}` : `${this.getApiBase()}/events`;
+            const response = await fetch(url);
+            const data = await response.json();
+            this.events = data.data || [];
+            this.notifyListeners('eventsUpdate', this.events);
+            return this.events;
+        } catch (error) {
+            console.error('Failed to fetch events:', error);
             return [];
         }
     }
@@ -195,6 +235,133 @@ class HotelDataSync {
             console.error('Failed to create task:', error);
             this.showToast('Failed to create task', 'error');
             return null;
+        }
+    }
+
+    /**
+     * Create event
+     */
+    async createEvent(eventData) {
+        try {
+            const response = await fetch(this.getApiBase() + '/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(eventData)
+            });
+
+            const data = await response.json();
+            
+            if (data.ok && !data.error) {
+                // Force refresh of all data to ensure integration
+                await this.loadData();
+                this.showToast(data.message || 'Event created successfully', 'success');
+                
+                // Trigger integration refresh
+                this.triggerIntegrationRefresh();
+                
+                return data.id;
+            } else {
+                const errorMessage = data.message || data.error || 'Failed to create event';
+                this.showToast(errorMessage, 'error');
+                console.error('Event creation failed:', data);
+                return null;
+            }
+        } catch (error) {
+            console.error('Failed to create event:', error);
+            this.showToast('Failed to create event', 'error');
+            return null;
+        }
+    }
+    
+    /**
+     * Trigger integration refresh across all modules
+     */
+    triggerIntegrationRefresh() {
+        // Dispatch custom events for module integration
+        window.dispatchEvent(new CustomEvent('hotelDataRefresh', {
+            detail: {
+                type: 'event',
+                timestamp: Date.now()
+            }
+        }));
+        
+        // Force page refresh for critical modules if needed
+        if (window.location.pathname.includes('billing.php') || 
+            window.location.pathname.includes('rooms-overview.php') ||
+            window.location.pathname.includes('index.php')) {
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+    }
+
+    /**
+     * Update event
+     */
+    async updateEvent(eventId, eventData) {
+        try {
+            const response = await fetch(`${this.getApiBase()}/events/${eventId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(eventData)
+            });
+
+            const data = await response.json();
+            
+            if (data.ok && !data.error) {
+                await this.loadData();
+                this.showToast('Event updated successfully', 'success');
+                return true;
+            } else {
+                const errorMessage = data.message || data.error || 'Failed to update event';
+                this.showToast(errorMessage, 'error');
+                console.error('Event update failed:', data);
+                return false;
+            }
+        } catch (error) {
+            console.error('Failed to update event:', error);
+            this.showToast('Failed to update event', 'error');
+            return false;
+        }
+    }
+
+    /**
+     * Confirm event and block rooms
+     */
+    async confirmEvent(eventId) {
+        try {
+            const response = await fetch(`${this.getApiBase()}/events/${eventId}/confirm`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.ok && !data.error) {
+                // Force refresh of all data to ensure integration
+                await this.loadData();
+                this.showToast('Event confirmed and rooms blocked', 'success');
+                
+                // Trigger integration refresh
+                this.triggerIntegrationRefresh();
+                
+                return true;
+            } else {
+                const errorMessage = data.message || data.error || 'Failed to confirm event';
+                this.showToast(errorMessage, 'error');
+                console.error('Event confirmation failed:', data);
+                return false;
+            }
+        } catch (error) {
+            console.error('Failed to confirm event:', error);
+            this.showToast('Failed to confirm event', 'error');
+            return false;
         }
     }
 
@@ -346,10 +513,12 @@ class HotelDataSync {
         this.listeners = {
             roomsUpdate: [],
             housekeepingUpdate: [],
+            eventsUpdate: [],
             statsUpdate: []
         };
         this.rooms = [];
         this.housekeepingTasks = [];
+        this.events = [];
         this.stats = {};
     }
 }
@@ -366,14 +535,23 @@ window.hotelSync = {
         window.HotelSync.updateHousekeepingTask(taskId, status, assignedTo),
     createTask: (taskData) => 
         window.HotelSync.createHousekeepingTask(taskData),
+    createEvent: (eventData) => 
+        window.HotelSync.createEvent(eventData),
+    updateEvent: (eventId, eventData) => 
+        window.HotelSync.updateEvent(eventId, eventData),
+    confirmEvent: (eventId) => 
+        window.HotelSync.confirmEvent(eventId),
     onRoomsUpdate: (callback) => 
         window.HotelSync.on('roomsUpdate', callback),
     onHousekeepingUpdate: (callback) => 
         window.HotelSync.on('housekeepingUpdate', callback),
+    onEventsUpdate: (callback) => 
+        window.HotelSync.on('eventsUpdate', callback),
     onStatsUpdate: (callback) => 
         window.HotelSync.on('statsUpdate', callback),
     getRooms: () => window.HotelSync.rooms,
     getTasks: () => window.HotelSync.housekeepingTasks,
+    getEvents: () => window.HotelSync.events,
     getStats: () => window.HotelSync.stats
 };
 

@@ -66,6 +66,14 @@
         background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
         color: white;
       }
+      .room-event-reserved {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+      }
+      .room-event-ongoing {
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        color: white;
+      }
       .floor-header {
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         border-left: 4px solid #3b82f6;
@@ -115,6 +123,17 @@
       .dot-occupied { background: #ef4444; }
       .dot-cleaning { background: #f59e0b; }
       .dot-maintenance { background: #6b7280; }
+      .dot-event-reserved { background: #8b5cf6; }
+      .dot-event-ongoing { background: #ec4899; }
+      
+      /* Active legend item styling */
+      .legend-item.active {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 6px;
+        padding: 4px 8px;
+      }
+      
     </style>
   </head>
   <body class="min-h-screen bg-background">
@@ -128,21 +147,29 @@
         
         <!-- Legend -->
         <div class="flex flex-wrap gap-6 mb-6">
-          <div class="flex items-center">
+          <div class="legend-item flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="filterByStatus('Vacant')" data-status="Vacant">
             <span class="legend-dot dot-vacant"></span>
             <span class="text-sm font-medium">Vacant</span>
           </div>
-          <div class="flex items-center">
+          <div class="legend-item flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="filterByStatus('Occupied')" data-status="Occupied">
             <span class="legend-dot dot-occupied"></span>
             <span class="text-sm font-medium">Occupied</span>
           </div>
-          <div class="flex items-center">
+          <div class="legend-item flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="filterByStatus('Cleaning')" data-status="Cleaning">
             <span class="legend-dot dot-cleaning"></span>
             <span class="text-sm font-medium">For Cleaning</span>
           </div>
-          <div class="flex items-center">
+          <div class="legend-item flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="filterByStatus('Maintenance')" data-status="Maintenance">
             <span class="legend-dot dot-maintenance"></span>
             <span class="text-sm font-medium">Maintenance</span>
+          </div>
+          <div class="legend-item flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="filterByStatus('Event Reserved')" data-status="Event Reserved">
+            <span class="legend-dot dot-event-reserved"></span>
+            <span class="text-sm font-medium">Event Reserved</span>
+          </div>
+          <div class="legend-item flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="filterByStatus('Event Ongoing')" data-status="Event Ongoing">
+            <span class="legend-dot dot-event-ongoing"></span>
+            <span class="text-sm font-medium">Event Ongoing</span>
           </div>
         </div>
 
@@ -157,6 +184,8 @@
               <option value="Cleaning">Cleaning</option>
               <option value="Maintenance">Maintenance</option>
               <option value="Reserved">Reserved</option>
+              <option value="Event Reserved">Event Reserved</option>
+              <option value="Event Ongoing">Event Ongoing</option>
             </select>
           </div>
           <div>
@@ -241,6 +270,10 @@
         "maintenance": "room-maintenance",
         "Reserved": "room-occupied",
         "reserved": "room-occupied",
+        "Event Reserved": "room-event-reserved",
+        "event reserved": "room-event-reserved",
+        "Event Ongoing": "room-event-ongoing",
+        "event ongoing": "room-event-ongoing",
         "dirty": "room-cleaning"
       };
 
@@ -250,7 +283,9 @@
         { value: 'Occupied', label: 'Occupied', color: 'red' },
         { value: 'Cleaning', label: 'Cleaning', color: 'orange' },
         { value: 'Maintenance', label: 'Maintenance', color: 'gray' },
-        { value: 'Reserved', label: 'Reserved', color: 'blue' }
+        { value: 'Reserved', label: 'Reserved', color: 'blue' },
+        { value: 'Event Reserved', label: 'Event Reserved', color: 'purple' },
+        { value: 'Event Ongoing', label: 'Event Ongoing', color: 'pink' }
       ];
 
       const floorsContainer = document.getElementById("floorsContainer");
@@ -285,11 +320,20 @@
 
         floorsContainer.innerHTML = "";
         
+        
         const normalizedSearch = (filters.search || '').toString().trim().toLowerCase();
 
         // Apply filters
         const visibleRooms = rooms.filter(r => {
-          const statusOk = filters.status === 'all' || (r.status === filters.status || (r.status || '').toString().toLowerCase() === filters.status.toLowerCase());
+          // Determine actual status for filtering
+          let actualStatus = r.status;
+          if (r.status === 'Reserved' && r.guest_name && r.guest_name.startsWith('Event:')) {
+            actualStatus = 'Event Reserved';
+          } else if (r.status === 'Event Ongoing') {
+            actualStatus = 'Event Ongoing';
+          }
+          
+          const statusOk = filters.status === 'all' || (actualStatus === filters.status || (actualStatus || '').toString().toLowerCase() === filters.status.toLowerCase());
           const typeOk = filters.type === 'all' || (r.room_type === filters.type);
           const floorOk = filters.floor === 'all' || ((r.floor_number || 1).toString() === filters.floor.toString());
           if (!normalizedSearch) return statusOk && typeOk && floorOk;
@@ -341,6 +385,8 @@
         const occupiedCount = floorRooms.filter(r => r.status === 'Occupied').length;
         const cleaningCount = floorRooms.filter(r => r.status === 'Cleaning' || r.status === 'For Cleaning').length;
         const maintenanceCount = floorRooms.filter(r => r.status === 'Maintenance').length;
+        const eventReservedCount = floorRooms.filter(r => r.status === 'Reserved' && r.guest_name && r.guest_name.startsWith('Event:')).length;
+        const eventOngoingCount = floorRooms.filter(r => r.status === 'Event Ongoing').length;
 
         header.innerHTML = `
           <div class="flex items-center justify-between">
@@ -353,6 +399,8 @@
               ${occupiedCount > 0 ? `<span class="bg-red-100 text-red-800 px-2 py-1 rounded-full">${occupiedCount} Occupied</span>` : ''}
               ${cleaningCount > 0 ? `<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full">${cleaningCount} Cleaning</span>` : ''}
               ${maintenanceCount > 0 ? `<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">${maintenanceCount} Maintenance</span>` : ''}
+              ${eventReservedCount > 0 ? `<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full">${eventReservedCount} Event Reserved</span>` : ''}
+              ${eventOngoingCount > 0 ? `<span class="bg-pink-100 text-pink-800 px-2 py-1 rounded-full">${eventOngoingCount} Event Ongoing</span>` : ''}
             </div>
           </div>
         `;
@@ -375,7 +423,17 @@
       // Create room card
       function createRoomCard(room) {
         const card = document.createElement("div");
-        const statusClass = statusClassMap[room.status] || "room-vacant";
+        
+        // Check if room is reserved for an event or has an ongoing event
+        let actualStatus = room.status;
+        if (room.status === 'Reserved' && room.guest_name && room.guest_name.startsWith('Event:')) {
+          actualStatus = 'Event Reserved';
+        } else if (room.status === 'Event Ongoing') {
+          actualStatus = 'Event Ongoing';
+        }
+        
+        
+        const statusClass = statusClassMap[actualStatus] || "room-vacant";
         card.className = `room-card ${statusClass} rounded-lg p-4 shadow-sm`;
         card.setAttribute('data-room-id', room.id);
 
@@ -386,8 +444,8 @@
               <div class="text-sm opacity-90">${room.room_type || 'Standard'}</div>
             </div>
             <div class="mt-2">
-              <div class="text-xs font-medium">${room.status}</div>
-              ${room.guest_name ? `<div class="text-xs opacity-75 mt-1 truncate">Guest: ${room.guest_name}</div>` : ''}
+              <div class="text-xs font-medium">${actualStatus}</div>
+              ${room.guest_name ? `<div class="text-xs opacity-75 mt-1 truncate">${room.guest_name}</div>` : ''}
               ${room.maintenance_notes ? `<div class="text-xs opacity-75 mt-1 truncate">${room.maintenance_notes}</div>` : ''}
             </div>
           </div>
@@ -398,6 +456,29 @@
         return card;
       }
 
+      // Filter by status from legend click
+      function filterByStatus(status) {
+        filters.status = status;
+        
+        // Update the dropdown to match
+        const statusEl = document.getElementById('filterStatus');
+        if (statusEl) {
+          statusEl.value = status;
+        }
+        
+        // Update legend item visual feedback
+        document.querySelectorAll('.legend-item').forEach(item => {
+          item.classList.remove('active');
+        });
+        
+        const activeItem = document.querySelector(`[data-status="${status}"]`);
+        if (activeItem) {
+          activeItem.classList.add('active');
+        }
+        
+        renderRooms();
+      }
+
       // Filters setup and helpers
       function setupFilters() {
         const statusEl = document.getElementById('filterStatus');
@@ -405,7 +486,21 @@
         const floorEl = document.getElementById('filterFloor');
         const searchEl = document.getElementById('filterSearch');
 
-        if (statusEl) statusEl.addEventListener('change', () => { filters.status = statusEl.value; renderRooms(); });
+        if (statusEl) statusEl.addEventListener('change', () => { 
+          filters.status = statusEl.value; 
+          
+          // Update legend item visual feedback
+          document.querySelectorAll('.legend-item').forEach(item => {
+            item.classList.remove('active');
+          });
+          
+          const activeItem = document.querySelector(`[data-status="${statusEl.value}"]`);
+          if (activeItem) {
+            activeItem.classList.add('active');
+          }
+          
+          renderRooms(); 
+        });
         if (typeEl) typeEl.addEventListener('change', () => { filters.type = typeEl.value; renderRooms(); });
         if (floorEl) floorEl.addEventListener('change', () => { filters.floor = floorEl.value; renderRooms(); });
         if (searchEl) searchEl.addEventListener('input', () => { filters.search = searchEl.value; renderRooms(); });
@@ -460,16 +555,36 @@
       }
 
       // Open room modal
-      function openRoomModal(room) {
+      async function openRoomModal(room) {
         currentRoomModal = room;
+        
+        // Determine actual status for display
+        let actualStatus = room.status;
+        if (room.status === 'Reserved' && room.guest_name && room.guest_name.startsWith('Event:')) {
+          actualStatus = 'Event Reserved';
+        } else if (room.status === 'Event Ongoing') {
+          actualStatus = 'Event Ongoing';
+        }
         
         document.getElementById("modalRoomNumber").textContent = `Room ${room.room_number}`;
         document.getElementById("modalRoomType").textContent = `Type: ${room.room_type || 'Standard'}`;
-        document.getElementById("modalRoomStatus").textContent = `Status: ${room.status}`;
+        document.getElementById("modalRoomStatus").textContent = `Status: ${actualStatus}`;
         
-        const extraInfo = room.guest_name ? `Guest: ${room.guest_name}` : 
-                         room.maintenance_notes ? `Note: ${room.maintenance_notes}` : '—';
+        // Check if this room is reserved for an event
+        let extraInfo = '—';
+        if (room.guest_name && room.guest_name.startsWith('Event:')) {
+          extraInfo = room.guest_name;
+        } else if (room.guest_name) {
+          extraInfo = `Guest: ${room.guest_name}`;
+        } else if (room.maintenance_notes) {
+          extraInfo = `Note: ${room.maintenance_notes}`;
+        }
         document.getElementById("modalExtra").textContent = `Info: ${extraInfo}`;
+        
+        // Load event information if this room is reserved for an event
+        if (room.status === 'Reserved' && room.guest_name && room.guest_name.startsWith('Event:')) {
+          await loadRoomEvents(room.id);
+        }
 
         // Create status change options
         const modalContent = document.querySelector('#roomModal .bg-card');
@@ -488,7 +603,7 @@
           <label class="block text-sm font-medium mb-2 text-foreground">Change Status:</label>
           <select id="newStatus" class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground">
             ${statusOptions.map(opt => `
-              <option value="${opt.value}" ${opt.value === room.status ? 'selected' : ''}>
+              <option value="${opt.value}" ${opt.value === actualStatus ? 'selected' : ''}>
                 ${opt.label}
               </option>
             `).join('')}
@@ -518,6 +633,58 @@
         modal.classList.add("flex");
       }
 
+      // Load events for a specific room
+      async function loadRoomEvents(roomId) {
+        try {
+          const response = await fetch(`event_actions.php?action=get_room_events&room_id=${roomId}`);
+          const result = await response.json();
+          
+          if (result.success && result.data.length > 0) {
+            displayRoomEvents(result.data);
+          }
+        } catch (error) {
+          console.error('Error loading room events:', error);
+        }
+      }
+
+      // Display events in the room modal
+      function displayRoomEvents(events) {
+        // Remove existing event info if any
+        const existingEventInfo = document.getElementById('roomEventInfo');
+        if (existingEventInfo) {
+          existingEventInfo.remove();
+        }
+
+        // Create event info section
+        const eventInfo = document.createElement('div');
+        eventInfo.id = 'roomEventInfo';
+        eventInfo.className = 'mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800';
+        eventInfo.innerHTML = `
+          <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">📅 Event Bookings</h4>
+          ${events.map(event => `
+            <div class="text-xs text-blue-700 dark:text-blue-300 mb-1">
+              <strong>${event.title}</strong> - ${event.organizer_name}
+            </div>
+            <div class="text-xs text-blue-600 dark:text-blue-400 mb-2">
+              ${new Date(event.start_datetime).toLocaleDateString()} - ${new Date(event.end_datetime).toLocaleDateString()}
+            </div>
+          `).join('')}
+        `;
+
+        // Insert before the status selector
+        const modalContent = document.querySelector('#roomModal .bg-card');
+        const statusSelector = document.getElementById('statusSelector');
+        if (statusSelector) {
+          modalContent.insertBefore(eventInfo, statusSelector);
+        } else {
+          // If no status selector, add before the buttons
+          const buttons = document.querySelector('#roomModal .flex.gap-3');
+          if (buttons) {
+            buttons.parentElement.insertBefore(eventInfo, buttons);
+          }
+        }
+      }
+
       // Handle status update
       async function handleStatusUpdate() {
         if (!currentRoomModal) return;
@@ -525,7 +692,34 @@
         const newStatus = document.getElementById('newStatus')?.value;
         const notes = document.getElementById('roomNotes')?.value;
 
-        if (newStatus && newStatus !== currentRoomModal.status) {
+        // Determine current actual status
+        let currentActualStatus = currentRoomModal.status;
+        if (currentRoomModal.status === 'Reserved' && currentRoomModal.guest_name && currentRoomModal.guest_name.startsWith('Event:')) {
+          currentActualStatus = 'Event Reserved';
+        } else if (currentRoomModal.status === 'Event Ongoing') {
+          currentActualStatus = 'Event Ongoing';
+        }
+        
+        if (newStatus && newStatus !== currentActualStatus) {
+          // Handle special case: changing from Event Reserved
+          let statusToUpdate = newStatus;
+          let guestNameToUpdate = currentRoomModal.guest_name;
+          let notesToUpdate = notes;
+          
+          if ((currentActualStatus === 'Event Reserved' || currentActualStatus === 'Event Ongoing') && newStatus !== 'Event Reserved' && newStatus !== 'Event Ongoing') {
+            // If changing from Event Reserved/Event Ongoing to something else, clear event info
+            guestNameToUpdate = null;
+            notesToUpdate = notes || '';
+          } else if (newStatus === 'Event Reserved' && currentActualStatus !== 'Event Reserved') {
+            // If changing to Event Reserved, this shouldn't happen through normal flow
+            // But if it does, we'll keep the current guest_name
+            statusToUpdate = 'Reserved'; // Store as Reserved in database
+          } else if (newStatus === 'Event Ongoing' && currentActualStatus !== 'Event Ongoing') {
+            // If changing to Event Ongoing, this shouldn't happen through normal flow
+            // But if it does, we'll keep the current guest_name
+            statusToUpdate = 'Event Ongoing'; // Store as Event Ongoing in database
+          }
+          
           // Show loading state
           const updateBtn = document.getElementById('modalActionPrimary');
           const originalText = updateBtn.textContent;
@@ -534,9 +728,9 @@
 
           const success = await hotelSync.updateRoom(
             currentRoomModal.id,
-            newStatus,
-            currentRoomModal.guest_name,
-            notes
+            statusToUpdate,
+            guestNameToUpdate,
+            notesToUpdate
           );
 
           if (success) {

@@ -259,20 +259,28 @@ function fetchAllReservations(): array {
     $query = "
       SELECT
         r.id,
-        CONCAT(g.first_name, ' ', g.last_name) as guest,
+        CASE 
+          WHEN r.id LIKE 'EVT-%' THEN CONCAT('Event: ', e.title, ' - ', e.organizer_name)
+          ELSE CONCAT(g.first_name, ' ', g.last_name)
+        END as guest,
         rm.room_number as room,
         r.check_in_date as checkin,
         r.check_out_date as checkout,
         LOWER(r.status) as status,
         r.payment_status,
         TIMESTAMPDIFF(HOUR, r.check_in_date, r.check_out_date) DIV 24 as nights,
-        rm.rate,
+        CASE 
+          WHEN r.id LIKE 'EVT-%' THEN e.price_estimate
+          ELSE rm.rate
+        END as rate,
         g.email as guest_email,
         g.phone as guest_phone,
         rm.room_type
       FROM reservations r
       LEFT JOIN guests g ON r.guest_id = g.id
       LEFT JOIN rooms rm ON r.room_id = rm.id
+      LEFT JOIN event_reservations er ON r.id = er.reservation_id
+      LEFT JOIN events e ON er.event_id = e.id
       ORDER BY r.check_in_date DESC, r.created_at DESC
     ";
 
@@ -455,13 +463,22 @@ function fetchArrivals(): array {
     $query = "
       SELECT
         r.id,
-        CONCAT(g.first_name, ' ', g.last_name) AS name,
+        CASE 
+          WHEN r.id LIKE 'EVT-%' THEN CONCAT('Event: ', e.title, ' - ', e.organizer_name)
+          ELSE CONCAT(g.first_name, ' ', g.last_name)
+        END AS name,
         rm.room_number as room,
         DATE_FORMAT(r.check_in_date, '%H:%i') AS time,
-        LOWER(r.status) AS status
+        LOWER(r.status) AS status,
+        CASE 
+          WHEN r.id LIKE 'EVT-%' THEN 'event'
+          ELSE 'guest'
+        END AS type
       FROM reservations r
       LEFT JOIN guests g ON r.guest_id = g.id
       LEFT JOIN rooms rm ON r.room_id = rm.id
+      LEFT JOIN event_reservations er ON r.id = er.reservation_id
+      LEFT JOIN events e ON er.event_id = e.id
       WHERE DATE(r.check_in_date) = CURDATE()
       AND r.status = 'Pending'
       ORDER BY r.check_in_date
@@ -553,13 +570,22 @@ function fetchDepartures(): array {
     $query = "
       SELECT
         r.id,
-        CONCAT(g.first_name, ' ', g.last_name) AS name,
+        CASE 
+          WHEN r.id LIKE 'EVT-%' THEN CONCAT('Event: ', e.title, ' - ', e.organizer_name)
+          ELSE CONCAT(g.first_name, ' ', g.last_name)
+        END AS name,
         rm.room_number as room,
         DATE_FORMAT(r.check_out_date, '%H:%i') AS time,
-        LOWER(r.status) AS status
+        LOWER(r.status) AS status,
+        CASE 
+          WHEN r.id LIKE 'EVT-%' THEN 'event'
+          ELSE 'guest'
+        END AS type
       FROM reservations r
       LEFT JOIN guests g ON r.guest_id = g.id
       LEFT JOIN rooms rm ON r.room_id = rm.id
+      LEFT JOIN event_reservations er ON r.id = er.reservation_id
+      LEFT JOIN events e ON er.event_id = e.id
       WHERE r.status = 'Checked In'
       ORDER BY r.check_out_date
     ";
@@ -580,10 +606,16 @@ function syncRoomsWithTodaysPendingArrivals(): void {
   try {
     $sql = "
       SELECT r.id as res_id, r.room_id, rm.room_number, rm.status AS room_status,
-             g.first_name, g.last_name
+             g.first_name, g.last_name,
+             CASE 
+               WHEN r.id LIKE 'EVT-%' THEN CONCAT('Event: ', e.title, ' - ', e.organizer_name)
+               ELSE CONCAT(g.first_name, ' ', g.last_name)
+             END as guest_name
       FROM reservations r
       LEFT JOIN rooms rm ON r.room_id = rm.id
       LEFT JOIN guests g ON r.guest_id = g.id
+      LEFT JOIN event_reservations er ON r.id = er.reservation_id
+      LEFT JOIN events e ON er.event_id = e.id
       WHERE DATE(r.check_in_date) = CURDATE()
         AND r.status = 'Pending'
         AND r.room_id IS NOT NULL
@@ -594,7 +626,7 @@ function syncRoomsWithTodaysPendingArrivals(): void {
     if (!$rows) return;
     $upd = $pdo->prepare("UPDATE rooms SET status = 'Reserved', guest_name = :guest_name WHERE id = :room_id");
     foreach ($rows as $row) {
-      $guestName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+      $guestName = $row['guest_name'] ?? '';
       $upd->execute([':guest_name' => $guestName !== '' ? $guestName : null, ':room_id' => (int)$row['room_id']]);
       // Log only if changing from something other than Reserved
       if (($row['room_status'] ?? '') !== 'Reserved') {
@@ -604,5 +636,274 @@ function syncRoomsWithTodaysPendingArrivals(): void {
   } catch (Throwable $e) {
     // best-effort; do not throw
     error_log('syncRoomsWithTodaysPendingArrivals failed: ' . $e->getMessage());
+  }
+}
+
+/**
+ * Create or get event guest for event reservations
+ * This ensures event reservations have a valid guest_id
+ */
+function createOrGetEventGuest(array $event): int {
+  $pdo = getPdo();
+  if (!$pdo) return 0;
+  
+  try {
+    // Try to find existing event guest for this organizer
+    $stmt = $pdo->prepare("
+      SELECT id FROM guests 
+      WHERE first_name = ? AND last_name = ? 
+      AND email LIKE '%event%' 
+      LIMIT 1
+    ");
+    $stmt->execute([
+      'Event',
+      $event['organizer_name']
+    ]);
+    
+    $existingGuest = $stmt->fetch();
+    if ($existingGuest) {
+      return (int)$existingGuest['id'];
+    }
+    
+    // Create new event guest
+    $stmt = $pdo->prepare("
+      INSERT INTO guests (
+        first_name, last_name, email, phone, address, city, country, 
+        id_type, id_number, date_of_birth, nationality, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+    ");
+    
+    $eventEmail = 'event-' . strtolower(str_replace(' ', '-', $event['organizer_name'])) . '@hotel.com';
+    $eventPhone = $event['organizer_contact'] ?? 'N/A';
+    
+    $stmt->execute([
+      'Event',
+      $event['organizer_name'],
+      $eventEmail,
+      $eventPhone,
+      'Event Venue',
+      'Hotel',
+      'Philippines',
+      'Other',
+      'EVT-' . $event['id'],
+      '1990-01-01',
+      'Filipino'
+    ]);
+    
+    return (int)$pdo->lastInsertId();
+  } catch (Exception $e) {
+    error_log('createOrGetEventGuest error: ' . $e->getMessage());
+    return 0;
+  }
+}
+
+// ---- Events helpers ----
+function createEvent(array $data): int {
+  $pdo = getPdo(); if (!$pdo) return 0;
+  
+  // Debug logging
+  error_log('createEvent called with data: ' . json_encode($data));
+  
+  try {
+    $stmt = $pdo->prepare('
+      INSERT INTO events (title, description, organizer_name, organizer_contact, start_datetime, end_datetime, attendees_expected, setup_type, room_blocks, price_estimate, status, created_by)
+      VALUES (:title,:description,:organizer_name,:organizer_contact,:start,:end,:attendees,:setup,:room_blocks,:price,:status,:created_by)
+    ');
+    $roomBlocks = isset($data['room_blocks']) ? json_encode($data['room_blocks']) : null;
+    
+    $params = [
+      ':title' => trim($data['title'] ?? ''),
+      ':description' => trim($data['description'] ?? ''),
+      ':organizer_name' => trim($data['organizer_name'] ?? ''),
+      ':organizer_contact' => trim($data['organizer_contact'] ?? ''),
+      ':start' => $data['start_datetime'],
+      ':end' => $data['end_datetime'],
+      ':attendees' => (int)($data['attendees_expected'] ?? 0),
+      ':setup' => $data['setup_type'] ?? 'Conference',
+      ':room_blocks' => $roomBlocks,
+      ':price' => (float)($data['price_estimate'] ?? 0),
+      ':status' => $data['status'] ?? 'Pending',
+      ':created_by' => currentUserEmail()
+    ];
+    
+    error_log('createEvent parameters: ' . json_encode($params));
+    
+    $result = $stmt->execute($params);
+    $id = (int)$pdo->lastInsertId();
+    
+    error_log('createEvent result: success=' . ($result ? 'true' : 'false') . ', id=' . $id);
+    
+    return $id;
+  } catch (Exception $e) {
+    error_log('createEvent error: ' . $e->getMessage());
+    return 0;
+  }
+}
+
+function updateEvent(int $eventId, array $data): bool {
+  $pdo = getPdo(); if (!$pdo) return false;
+  
+  // Debug logging
+  error_log('updateEvent called with eventId: ' . $eventId . ', data: ' . json_encode($data));
+  
+  try {
+    $allowed = ['title','description','organizer_name','organizer_contact','start_datetime','end_datetime','attendees_expected','setup_type','room_blocks','price_estimate','status'];
+    $data = array_intersect_key($data, array_flip($allowed));
+    if (!$data) {
+      error_log('updateEvent: No valid data to update');
+      return false;
+    }
+    
+    $sets = [];
+    $params = [':id' => $eventId];
+    
+    foreach ($data as $k => $v) {
+      if ($k === 'room_blocks') $v = json_encode($v);
+      $sets[] = "$k = :$k";
+      $params[":$k"] = $v;
+    }
+    
+    $sql = 'UPDATE events SET ' . implode(',', $sets) . ', updated_at = NOW() WHERE id = :id';
+    
+    error_log('updateEvent SQL: ' . $sql);
+    error_log('updateEvent parameters: ' . json_encode($params));
+    
+    $stmt = $pdo->prepare($sql);
+    $result = $stmt->execute($params);
+    
+    error_log('updateEvent result: success=' . ($result ? 'true' : 'false') . ', rows_affected=' . $stmt->rowCount());
+    
+    return $result;
+  } catch (Exception $e) {
+    error_log('updateEvent error: ' . $e->getMessage());
+    return false;
+  }
+}
+
+function fetchEvents(?string $status = null, ?string $from = null, ?string $to = null): array {
+  $pdo = getPdo(); if (!$pdo) return [];
+  $where = [];$params=[];
+  if ($status) { $where[] = 'status = :status'; $params[':status'] = $status; }
+  if ($from && $to) { $where[] = '(start_datetime <= :to AND end_datetime >= :from)'; $params[':from'] = $from; $params[':to'] = $to; }
+  $sql = 'SELECT * FROM events ' . ($where ? ('WHERE ' . implode(' AND ', $where)) : '') . ' ORDER BY start_datetime DESC';
+  $stmt = $pdo->prepare($sql); $stmt->execute($params); $rows = $stmt->fetchAll();
+  return array_map(function($r){ $r['room_blocks'] = $r['room_blocks'] ? json_decode($r['room_blocks'], true) : []; return $r; }, $rows);
+}
+
+function fetchEventById(int $id): ?array {
+  $pdo = getPdo(); if (!$pdo) return null;
+  $stmt = $pdo->prepare('SELECT * FROM events WHERE id = :id');
+  $stmt->execute([':id'=>$id]);
+  $row = $stmt->fetch();
+  if (!$row) return null;
+  $row['room_blocks'] = $row['room_blocks'] ? json_decode($row['room_blocks'], true) : [];
+  // Attach services
+  try { $srv = $pdo->prepare('SELECT id, service_name, qty, price FROM event_services WHERE event_id = :id'); $srv->execute([':id'=>$id]); $row['services'] = $srv->fetchAll(); } catch (Throwable $e) { $row['services'] = []; }
+  return $row;
+}
+
+function linkEventReservations(int $eventId, array $reservationIds): void {
+  $pdo = getPdo(); if (!$pdo) return;
+  $stmt = $pdo->prepare('INSERT IGNORE INTO event_reservations (event_id, reservation_id) VALUES (:e,:r)');
+  foreach ($reservationIds as $rid) {
+    $stmt->execute([':e'=>$eventId, ':r'=>$rid]);
+  }
+}
+
+function checkRoomEventConflicts(array $roomIds, string $start, string $end, ?int $ignoreEventId = null): array {
+  $pdo = getPdo(); if (!$pdo) return [];
+  $conflicts = [];
+  // Check reservations conflicts
+  if ($roomIds) {
+    $in = implode(',', array_fill(0, count($roomIds), '?'));
+    $sql = "SELECT r.id, r.room_id FROM reservations r WHERE r.room_id IN ($in) AND (r.check_in_date <= ? AND r.check_out_date >= ?) AND r.status IN ('Pending','Checked In','Confirmed')";
+    $stmt = $pdo->prepare($sql);
+    $params = array_map('intval', $roomIds); $params[] = $end; $params[] = $start; $stmt->execute($params);
+    while ($row = $stmt->fetch()) { $conflicts[] = ['type'=>'reservation','id'=>$row['id'],'room_id'=>$row['room_id']]; }
+  }
+  // Check other events conflicts on same rooms
+  if ($roomIds) {
+    $in = implode(',', array_fill(0, count($roomIds), '?'));
+    $sql = "SELECT e.id, e.room_blocks FROM events e WHERE (e.start_datetime <= ? AND e.end_datetime >= ?)";
+    if ($ignoreEventId) { $sql .= ' AND e.id != ?'; }
+    $stmt = $pdo->prepare($sql);
+    $params = [$end, $start]; if ($ignoreEventId) $params[] = $ignoreEventId; $stmt->execute($params);
+    while ($row = $stmt->fetch()) {
+      $blocks = $row['room_blocks'] ? json_decode($row['room_blocks'], true) : [];
+      foreach ($roomIds as $rid) {
+        if (in_array((int)$rid, array_map('intval', $blocks), true)) {
+          $conflicts[] = ['type'=>'event','id'=>$row['id'],'room_id'=>(int)$rid];
+        }
+      }
+    }
+  }
+  return $conflicts;
+}
+
+function confirmEventAndBlockRooms(int $eventId): bool {
+  $pdo = getPdo(); if (!$pdo) return false;
+  $event = fetchEventById($eventId); if (!$event) return false;
+  $rooms = array_map('intval', $event['room_blocks'] ?? []);
+  try {
+    $pdo->beginTransaction();
+    $upd = $pdo->prepare("UPDATE events SET status='Approved' WHERE id = :id");
+    $upd->execute([':id'=>$eventId]);
+    
+    if ($rooms) {
+      // Create or get event guest for this event
+      $eventGuestId = createOrGetEventGuest($event);
+      
+      foreach ($rooms as $roomId) {
+        // Create a reservation for the event (Pending status for front desk check-in)
+        $reservationId = 'EVT-' . strtoupper(uniqid());
+        $stmt = $pdo->prepare("
+          INSERT INTO reservations (id, guest_id, room_id, check_in_date, check_out_date, status, payment_status, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 'Pending', 'FULLY PAID', NOW(), NOW())
+        ");
+        $stmt->execute([
+          $reservationId,
+          $eventGuestId,
+          $roomId,
+          $event['start_datetime'],
+          $event['end_datetime']
+        ]);
+        
+        // Link reservation to event
+        $stmt = $pdo->prepare("INSERT INTO event_reservations (event_id, reservation_id) VALUES (?, ?)");
+        $stmt->execute([$eventId, $reservationId]);
+        
+        // Create billing transaction for event (like regular reservations)
+        $stmt = $pdo->prepare("
+          INSERT INTO billing_transactions (
+            reservation_id, transaction_type, amount, payment_amount, balance, `change`,
+            payment_method, status, notes, transaction_date
+          ) VALUES (?, 'Room Charge', ?, ?, ?, ?, 'Cash', 'Paid', ?, NOW())
+        ");
+        $stmt->execute([
+          $reservationId,
+          $event['price_estimate'],
+          $event['price_estimate'],
+          $event['price_estimate'],
+          0, // No change for events
+          "Event: {$event['title']} - {$event['organizer_name']}"
+        ]);
+        
+        // Update room status with event information
+        $stmt = $pdo->prepare("
+          UPDATE rooms 
+          SET status = 'Reserved', 
+              guest_name = CONCAT('Event: ', ?, ' - ', ?),
+              maintenance_notes = 'Event Reserved'
+          WHERE id = ?
+        ");
+        $stmt->execute([$event['title'], $event['organizer_name'], $roomId]);
+      }
+    }
+    $pdo->commit();
+    return true;
+  } catch (Throwable $e) { 
+    $pdo->rollBack(); 
+    error_log('confirmEventAndBlockRooms error: ' . $e->getMessage());
+    return false; 
   }
 }

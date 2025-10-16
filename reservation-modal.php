@@ -4,153 +4,226 @@ require_once __DIR__ . '/includes/security.php';
 
 <!-- Reservation Modal -->
 <div id="reservationModal" class="fixed inset-0 modal-overlay z-50 hidden">
-  <div class="flex items-center justify-center min-h-screen p-2">
-    <div class="modal-content rounded-lg w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col">
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between p-4 border-b border-border flex-shrink-0 bg-card">
-        <h2 class="text-lg font-semibold text-card-foreground">New Reservation</h2>
-        <button id="closeModalBtn" class="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded-full">
-          <i data-lucide="x" class="h-5 w-5"></i>
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="modal-content rounded-xl w-full max-w-7xl h-[95vh] overflow-hidden flex flex-col bg-card shadow-2xl border border-border">
+      <!-- Enhanced Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-border flex-shrink-0 bg-gradient-to-r from-primary/5 to-primary/10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-card-foreground">New Reservation</h2>
+            <p class="text-sm text-muted-foreground">Create a new hotel reservation for your guest</p>
+          </div>
+        </div>
+        <button id="closeModalBtn" class="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
         </button>
       </div>
 
       <!-- Modal Body - Scrollable Content -->
-      <div class="flex-1 overflow-y-auto bg-card">
-        <form id="reservationForm" class="p-3">
+      <div class="flex-1 overflow-y-auto bg-background">
+        <form id="reservationForm" class="p-6">
           <!-- Two Column Layout -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Left Column: Guest Information -->
-            <div class="space-y-3">
-              <h3 class="text-lg font-medium mb-2 border-b border-border pb-2 text-card-foreground">Guest Information</h3>
+            <div class="space-y-6">
+              <div class="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold text-card-foreground">Guest Information</h3>
+                </div>
 
-              <!-- Search Section -->
-              <div>
-                <label class="block text-sm font-medium text-card-foreground mb-1">Search Existing Guests</label>
-                <div class="relative">
-                  <input type="text" id="guestSearch" placeholder="Search guests by name, email, or phone..." class="w-full px-3 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
-                  <div id="guestSearchResults" class="search-results absolute z-10 w-full mt-1 rounded-md max-h-60 overflow-y-auto hidden">
-                    <div id="guestsLoading" class="p-3 text-sm text-muted-foreground">Loading guests...</div>
-                    <div id="noGuestsFound" class="p-3 text-sm text-muted-foreground hidden">No guests found</div>
+                <!-- Search Section -->
+                <div class="mb-6">
+                  <label class="block text-sm font-semibold text-card-foreground mb-2">Search Existing Guests</label>
+                  <div class="relative">
+                    <input type="text" id="guestSearch" placeholder="Search guests by name, email, or phone..." class="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                    <div id="guestSearchResults" class="search-results absolute z-10 w-full mt-2 rounded-lg max-h-60 overflow-y-auto hidden bg-card border border-border shadow-lg">
+                      <div id="guestsLoading" class="p-4 text-sm text-muted-foreground flex items-center gap-2">
+                        <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Loading guests...
+                      </div>
+                      <div id="noGuestsFound" class="p-4 text-sm text-muted-foreground hidden">No guests found</div>
+                    </div>
+                  </div>
+                  <div id="selectedGuestInfo" class="mt-3 p-4 bg-primary/10 border border-primary/20 rounded-lg hidden">
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      <p class="text-sm text-primary font-medium">Selected: <span id="selectedGuestName" class="font-semibold"></span></p>
+                    </div>
+                    <input type="hidden" id="guest_id" name="guest_id">
+                  </div>
+                  <div id="guestsFetchStatus" class="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Guests: <span id="guestsStatus" class="font-medium">Not loaded</span>
                   </div>
                 </div>
-                <div id="selectedGuestInfo" class="mt-2 p-3 bg-primary/10 border border-primary/20 rounded hidden">
-                  <p class="text-sm text-primary">Selected: <span id="selectedGuestName" class="font-medium"></span></p>
-                  <input type="hidden" id="guest_id" name="guest_id">
-                </div>
-                <div id="guestsFetchStatus" class="mt-2 text-xs text-muted-foreground">Guests: <span id="guestsStatus">Not loaded</span></div>
-              </div>
 
-              <!-- New Guest Form -->
-              <div id="newGuestSection">
-                <div class="mb-2">
-                  <label class="block text-sm font-medium text-card-foreground mb-1">Or Create New Guest</label>
-                </div>
-                <div class="grid grid-cols-1 gap-2">
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">First Name *</label>
-                      <input type="text" id="first_name" name="first_name" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">Last Name *</label>
-                      <input type="text" id="last_name" name="last_name" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
+                <!-- New Guest Form -->
+                <div id="newGuestSection">
+                  <div class="mb-4">
+                    <div class="flex items-center gap-2 mb-3">
+                      <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                        <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                      </div>
+                      <label class="text-sm font-semibold text-card-foreground">Or Create New Guest</label>
                     </div>
                   </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">Email *</label>
-                      <input type="email" id="email" name="email" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
+                  <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">First Name *</label>
+                        <input type="text" id="first_name" name="first_name" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Last Name *</label>
+                        <input type="text" id="last_name" name="last_name" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Email *</label>
+                        <input type="email" id="email" name="email" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Phone</label>
+                        <input type="tel" id="phone" name="phone" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Address</label>
+                        <input type="text" id="address" name="address" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">City</label>
+                        <input type="text" id="city" name="city" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Country</label>
+                        <input type="text" id="country" name="country" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Nationality</label>
+                        <input type="text" id="nationality" name="nationality" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">ID Type</label>
+                        <select id="id_type" name="id_type" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                          <option value="National ID">National ID</option>
+                          <option value="Passport">Passport</option>
+                          <option value="Driver License">Driver License</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">ID Number *</label>
+                        <input type="text" id="id_number" name="id_number" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                      </div>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">Phone</label>
-                      <input type="tel" id="phone" name="phone" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
+                      <label class="block text-sm font-medium text-card-foreground mb-2">Date of Birth *</label>
+                      <input type="date" id="date_of_birth" name="date_of_birth" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                      <div id="dateOfBirthError" class="mt-2 text-sm text-destructive hidden"></div>
                     </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">Address</label>
-                      <input type="text" id="address" name="address" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">City</label>
-                      <input type="text" id="city" name="city" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">Country</label>
-                      <input type="text" id="country" name="country" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">Nationality</label>
-                      <input type="text" id="nationality" name="nationality" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">ID Type</label>
-                      <select id="id_type" name="id_type" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground">
-                        <option value="National ID">National ID</option>
-                        <option value="Passport">Passport</option>
-                        <option value="Driver License">Driver License</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-card-foreground mb-1">ID Number *</label>
-                      <input type="text" id="id_number" name="id_number" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-card-foreground mb-1">Date of Birth *</label>
-                    <input type="date" id="date_of_birth" name="date_of_birth" class="w-full px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
-                    <div id="dateOfBirthError" class="mt-1 text-sm text-destructive hidden"></div>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Right Column: Room & Reservation Info -->
-            <div class="space-y-3">
+            <div class="space-y-6">
               <!-- Room Selection Section -->
-              <div>
-                <h3 class="text-lg font-medium mb-2 border-b border-border pb-2 text-card-foreground">Room Selection</h3>
-                <div class="grid grid-cols-1 gap-2">
+              <div class="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold text-card-foreground">Room Selection</h3>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-card-foreground mb-1">Select Room</label>
-                    <select id="room_id" name="room_id" class="w-full px-3 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required>
+                    <label class="block text-sm font-semibold text-card-foreground mb-2">Select Room</label>
+                    <select id="room_id" name="room_id" class="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
                       <option value="">Loading rooms...</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-card-foreground mb-1">Room Preview</label>
-                    <div id="selectedRoomInfo" class="p-3 bg-muted rounded min-h-[40px] flex items-center text-sm">
-                      <span class="text-sm text-muted-foreground">Select a room to see details</span>
+                    <label class="block text-sm font-semibold text-card-foreground mb-2">Room Preview</label>
+                    <div id="selectedRoomInfo" class="p-4 bg-muted/50 rounded-lg min-h-[60px] flex items-center text-sm border border-border">
+                      <div class="flex items-center gap-2 text-muted-foreground">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Select a room to see details</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div id="roomsFetchStatus" class="mt-2 text-xs text-muted-foreground">Rooms: <span id="roomsStatus">Not loaded</span></div>
+                <div id="roomsFetchStatus" class="mt-3 text-xs text-muted-foreground flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Rooms: <span id="roomsStatus" class="font-medium">Not loaded</span>
+                </div>
               </div>
 
               <!-- Date and Time Section -->
-              <div>
-                <h3 class="text-lg font-medium mb-2 border-b border-border pb-2 text-card-foreground">Reservation Dates</h3>
-                <div class="grid grid-cols-1 gap-2">
+              <div class="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold text-card-foreground">Reservation Dates</h3>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-card-foreground mb-1">Check-in Date & Time *</label>
-                    <input type="datetime-local" id="check_in_date" name="check_in_date" class="w-full px-3 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required min="">
+                    <label class="block text-sm font-semibold text-card-foreground mb-2">Check-in Date & Time *</label>
+                    <input type="datetime-local" id="check_in_date" name="check_in_date" class="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required min="">
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-card-foreground mb-1">Check-out Date & Time *</label>
-                    <input type="datetime-local" id="check_out_date" name="check_out_date" class="w-full px-3 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-background text-foreground" required min="">
+                    <label class="block text-sm font-semibold text-card-foreground mb-2">Check-out Date & Time *</label>
+                    <input type="datetime-local" id="check_out_date" name="check_out_date" class="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required min="">
                   </div>
                 </div>
                 
-                <!-- Buttons moved to right column -->
-                <div class="mt-4 flex justify-end gap-3">
-                  <button type="button" id="cancelBtn" class="btn-secondary px-4 py-1.5 text-sm rounded transition-colors">
+                <!-- Enhanced Action Buttons -->
+                <div class="mt-6 flex justify-end gap-4">
+                  <button type="button" id="cancelBtn" class="px-6 py-3 text-sm font-semibold rounded-lg border border-border hover:bg-muted transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                     Cancel
                   </button>
-                  <button type="submit" id="submitBtn" class="btn-primary px-4 py-1.5 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  <button type="submit" id="submitBtn" class="px-6 py-3 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
                     Create Reservation
                   </button>
                 </div>
@@ -741,3 +814,130 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+
+<style>
+/* Global Scrollbar Styling for Modal - Consistent Blue Theme */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b82f6; /* Blue-500 */
+  border-radius: 6px;
+  border: 2px solid hsl(var(--muted));
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb; /* Blue-600 */
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #1d4ed8; /* Blue-700 */
+}
+
+::-webkit-scrollbar-corner {
+  background: hsl(var(--muted));
+}
+
+/* Scrollbar buttons (arrows) */
+::-webkit-scrollbar-button {
+  background: #60a5fa; /* Light blue */
+  border-radius: 6px;
+  height: 12px;
+  width: 12px;
+}
+
+::-webkit-scrollbar-button:hover {
+  background: #93c5fd; /* Lighter blue */
+}
+
+::-webkit-scrollbar-button:vertical:start:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 15l7-7 7 7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+::-webkit-scrollbar-button:vertical:end:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+::-webkit-scrollbar-button:horizontal:start:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 19l-7-7 7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+::-webkit-scrollbar-button:horizontal:end:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 5l7 7-7 7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 hsl(var(--muted));
+}
+
+/* Modal specific scrollbar styling */
+.modal-content::-webkit-scrollbar,
+.modal-content .flex-1::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.modal-content .flex-1::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 6px;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.modal-content .flex-1::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 6px;
+  border: 2px solid hsl(var(--muted));
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.modal-content .flex-1::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* Search results dropdown scrollbar */
+.search-results::-webkit-scrollbar {
+  width: 8px;
+}
+
+.search-results::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--muted));
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+</style>

@@ -48,16 +48,24 @@
       $foliosQuery = "
         SELECT
           r.id,
-          CONCAT(g.first_name, ' ', g.last_name) as guest_name,
+          CASE 
+            WHEN r.id LIKE 'EVT-%' THEN CONCAT('Event: ', e.title, ' - ', e.organizer_name)
+            ELSE CONCAT(g.first_name, ' ', g.last_name)
+          END as guest_name,
           r.room_id,
           rm.room_number,
           r.check_in_date,
           r.check_out_date,
-          rm.rate as amount,
+          CASE 
+            WHEN r.id LIKE 'EVT-%' THEN e.price_estimate
+            ELSE rm.rate
+          END as amount,
           r.payment_status
         FROM reservations r
         JOIN rooms rm ON r.room_id = rm.id
-        JOIN guests g ON r.guest_id = g.id
+        LEFT JOIN guests g ON r.guest_id = g.id
+        LEFT JOIN event_reservations er ON r.id = er.reservation_id
+        LEFT JOIN events e ON er.event_id = e.id
         WHERE r.payment_status IN ('PENDING', 'DOWNPAYMENT')
         ORDER BY r.created_at DESC
         LIMIT 10
@@ -136,13 +144,18 @@
           bt.status,
           bt.notes,
           bt.transaction_date,
-          CONCAT(g.first_name, ' ', g.last_name) as guest_name,
+          CASE 
+            WHEN r.id LIKE 'EVT-%' THEN CONCAT('Event: ', e.title, ' - ', e.organizer_name)
+            ELSE CONCAT(g.first_name, ' ', g.last_name)
+          END as guest_name,
           rm.room_number,
           r.id as reservation_id
         FROM billing_transactions bt
         LEFT JOIN reservations r ON bt.reservation_id = r.id
         LEFT JOIN guests g ON r.guest_id = g.id
         LEFT JOIN rooms rm ON r.room_id = rm.id
+        LEFT JOIN event_reservations er ON r.id = er.reservation_id
+        LEFT JOIN events e ON er.event_id = e.id
         WHERE bt.status = 'Paid' OR r.payment_status = 'FULLY PAID'
         ORDER BY bt.transaction_date DESC
         LIMIT 10

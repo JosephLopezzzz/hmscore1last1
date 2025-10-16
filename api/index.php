@@ -375,6 +375,101 @@ switch (true) {
     sendJson(['data' => $rooms]);
 
   default:
+    // Events routes
+    // GET /api/events
+    if ($path === '/api/events' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+      $status = $_GET['status'] ?? null; $from = $_GET['from'] ?? ($_GET['start'] ?? null); $to = $_GET['to'] ?? ($_GET['end'] ?? null);
+      $rows = fetchEvents($status, $from, $to);
+      sendJson(['data' => $rows]);
+    }
+    // GET /api/events/:id
+    if (preg_match('#^/api/events/(\d+)$#', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+      $evt = fetchEventById((int)$m[1]); if (!$evt) sendJson(['error'=>'not_found'],404); sendJson(['data'=>$evt]);
+    }
+    // GET /api/events/availability
+    if ($path === '/api/events/availability' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+      $rooms = isset($_GET['rooms']) ? array_map('intval', array_filter(explode(',', (string)$_GET['rooms']))) : [];
+      $start = $_GET['start'] ?? $_GET['from'] ?? null; $end = $_GET['end'] ?? $_GET['to'] ?? null;
+      if (!$start || !$end) sendJson(['error'=>'invalid_input','message'=>'start and end required'], 422);
+      $conflicts = checkRoomEventConflicts($rooms, $start, $end, null);
+      sendJson(['data'=>['conflicts'=>$conflicts,'available'=>count($conflicts)===0]]);
+    }
+    // POST /api/events
+    if ($path === '/api/events' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      $pdo = getPdo(); if (!$pdo) sendJson(['error'=>'no_db'],500);
+      $payload = json_decode(file_get_contents('php://input') ?: '{}', true) ?: [];
+      
+      // Debug logging
+      error_log('Event creation payload: ' . json_encode($payload));
+      
+      $required = ['title','organizer_name','start_datetime','end_datetime'];
+      foreach ($required as $f) { if (empty($payload[$f])) sendJson(['error'=>'invalid_input','message'=>"$f is required"],422); }
+      if (strtotime($payload['start_datetime']) >= strtotime($payload['end_datetime'])) sendJson(['error'=>'invalid_input','message'=>'start must be before end'],422);
+      $roomBlocks = array_map('intval', $payload['room_blocks'] ?? []);
+      $conflicts = checkRoomEventConflicts($roomBlocks, $payload['start_datetime'], $payload['end_datetime'], null);
+      if ($conflicts) sendJson(['error'=>'conflict','message'=>'Rooms not available for the selected period','conflicts'=>$conflicts],409);
+      
+      try {
+        $id = createEvent($payload);
+        if ($id > 0) {
+          sendJson(['ok'=>true,'id'=>$id,'message'=>'Event created']);
+        } else {
+          sendJson(['error'=>'creation_failed','message'=>'Failed to create event in database'],500);
+        }
+      } catch (Exception $e) {
+        error_log('Event creation error: ' . $e->getMessage());
+        sendJson(['error'=>'creation_failed','message'=>'Database error: ' . $e->getMessage()],500);
+      }
+    }
+    // PATCH /api/events/:id
+    if (preg_match('#^/api/events/(\d+)$#', $path, $m) && in_array($_SERVER['REQUEST_METHOD'], ['PATCH','PUT'], true)) {
+      $pdo = getPdo(); if (!$pdo) sendJson(['error'=>'no_db'],500);
+      $payload = json_decode(file_get_contents('php://input') ?: '{}', true) ?: [];
+      $eventId = (int)$m[1];
+      
+      // Debug logging
+      error_log('Event update payload: ' . json_encode($payload));
+      
+      if (isset($payload['start_datetime'], $payload['end_datetime'])) {
+        if (strtotime($payload['start_datetime']) >= strtotime($payload['end_datetime'])) {
+          sendJson(['error'=>'invalid_input','message'=>'start must be before end'],422);
+        }
+      }
+      
+      $rooms = array_map('intval', $payload['room_blocks'] ?? []);
+      if ($rooms && isset($payload['start_datetime'], $payload['end_datetime'])) {
+        $conflicts = checkRoomEventConflicts($rooms, $payload['start_datetime'], $payload['end_datetime'], $eventId);
+        if ($conflicts) {
+          sendJson(['error'=>'conflict','message'=>'Rooms not available for the selected period','conflicts'=>$conflicts],409);
+        }
+      }
+      
+      try {
+        $ok = updateEvent($eventId, $payload);
+        if ($ok) {
+          sendJson(['ok'=>true,'message'=>'Event updated successfully']);
+        } else {
+          sendJson(['error'=>'update_failed','message'=>'Failed to update event in database'],500);
+        }
+      } catch (Exception $e) {
+        error_log('Event update error: ' . $e->getMessage());
+        sendJson(['error'=>'update_failed','message'=>'Database error: ' . $e->getMessage()],500);
+      }
+    }
+    // DELETE /api/events/:id
+    if (preg_match('#^/api/events/(\d+)$#', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'DELETE') {
+      $pdo = getPdo(); if (!$pdo) sendJson(['error'=>'no_db'],500);
+      $stmt = $pdo->prepare('DELETE FROM events WHERE id = :id'); $stmt->execute([':id'=>(int)$m[1]]);
+      sendJson(['ok'=>true]);
+    }
+    // POST /api/events/:id/confirm
+    if (preg_match('#^/api/events/(\d+)/confirm$#', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      $ok = confirmEventAndBlockRooms((int)$m[1]);
+      // placeholder notification
+      error_log('Event confirmed and rooms blocked: ID '.$m[1]);
+      sendJson(['ok'=>$ok]);
+    }
+
     sendJson(['error' => 'not_found', 'path' => $path], 404);
 }
 
