@@ -486,13 +486,77 @@ switch (true) {
       if ($conflicts) sendJson(['error'=>'conflict','message'=>'Rooms not available for the selected period','conflicts'=>$conflicts],409);
       
       try {
+        $pdo->beginTransaction();
+        
+        // Create the event
         $id = createEvent($payload);
-        if ($id > 0) {
-          sendJson(['ok'=>true,'id'=>$id,'message'=>'Event created']);
-        } else {
-          sendJson(['error'=>'creation_failed','message'=>'Failed to create event in database'],500);
+        if ($id <= 0) {
+          throw new Exception('Failed to create event');
         }
+        
+        // Create event guest
+        $eventGuestId = createOrGetEventGuest([
+          'id' => $id,
+          'title' => $payload['title'],
+          'organizer_name' => $payload['organizer_name'],
+          'organizer_contact' => $payload['organizer_contact']
+        ]);
+        
+        // Create reservations for blocked rooms
+        if (!empty($roomBlocks)) {
+          foreach ($roomBlocks as $roomId) {
+            // Create reservation ID for event
+            $reservationId = 'EVT-' . strtoupper(uniqid());
+            
+            // Create reservation entry
+            $stmt = $pdo->prepare("
+              INSERT INTO reservations (id, guest_id, room_id, check_in_date, check_out_date, status, payment_status, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, 'Pending', 'PENDING', NOW(), NOW())
+            ");
+            $stmt->execute([
+              $reservationId,
+              $eventGuestId,
+              $roomId,
+              $payload['start_datetime'],
+              $payload['end_datetime']
+            ]);
+            
+            // Link reservation to event
+            $stmt = $pdo->prepare("INSERT INTO event_reservations (event_id, reservation_id) VALUES (?, ?)");
+            $stmt->execute([$id, $reservationId]);
+            
+            // Create billing transaction for event
+            $stmt = $pdo->prepare("
+              INSERT INTO billing_transactions (
+                reservation_id, transaction_type, amount, payment_amount, balance, `change`,
+                payment_method, status, notes, transaction_date
+              ) VALUES (?, 'Room Charge', ?, ?, ?, ?, 'Cash', 'Pending', ?, NOW())
+            ");
+            $stmt->execute([
+              $reservationId,
+              $payload['price_estimate'] ?? 0,
+              $payload['price_estimate'] ?? 0,
+              $payload['price_estimate'] ?? 0,
+              0, // No change for events
+              "Event: {$payload['title']} - {$payload['organizer_name']}"
+            ]);
+            
+            // Update room status to Event Reserved
+            $stmt = $pdo->prepare("
+              UPDATE rooms 
+              SET status = 'Reserved', 
+                  guest_name = CONCAT('Event: ', ?, ' - ', ?),
+                  maintenance_notes = 'Event Reserved'
+              WHERE id = ?
+            ");
+            $stmt->execute([$payload['title'], $payload['organizer_name'], $roomId]);
+          }
+        }
+        
+        $pdo->commit();
+        sendJson(['ok'=>true,'id'=>$id,'message'=>'Event created successfully and integrated with all modules']);
       } catch (Exception $e) {
+        $pdo->rollBack();
         error_log('Event creation error: ' . $e->getMessage());
         sendJson(['error'=>'creation_failed','message'=>'Database error: ' . $e->getMessage()],500);
       }

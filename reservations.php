@@ -879,7 +879,10 @@
         availableRooms.forEach(room => {
           const option = document.createElement('option');
           option.value = room.id;
-          option.textContent = `Room ${room.room_number} (${room.room_type || 'Standard'}) - ${room.status}`;
+          const roomType = room.room_type || 'Standard';
+          const roomPrice = room.rate ? `₱${parseFloat(room.rate).toFixed(2)}` : '₱0.00';
+          option.textContent = `Room ${room.room_number} - ${roomType} (${roomPrice})`;
+          option.dataset.rate = room.rate || 0; // Store rate for calculation
           roomBlocksSelect.appendChild(option);
         });
         
@@ -890,6 +893,31 @@
           option.disabled = true;
           roomBlocksSelect.appendChild(option);
         }
+        
+        // Add event listener for price calculation
+        roomBlocksSelect.addEventListener('change', calculateEventPrice);
+      }
+
+      // Calculate event price based on selected room blocks
+      function calculateEventPrice() {
+        const roomBlocksSelect = document.getElementById('eventRoomBlocks');
+        const priceEstimateInput = document.getElementById('eventPrice');
+        
+        if (!roomBlocksSelect || !priceEstimateInput) return;
+        
+        let totalPrice = 0;
+        const selectedOptions = Array.from(roomBlocksSelect.selectedOptions);
+        
+        selectedOptions.forEach(option => {
+          const rate = parseFloat(option.dataset.rate) || 0;
+          totalPrice += rate;
+        });
+        
+        // Update the price estimate field
+        priceEstimateInput.value = totalPrice.toFixed(2);
+        
+        // Trigger change event to update any other dependent fields
+        priceEstimateInput.dispatchEvent(new Event('change'));
       }
 
       // Load events
@@ -1415,6 +1443,9 @@
             Array.from(roomBlocksSelect.options).forEach(option => {
               option.selected = event.room_numbers.includes(option.value);
             });
+            
+            // Recalculate price based on selected rooms
+            calculateEventPrice();
           }
           
           // Show modal

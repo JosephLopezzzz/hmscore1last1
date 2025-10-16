@@ -874,7 +874,7 @@ function confirmEventAndBlockRooms(int $eventId): bool {
         $reservationId = 'EVT-' . strtoupper(uniqid());
         $stmt = $pdo->prepare("
           INSERT INTO reservations (id, guest_id, room_id, check_in_date, check_out_date, status, payment_status, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, 'Pending', 'FULLY PAID', NOW(), NOW())
+          VALUES (?, ?, ?, ?, ?, 'Pending', 'PENDING', NOW(), NOW())
         ");
         $stmt->execute([
           $reservationId,
@@ -893,7 +893,7 @@ function confirmEventAndBlockRooms(int $eventId): bool {
           INSERT INTO billing_transactions (
             reservation_id, transaction_type, amount, payment_amount, balance, `change`,
             payment_method, status, notes, transaction_date
-          ) VALUES (?, 'Room Charge', ?, ?, ?, ?, 'Cash', 'Paid', ?, NOW())
+          ) VALUES (?, 'Room Charge', ?, ?, ?, ?, 'Cash', 'Pending', ?, NOW())
         ");
         $stmt->execute([
           $reservationId,
