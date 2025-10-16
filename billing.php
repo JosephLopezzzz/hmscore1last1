@@ -164,7 +164,7 @@ rning/10 text-warning border border-warning/20',
       $stmt->execute();
       $paidTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-      // Calculate billing totals
+      // Calcul ate billing totals
       $totalsQuery = "
         SELECT
           SUM(CASE WHEN bt.status = 'Paid' THEN bt.amount ELSE 0 END) as total_paid,
