@@ -95,6 +95,7 @@ interface NavSection {
   name: string;
   icon: React.ComponentType<{ className?: string }>;
   items: NavItem[];
+  hidden?: boolean;
 }
 
 interface SidebarProps {
@@ -257,6 +258,7 @@ export default function Sidebar({ isOpen, onClose, userType = 'staff' }: Sidebar
     {
       name: 'Channel Management',
       icon: Sliders,
+      hidden: true,
       items: [
         { name: 'OTA Connections', href: '/channels/ota', icon: Globe },
         { name: 'Rate Management', href: '/channels/rates', icon: Tag },
@@ -305,6 +307,9 @@ export default function Sidebar({ isOpen, onClose, userType = 'staff' }: Sidebar
   };
 
   const renderSection = (section: NavSection) => {
+    // Skip hidden sections
+    if (section.hidden) return null;
+    
     const isSectionExpanded = expandedSections[section.name] ?? true;
     
     return (

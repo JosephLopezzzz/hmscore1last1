@@ -13,7 +13,7 @@
     [ 'label' => 'Inventory', 'path' => 'inventory.php' ],
     [ 'label' => 'Billing', 'path' => 'billing.php' ],
     [ 'label' => 'Guests', 'path' => 'guests.php' ],
-    [ 'label' => 'Channels', 'path' => 'channel-management.php' ],
+    [ 'label' => 'Channels', 'path' => 'channel-management.php', 'hidden' => true ],
     [ 'label' => 'Marketing', 'path' => 'marketing.php' ],
     [ 'label' => 'Analytics', 'path' => 'analytics.php' ],
   ];
@@ -26,7 +26,9 @@
         <span class="text-xl font-bold text-foreground">Inn Nexus</span>
       </a>
       <nav class="hidden md:flex items-center gap-2">
-        <?php foreach ($navItems as $item): $isActive = ($current === $item['path']); ?>
+        <?php foreach ($navItems as $item): 
+          if (isset($item['hidden']) && $item['hidden']) continue;
+          $isActive = ($current === $item['path']); ?>
           <a href="<?php echo $basePath; ?>/<?php echo $item['path']; ?>" class="inline-flex">
             <button class="px-3 py-2 rounded-md text-sm hover:bg-accent/10 hover:text-accent <?php echo $isActive ? 'bg-accent/10 text-accent font-medium' : ''; ?>">
               <?php echo $item['label']; ?>

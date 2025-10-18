@@ -91,7 +91,7 @@ class HotelDataSync {
      */
     async fetchRooms() {
         try {
-            const response = await fetch(this.getApiBase() + '/rooms');
+            const response = await fetch(this.getApiBase() + '/rooms.php');
             const data = await response.json();
             this.rooms = data.data || [];
             this.notifyListeners('roomsUpdate', this.rooms);
@@ -107,7 +107,7 @@ class HotelDataSync {
      */
     async fetchHousekeepingTasks(status = null) {
         try {
-            const url = status ? `${this.getApiBase()}/housekeeping?status=${status}` : `${this.getApiBase()}/housekeeping`;
+            const url = status ? `${this.getApiBase()}/housekeeping.php?status=${status}` : `${this.getApiBase()}/housekeeping.php`;
             const response = await fetch(url);
             const data = await response.json();
             this.housekeepingTasks = data.data || [];
@@ -126,7 +126,7 @@ class HotelDataSync {
      */
     async fetchEvents(status = null) {
         try {
-            const url = status ? `${this.getApiBase()}/events?status=${status}` : `${this.getApiBase()}/events`;
+            const url = status ? `${this.getApiBase()}/events.php?status=${status}` : `${this.getApiBase()}/events.php`;
             const response = await fetch(url);
             const data = await response.json();
             this.events = data.data || [];
@@ -143,7 +143,7 @@ class HotelDataSync {
      */
     async updateRoomStatus(roomId, status, guestName = null, notes = null) {
         try {
-            const response = await fetch(this.getApiBase() + '/rooms', {
+            const response = await fetch(this.getApiBase() + '/rooms.php', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -179,7 +179,7 @@ class HotelDataSync {
      */
     async updateHousekeepingTask(taskId, status, assignedTo = null) {
         try {
-            const response = await fetch(`${this.getApiBase()}/housekeeping/${taskId}`, {
+            const response = await fetch(`${this.getApiBase()}/housekeeping.php/${taskId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -213,7 +213,7 @@ class HotelDataSync {
      */
     async createHousekeepingTask(taskData) {
         try {
-            const response = await fetch(this.getApiBase() + '/housekeeping', {
+            const response = await fetch(this.getApiBase() + '/housekeeping.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -243,7 +243,7 @@ class HotelDataSync {
      */
     async createEvent(eventData) {
         try {
-            const response = await fetch(this.getApiBase() + '/events', {
+            const response = await fetch(this.getApiBase() + '/events.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -302,7 +302,7 @@ class HotelDataSync {
      */
     async updateEvent(eventId, eventData) {
         try {
-            const response = await fetch(`${this.getApiBase()}/events/${eventId}`, {
+            const response = await fetch(`${this.getApiBase()}/events.php/${eventId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -334,7 +334,7 @@ class HotelDataSync {
      */
     async confirmEvent(eventId) {
         try {
-            const response = await fetch(`${this.getApiBase()}/events/${eventId}/confirm`, {
+            const response = await fetch(`${this.getApiBase()}/events.php/${eventId}/confirm`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
