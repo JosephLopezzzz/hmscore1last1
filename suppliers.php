@@ -118,7 +118,7 @@ if (($action === 'edit' || $action === 'view') && $supplier_id) {
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Suppliers Management - Inn Nexus Hotel Management System</title>
+    <title>Suppliers Management - Core 1 Hotel Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
@@ -536,5 +536,11 @@ if (($action === 'edit' || $action === 'view') && $supplier_id) {
             });
         });
     </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      window.lucide && window.lucide.createIcons();
+    </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
 </html>

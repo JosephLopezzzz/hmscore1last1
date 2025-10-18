@@ -15,7 +15,7 @@ requireAuth(['admin','receptionist']);
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Channel Management - Inn Nexus Hotel Management System</title>
+    <title>Channel Management - Core 1 Hotel Management System</title>
     <link rel="icon" href="./public/favicon.svg" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
@@ -323,5 +323,11 @@ requireAuth(['admin','receptionist']);
         init();
       }
     </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      window.lucide && window.lucide.createIcons();
+    </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
 </html>

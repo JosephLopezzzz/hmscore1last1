@@ -60,17 +60,17 @@ if (($_POST['_action'] ?? '') === 'login') {
             $mail->addAddress($email);
 
             $mail->isHTML(true);
-            $mail->Subject = 'Your Inn Nexus 2FA Verification Code';
+            $mail->Subject = 'Your Core 1 2FA Verification Code';
             $mail->Body    = "
-              <h2>Inn Nexus Login Verification</h2>
+              <h2>Core 1 Login Verification</h2>
               <p>Your 6-digit verification code is:</p>
               <h1 style='font-size:24px; letter-spacing:4px; color: #3b82f6;'>$otp</h1>
               <p>This code will expire in 5 minutes.</p>
               <p>If you didn't request this, please ignore this email.</p>
               <hr>
-              <p><small>Inn Nexus Hotel Management System</small></p>
+              <p><small>Core 1 Hotel Management System</small></p>
             ";
-            $mail->AltBody = "Your Inn Nexus verification code is: $otp (expires in 5 minutes).";
+            $mail->AltBody = "Your Core 1 verification code is: $otp (expires in 5 minutes).";
 
             $mail->send();
 
@@ -116,7 +116,7 @@ if (($_POST['_action'] ?? '') === 'login') {
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Inn Nexus Hotel Management System</title>
+    <title>Login - Core 1 Hotel Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
   </head>
@@ -132,7 +132,7 @@ if (($_POST['_action'] ?? '') === 'login') {
       <div class="text-center mb-6">
         <div class="flex items-center justify-center mb-4">
           <i data-lucide="hotel" class="h-8 w-8 text-primary mr-2"></i>
-          <span class="text-xl font-bold text-card-foreground">Inn Nexus</span>
+          <span class="text-xl font-bold text-card-foreground">Core 1</span>
         </div>
         <h1 class="text-2xl font-bold text-card-foreground">Sign in</h1>
         <p class="text-sm text-muted-foreground mt-2">Welcome back to your dashboard</p>

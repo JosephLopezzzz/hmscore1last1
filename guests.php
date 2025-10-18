@@ -10,7 +10,7 @@
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Guests - Inn Nexus Hotel Management System</title>
+    <title>Guests - Core 1 Hotel Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
   </head>
@@ -695,7 +695,13 @@
         });
       });
     </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      window.lucide && window.lucide.createIcons();
+    </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
-  </html>
+</html>
 
 

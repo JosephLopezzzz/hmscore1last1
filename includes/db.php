@@ -719,6 +719,18 @@ function createEvent(array $data): int {
   
   // Debug logging
   error_log('createEvent called with data: ' . json_encode($data));
+  error_log('start_datetime value: ' . ($data['start_datetime'] ?? 'NULL'));
+  error_log('end_datetime value: ' . ($data['end_datetime'] ?? 'NULL'));
+  
+  // Validate required datetime fields
+  if (empty($data['start_datetime'])) {
+    error_log('ERROR: start_datetime is empty or null');
+    return 0;
+  }
+  if (empty($data['end_datetime'])) {
+    error_log('ERROR: end_datetime is empty or null');
+    return 0;
+  }
   
   try {
     $stmt = $pdo->prepare('

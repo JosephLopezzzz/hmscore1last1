@@ -1,6 +1,8 @@
 <?php
 // Marketing and Promotion Management
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/validation.php';
+require_once __DIR__ . '/includes/modal-components.php';
 requireAuth(['admin', 'manager']);
 
 $action = $_GET['action'] ?? 'dashboard';
@@ -14,22 +16,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             if ($action === 'create_campaign') {
-                $name = trim($_POST['name']);
-                $description = trim($_POST['description']);
-                $campaign_type = $_POST['campaign_type'];
-                $target_audience = trim($_POST['target_audience']);
-                $start_date = $_POST['start_date'];
-                $end_date = $_POST['end_date'] ?: null;
-                $budget = $_POST['budget'] ?: null;
-
-                if (empty($name) || empty($campaign_type) || empty($start_date)) {
-                    $error = "Please fill in all required fields.";
+                // Define validation rules
+                $rules = [
+                    'name' => ['type' => 'string', 'required' => true, 'max_length' => 255, 'error_message' => 'Campaign name is required and must not exceed 255 characters.'],
+                    'description' => ['type' => 'string', 'max_length' => 1000],
+                    'campaign_type' => ['type' => 'string', 'required' => true, 'error_message' => 'Campaign type is required.'],
+                    'target_audience' => ['type' => 'string', 'max_length' => 500],
+                    'start_date' => ['type' => 'date', 'required' => true, 'error_message' => 'Start date is required.'],
+                    'end_date' => ['type' => 'date'],
+                    'budget' => ['type' => 'numeric', 'min' => 0, 'max' => 999999.99]
+                ];
+                
+                $validation = sanitizeFormData($_POST, $rules);
+                
+                if (!$validation['is_valid']) {
+                    $error = implode(' ', $validation['errors']);
                 } else {
+                    $data = $validation['data'];
                     $stmt = $pdo->prepare("
                         INSERT INTO marketing_campaigns (name, description, campaign_type, target_audience, start_date, end_date, budget, created_by)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     ");
-                    $stmt->execute([$name, $description, $campaign_type, $target_audience, $start_date, $end_date, $budget, $_SESSION['user_id']]);
+                    $stmt->execute([
+                        $data['name'], 
+                        $data['description'], 
+                        $data['campaign_type'], 
+                        $data['target_audience'], 
+                        $data['start_date'], 
+                        $data['end_date'], 
+                        $data['budget'], 
+                        $_SESSION['user_id']
+                    ]);
 
                     $success = "Marketing campaign created successfully.";
                     header("Location: marketing.php?action=dashboard");
@@ -93,7 +110,7 @@ if ($pdo) {
 
     // Recent campaigns
     $stats['recent_campaigns'] = $pdo->query("
-        SELECT name, campaign_type, status, start_date
+        SELECT id, name, campaign_type, status, start_date
         FROM marketing_campaigns
         ORDER BY created_at DESC
         LIMIT 5
@@ -123,6 +140,7 @@ if ($pdo) {
     <link rel="icon" href="./public/favicon.svg" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
+    <link rel="stylesheet" href="./public/css/forms.css" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
@@ -238,17 +256,19 @@ if ($pdo) {
                                             <?php echo ucfirst($campaign['status']); ?>
                                         </span>
                                         <div class="flex gap-1">
-                                            <button onclick="editCampaign(<?php echo $campaign['id']; ?>)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded">
-                                                <i data-lucide="edit"></i>
-                                            </button>
-                                            <?php if ($campaign['status'] === 'active'): ?>
-                                                <button onclick="pauseCampaign(<?php echo $campaign['id']; ?>)" class="px-2 py-1 text-yellow-600 hover:bg-yellow-50 rounded">
-                                                    <i data-lucide="pause"></i>
+                                            <?php if (isset($campaign['id']) && $campaign['id']): ?>
+                                                <button onclick="editCampaign(<?php echo (int)$campaign['id']; ?>)" class="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded">
+                                                    <i data-lucide="edit"></i>
                                                 </button>
-                                            <?php elseif ($campaign['status'] === 'paused'): ?>
-                                                <button onclick="activateCampaign(<?php echo $campaign['id']; ?>)" class="px-2 py-1 text-green-600 hover:bg-green-50 rounded">
-                                                    <i data-lucide="play"></i>
-                                                </button>
+                                                <?php if ($campaign['status'] === 'active'): ?>
+                                                    <button onclick="pauseCampaign(<?php echo (int)$campaign['id']; ?>)" class="px-2 py-1 text-yellow-600 hover:bg-yellow-50 rounded">
+                                                        <i data-lucide="pause"></i>
+                                                    </button>
+                                                <?php elseif ($campaign['status'] === 'paused'): ?>
+                                                    <button onclick="activateCampaign(<?php echo (int)$campaign['id']; ?>)" class="px-2 py-1 text-green-600 hover:bg-green-50 rounded">
+                                                        <i data-lucide="play"></i>
+                                                    </button>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -507,6 +527,8 @@ if ($pdo) {
     </main>
 
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./public/js/form-validation.js"></script>
+    <script src="./public/js/modal-system.js"></script>
     <script>
         window.lucide && window.lucide.createIcons();
 
@@ -568,5 +590,7 @@ if ($pdo) {
         }
 
     </script>
+    
+    <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
 </html>

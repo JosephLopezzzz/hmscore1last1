@@ -129,5 +129,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </main>
     <script src="https://unpkg.com/lucide@latest"></script>
 <script>window.lucide && window.lucide.createIcons();</script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
 </html>

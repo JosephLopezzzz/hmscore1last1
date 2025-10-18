@@ -59,6 +59,7 @@ function handleGetRequest($path) {
                 r.last_cleaned,
                 r.maintenance_notes,
                 r.updated_at,
+                r.rate,
                 COUNT(ht.id) as task_count
             FROM rooms r
             LEFT JOIN housekeeping_tasks ht ON r.id = ht.room_id AND ht.status != 'completed'
@@ -85,7 +86,8 @@ function handleGetRequest($path) {
                 r.housekeeping_status,
                 r.last_cleaned,
                 r.maintenance_notes,
-                r.updated_at
+                r.updated_at,
+                r.rate
             FROM rooms r
             WHERE r.id = ?
         ");

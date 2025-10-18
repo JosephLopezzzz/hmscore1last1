@@ -57,7 +57,7 @@ if ($pdo = getPdo()) {
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Inventory Management - Inn Nexus Hotel Management System</title>
+    <title>Inventory Management - Core 1 Hotel Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
@@ -75,7 +75,19 @@ if ($pdo = getPdo()) {
                 <p class="text-muted-foreground"><?php echo date('l, F j, Y'); ?></p>
             </div>
             <div class="flex gap-2">
-                <a href="stock-tracking.php" class="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
+                <button onclick="showAddItemModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                    <i data-lucide="plus"></i>
+                    Add Item
+                </button>
+                <button onclick="showAddCategoryModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors">
+                    <i data-lucide="folder-plus"></i>
+                    Add Category
+                </button>
+                <button onclick="showAddSupplierModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors">
+                    <i data-lucide="user-plus"></i>
+                    Add Supplier
+                </button>
+                <a href="stock-tracking.php" class="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors">
                     <i data-lucide="activity"></i>
                     Stock Tracking
                 </a>
@@ -109,7 +121,7 @@ if ($pdo = getPdo()) {
 
         <!-- Dashboard Tab -->
         <?php if ($tab === 'dashboard'): ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <!-- Total Items Card -->
             <div class="bg-card rounded-lg border p-6">
                 <div class="flex items-center">
@@ -153,11 +165,26 @@ if ($pdo = getPdo()) {
             <div class="bg-card rounded-lg border p-6">
                 <div class="flex items-center">
                     <div class="p-2 bg-green-100 rounded-lg">
-                        <i data-lucide="dollar-sign" class="h-6 w-6 text-green-600"></i>
+                        <i data-lucide="package" class="h-6 w-6 text-green-600"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-muted-foreground">Total Value</p>
+                        <p class="text-sm font-medium text-muted-foreground">Total Inventory Value</p>
                         <p class="text-2xl font-bold text-green-600">$<?php echo number_format($stats['total_value'] ?? 0, 2); ?></p>
+                        <p class="text-xs text-muted-foreground mt-1">Based on unit costs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profit Margin Card -->
+            <div class="bg-card rounded-lg border p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i data-lucide="trending-up" class="h-6 w-6 text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-muted-foreground">Avg. Profit Margin</p>
+                        <p class="text-2xl font-bold text-purple-600">50%</p>
+                        <p class="text-xs text-muted-foreground mt-1">Selling vs unit cost</p>
                     </div>
                 </div>
             </div>
@@ -194,14 +221,22 @@ if ($pdo = getPdo()) {
                     <?php else: ?>
                         <div class="space-y-3">
                             <?php foreach ($low_stock_items as $item): ?>
-                                <div class="flex items-center justify-between p-3 border rounded-lg">
-                                    <div>
-                                        <p class="font-medium"><?php echo htmlspecialchars($item['name']); ?></p>
-                                        <p class="text-sm text-muted-foreground"><?php echo htmlspecialchars($item['sku']); ?> • <?php echo htmlspecialchars($item['category_name']); ?></p>
+                                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                        <div>
+                                            <p class="font-medium"><?php echo htmlspecialchars($item['name']); ?></p>
+                                            <p class="text-sm text-muted-foreground"><?php echo htmlspecialchars($item['sku']); ?> • <?php echo htmlspecialchars($item['category_name']); ?></p>
+                                        </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="font-medium text-yellow-600"><?php echo $item['current_stock']; ?> / <?php echo $item['minimum_stock_level']; ?></p>
-                                        <p class="text-sm text-muted-foreground">min required</p>
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
+                                                <?php echo $item['current_stock']; ?> / <?php echo $item['minimum_stock_level']; ?>
+                                            </span>
+                                            <span class="text-sm text-muted-foreground">min</span>
+                                        </div>
+                                        <p class="text-xs text-muted-foreground mt-1">Reorder needed</p>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -323,6 +358,7 @@ if ($pdo = getPdo()) {
                                 <th class="text-right p-3">Current Stock</th>
                                 <th class="text-right p-3">Min Level</th>
                                 <th class="text-right p-3">Unit Cost</th>
+                                <th class="text-right p-3">Selling Price</th>
                                 <th class="text-center p-3">Status</th>
                                 <th class="text-center p-3">Stock</th>
                                 <th class="text-center p-3">Actions</th>
@@ -365,6 +401,9 @@ if ($pdo = getPdo()) {
                                     </td>
                                     <td class="p-3 text-right">
                                         $<?php echo number_format($item['unit_cost'], 2); ?>
+                                    </td>
+                                    <td class="p-3 text-right">
+                                        $<?php echo number_format($item['selling_price'] ?? 0, 2); ?>
                                     </td>
                                     <td class="p-3 text-center">
                                         <?php if (($item['current_stock'] ?? 0) == 0): ?>
@@ -612,7 +651,7 @@ if ($pdo = getPdo()) {
 
                         <button onclick="generateInventoryValueReport()" class="w-full text-left p-3 border rounded-lg hover:bg-muted/50">
                             <div class="flex items-center gap-3">
-                                <i data-lucide="dollar-sign" class="h-5 w-5 text-green-600"></i>
+                                <i data-lucide="file-text" class="h-5 w-5 text-green-600"></i>
                                 <div>
                                     <p class="font-medium">Inventory Value Report</p>
                                     <p class="text-sm text-muted-foreground">Current inventory value by category</p>
@@ -1759,5 +1798,6 @@ if ($pdo = getPdo()) {
             }
         });
     </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
 </html>

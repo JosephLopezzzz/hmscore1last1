@@ -7,7 +7,6 @@
   }
   $navItems = [
     [ 'label' => 'Front Desk', 'path' => 'index.php' ],
-    [ 'label' => 'Reservations', 'path' => 'reservations.php' ],
     [ 'label' => 'Rooms', 'path' => 'rooms-overview.php' ],
     [ 'label' => 'Housekeeping', 'path' => 'housekeeping.php' ],
     [ 'label' => 'Inventory', 'path' => 'inventory.php' ],
@@ -17,13 +16,19 @@
     [ 'label' => 'Marketing', 'path' => 'marketing.php' ],
     [ 'label' => 'Analytics', 'path' => 'analytics.php' ],
   ];
+  
+  // Reservations submenu
+  $reservationsSubmenu = [
+    [ 'label' => 'Hotel Reservations', 'path' => 'reservations.php', 'module' => 'hotel' ],
+    [ 'label' => 'Events & Conferences', 'path' => 'reservations.php', 'module' => 'events' ],
+  ];
 ?>
 <header class="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 light-mode-header">
   <div class="max-w-7xl mx-auto flex h-16 items-center justify-between px-6 w-full">
     <div class="flex items-center gap-6">
       <a href="<?php echo $basePath; ?>/index.php" class="flex items-center gap-2">
         <i data-lucide="hotel" class="h-6 w-6 text-accent"></i>
-        <span class="text-xl font-bold text-foreground">Inn Nexus</span>
+        <span class="text-xl font-bold text-foreground">Core 1</span>
       </a>
       <nav class="hidden md:flex items-center gap-2">
         <?php foreach ($navItems as $item): 
@@ -35,6 +40,31 @@
             </button>
           </a>
         <?php endforeach; ?>
+        
+        <!-- Reservations Dropdown -->
+        <div class="relative group">
+          <button class="px-3 py-2 rounded-md text-sm hover:bg-accent/10 hover:text-accent flex items-center gap-1 <?php echo ($current === 'reservations.php') ? 'bg-accent/10 text-accent font-medium' : ''; ?>">
+            Reservations
+            <i data-lucide="chevron-down" class="h-4 w-4 transition-transform group-hover:rotate-180"></i>
+          </button>
+          <div class="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+            <div class="py-1">
+              <?php foreach ($reservationsSubmenu as $subItem): ?>
+                <?php if (isset($subItem['module'])): ?>
+                  <button onclick="navigateToReservationsModule('<?php echo $subItem['module']; ?>')" class="block w-full text-left px-4 py-2 text-sm hover:bg-accent/10 hover:text-accent">
+                    <?php echo $subItem['label']; ?>
+                  </button>
+                <?php else: ?>
+                  <a href="<?php echo $basePath; ?>/<?php echo $subItem['path']; ?>" class="block">
+                    <button class="w-full text-left px-4 py-2 text-sm hover:bg-accent/10 hover:text-accent">
+                      <?php echo $subItem['label']; ?>
+                    </button>
+                  </a>
+                <?php endif; ?>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </div>
       </nav>
     </div>
 
@@ -73,6 +103,55 @@
     </div>
   </div>
 </header>
+
+<script>
+  // Navigate to reservations page and show specific module
+  function navigateToReservationsModule(module) {
+    // If we're already on reservations page, just show module
+    if (window.location.pathname.includes('reservations.php')) {
+      // Show module immediately
+      showModule(module);
+    } else {
+      // Store module in sessionStorage for when page loads
+      sessionStorage.setItem('selectedModule', module);
+      // Navigate to reservations page
+      window.location.href = '<?php echo $basePath; ?>/reservations.php';
+    }
+  }
+  
+  // Show specific module on reservations page
+  function showModule(module) {
+    // Find sections by their specific IDs
+    const hotelSection = document.getElementById('hotel-reservations-section');
+    const eventsSection = document.getElementById('events-conferences-section');
+    
+    if (module === 'hotel') {
+      // Show ONLY hotel reservations, hide events completely
+      if (hotelSection) {
+        hotelSection.style.display = 'block';
+      }
+      if (eventsSection) {
+        eventsSection.style.display = 'none';
+      }
+    } else if (module === 'events') {
+      // Show ONLY events, hide hotel reservations completely
+      if (hotelSection) {
+        hotelSection.style.display = 'none';
+      }
+      if (eventsSection) {
+        eventsSection.style.display = 'block';
+      }
+    } else if (module === 'both') {
+      // Show both modules (default state)
+      if (hotelSection) {
+        hotelSection.style.display = 'block';
+      }
+      if (eventsSection) {
+        eventsSection.style.display = 'block';
+      }
+    }
+  }
+</script>
 
 <script>
   // User menu and theme toggle functionality

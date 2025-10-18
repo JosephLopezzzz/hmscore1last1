@@ -10,7 +10,7 @@
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analytics & Reports - Inn Nexus Hotel Management System</title>
+    <title>Analytics & Reports - Core 1 Hotel Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./public/css/tokens.css" />
   </head>
@@ -280,7 +280,8 @@
         }
       });
     </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
-  </html>
+</html>
 
 

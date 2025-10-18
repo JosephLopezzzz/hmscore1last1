@@ -19,9 +19,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>Housekeeping - Inn Nexus Hotel Management System</title>
-    <meta name="title" content="Housekeeping - Inn Nexus Hotel Management System" />
-    <meta name="description" content="Housekeeping task management for Inn Nexus. Track cleaning tasks, maintenance issues, and completion rates in real-time." />
+    <title>Housekeeping - Core 1 Hotel Management System</title>
+    <meta name="title" content="Housekeeping - Core 1 Hotel Management System" />
+    <meta name="description" content="Housekeeping task management for Core 1. Track cleaning tasks, maintenance issues, and completion rates in real-time." />
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
@@ -370,6 +370,7 @@
         }
       })();
     </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
 </html>
 

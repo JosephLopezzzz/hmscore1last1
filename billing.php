@@ -12,11 +12,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>Billing & Payments - Inn Nexus Hotel Management System</title>
-    <meta name="title" content="Billing & Payments - Inn Nexus Hotel Management System" />
-    <meta name="description" content="Manage hotel billing, payments, and guest folios with Inn Nexus billing management system. Process payments and track revenue efficiently." />
+    <title>Billing & Payments - Core 1 Hotel Management System</title>
+    <meta name="title" content="Billing & Payments - Core 1 Hotel Management System" />
+    <meta name="description" content="Manage hotel billing, payments, and guest folios with Core 1 billing management system. Process payments and track revenue efficiently." />
     <meta name="keywords" content="hotel billing, payment processing, guest folios, hotel accounting, revenue management, payment systems" />
-    <meta name="author" content="Inn Nexus Team" />
+    <meta name="author" content="Core 1 Team" />
     <meta name="robots" content="noindex, nofollow" />
     
     <!-- Favicon -->
@@ -197,7 +197,7 @@ rning/10 text-warning border border-warning/20',
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-3">
           <div class="flex items-center gap-2">
             <div class="p-1.5 rounded-lg bg-accent/10">
-              <i data-lucide="dollar-sign" class="h-4 w-4 text-accent"></i>
+              <i data-lucide="trending-up" class="h-4 w-4 text-accent"></i>
             </div>
             <div>
               <p class="text-xs text-muted-foreground">Total Revenue</p>
@@ -736,6 +736,7 @@ rning/10 text-warning border border-warning/20',
         });
       });
     </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
   </html>
 

@@ -34,6 +34,10 @@ if (updateReservationStatusSimple($reservationId, 'Checked In')) {
                     $upd->execute([':guest_name' => $guestName, ':room_id' => (int)$row['room_id']]);
                     // Log status change
                     logRoomStatusChange($row['room_number'] ?? '', (string)($row['room_status'] ?? 'Vacant'), 'Event Ongoing', 'Event checked in', 'Front Desk');
+                    
+                    // Update event status to "Ongoing"
+                    $eventStmt = $pdo->prepare("UPDATE events SET status = 'Ongoing' WHERE id IN (SELECT event_id FROM event_reservations WHERE reservation_id = :reservation_id)");
+                    $eventStmt->execute([':reservation_id' => $reservationId]);
                 } else {
                     // For regular guests, set status to "Occupied"
                     $guestName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));

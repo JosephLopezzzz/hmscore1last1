@@ -15,11 +15,11 @@
     <meta http-equiv="Expires" content="0" />
     
     <!-- Primary Meta Tags -->
-    <title>Reservations - Inn Nexus Hotel Management System</title>
-    <meta name="title" content="Reservations Management - Inn Nexus Hotel Management System" />
-    <meta name="description" content="Manage hotel reservations, bookings, and guest check-ins with Inn Nexus reservation management system. Streamline your booking process." />
+    <title>Reservations - Core 1 Hotel Management System</title>
+    <meta name="title" content="Reservations Management - Core 1 Hotel Management System" />
+    <meta name="description" content="Manage hotel reservations, bookings, and guest check-ins with Core 1 reservation management system. Streamline your booking process." />
     <meta name="keywords" content="hotel reservations, booking management, guest check-in, hotel booking system, reservation software" />
-    <meta name="author" content="Inn Nexus Team" />
+    <meta name="author" content="Core 1 Team" />
     <meta name="robots" content="noindex, nofollow" />
     
     <!-- Favicon -->
@@ -43,7 +43,6 @@
     <?php require_once __DIR__ . '/includes/db.php'; requireAuth(['admin','receptionist']); ?>
     <?php include __DIR__ . '/includes/header.php'; ?>
     <?php include __DIR__ . '/includes/helpers.php'; ?>
-    <?php require_once __DIR__ . '/includes/db.php'; ?>
     <?php
       $reservations = fetchAllReservations() ?: [];
       // Filter to only show pending and cancelled reservations
@@ -122,28 +121,62 @@
         $averageRate = $reservationsWithRates > 0 ? $totalRates / $reservationsWithRates : 0;
       ?>
 
-      <!-- Metrics Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <!-- Integrated Metrics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Hotel Reservations Metrics -->
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <p class="text-sm text-muted-foreground mb-1">Total Reservations</p>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+              </svg>
+            </div>
+            <p class="text-sm text-muted-foreground">Hotel Reservations</p>
+          </div>
           <p class="text-2xl font-bold"><?php echo count($reservations); ?></p>
         </div>
+        
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <p class="text-sm text-muted-foreground mb-1">Arriving Today</p>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <p class="text-sm text-muted-foreground">Arriving Today</p>
+          </div>
           <p class="text-2xl font-bold"><?php echo $arrivingToday; ?></p>
         </div>
+        
+        <!-- Events & Conferences Metrics -->
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <p class="text-sm text-muted-foreground mb-1">Departing Today</p>
-          <p class="text-2xl font-bold"><?php echo $departingToday; ?></p>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+              <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <p class="text-sm text-muted-foreground">Total Events</p>
+          </div>
+          <p class="text-2xl font-bold" id="metricTotalEvents">0</p>
         </div>
+        
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          <p class="text-sm text-muted-foreground mb-1">Average Rate</p>
-          <p class="text-2xl font-bold"><?php echo formatCurrencyPhpPeso($averageRate, 2); ?></p>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
+              <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+            </div>
+            <p class="text-sm text-muted-foreground">Revenue Estimate</p>
+          </div>
+          <p class="text-2xl font-bold" id="metricRevenueEstimate">₱0</p>
         </div>
       </div>
 
       <!-- Hotel Reservations Section -->
-      <div class="rounded-lg border bg-card text-card-foreground shadow-sm mb-6 overflow-hidden">
+      <div id="hotel-reservations-section" class="rounded-lg border bg-card text-card-foreground shadow-sm mb-6 overflow-hidden">
         <!-- Enhanced Top Section -->
         <div class="bg-gradient-to-r from-primary/5 to-primary/10 p-6 border-b border-border">
           <div class="flex items-center justify-between mb-6">
@@ -171,7 +204,7 @@
         
         <!-- Enhanced Table -->
         <div class="overflow-x-auto">
-          <table class="w-full">
+        <table class="w-full">
             <thead class="bg-muted/50">
               <tr class="border-b border-border">
                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -247,10 +280,10 @@
                     Actions
                   </div>
                 </th>
-              </tr>
-            </thead>
+            </tr>
+          </thead>
             <tbody class="divide-y divide-border">
-              <?php foreach ($reservations as $res): ?>
+            <?php foreach ($reservations as $res): ?>
                 <tr class="hover:bg-muted/50 transition-colors">
                   <td class="px-4 py-4">
                     <div class="flex items-center gap-3">
@@ -264,7 +297,7 @@
                         <div class="text-xs text-muted-foreground">Reservation</div>
                       </div>
                     </div>
-                  </td>
+                </td>
                   <td class="px-4 py-4">
                     <div class="flex items-center gap-2">
                       <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
@@ -332,340 +365,209 @@
                         Edit
                       </button>
                     </div>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
       </div>
 
       <!-- Events & Conferences Section -->
-      <div class="space-y-6">
-        <div class="bg-card border border-border rounded-lg p-6">
+      <div id="events-conferences-section" class="rounded-lg border bg-card text-card-foreground shadow-sm mb-6 overflow-hidden">
+        <!-- Enhanced Top Section -->
+        <div class="bg-gradient-to-r from-primary/5 to-primary/10 p-6 border-b border-border">
           <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
               </div>
               <div>
                 <h3 class="text-2xl font-bold text-foreground">Events & Conferences</h3>
-                <p class="text-muted-foreground">Manage events, conferences, and group bookings</p>
+                <p class="text-muted-foreground">Manage events, conferences, and special occasions</p>
               </div>
             </div>
-            <div class="flex gap-3">
-              <button id="toggleCalendarBtn" class="h-10 px-4 rounded-lg border border-border hover:bg-muted text-foreground transition-colors flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Calendar View
-              </button>
-              <button id="addEventBtn" class="h-10 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                New Event
-              </button>
-            </div>
+            <button onclick="showEventModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              New Event
+            </button>
           </div>
 
-          <!-- Room Status Legend for Events -->
-          <div class="mb-6 p-4 bg-muted/30 rounded-lg border border-border">
-            <h4 class="text-sm font-semibold text-foreground mb-3">Event Room Status Legend</h4>
-            <div class="flex flex-wrap gap-4">
-              <div class="flex items-center gap-2">
-                <div class="w-3 h-3 rounded-full" style="background: #8b5cf6;"></div>
-                <span class="text-sm text-muted-foreground">Event Reserved</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="w-3 h-3 rounded-full" style="background: #ec4899;"></div>
-                <span class="text-sm text-muted-foreground">Event Ongoing</span>
-              </div>
-            </div>
-            <p class="text-xs text-muted-foreground mt-2">
-              When events are created with room blocks, rooms show as "Event Reserved" (purple). 
-              After check-in at front desk, rooms change to "Event Ongoing" (pink).
-            </p>
-          </div>
+        </div>
 
-          <!-- Metrics Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div class="bg-card border border-border rounded-lg p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm font-medium text-muted-foreground">Total Events</p>
-                  <p id="metricTotalEvents" class="text-2xl font-bold text-foreground">0</p>
-                </div>
-                <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                </div>
-              </div>
+        <!-- Events Controls -->
+        <div class="p-6 border-b border-border">
+          <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="relative">
+              <input type="text" id="eventSearchInput" placeholder="Search events..." class="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
             </div>
             
-            <div class="bg-card border border-border rounded-lg p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm font-medium text-muted-foreground">Upcoming Events</p>
-                  <p id="metricUpcomingEvents" class="text-2xl font-bold text-foreground">0</p>
-                </div>
-                <div class="h-12 w-12 rounded-full bg-warning/10 flex items-center justify-center">
-                  <svg class="h-6 w-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <select id="eventStatusFilter" class="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
             
-            <div class="bg-card border border-border rounded-lg p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm font-medium text-muted-foreground">Approved Events</p>
-                  <p id="metricApprovedEvents" class="text-2xl font-bold text-foreground">0</p>
-                </div>
-                <div class="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
-                  <svg class="h-6 w-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <input type="date" id="eventDateFilter" class="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <button onclick="exportEvents()" class="px-4 py-2 border border-border rounded-lg hover:bg-muted text-foreground transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export
+            </button>
             
-            <div class="bg-card border border-border rounded-lg p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm font-medium text-muted-foreground">Revenue Estimate</p>
-                  <p id="metricRevenueEstimate" class="text-2xl font-bold text-foreground">₱0</p>
-                </div>
-                <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <button id="toggleCalendarBtn" onclick="toggleView()" class="px-4 py-2 border border-border rounded-lg hover:bg-muted text-foreground transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              Calendar View
+            </button>
           </div>
+        </div>
+        </div>
 
-          <!-- Events List View -->
-          <div id="eventsListView" class="space-y-6">
-            <!-- Filter and Search Controls -->
-            <div class="bg-card border border-border rounded-lg p-6">
-              <div class="flex flex-col sm:flex-row gap-4">
-                <div class="flex-1">
-                  <input 
-                    type="text" 
-                    id="eventSearchInput" 
-                    placeholder="Search events..." 
-                    class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div class="flex gap-2">
-                  <select id="eventStatusFilter" class="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-                    <option value="">All Status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                  <input 
-                    type="date" 
-                    id="eventDateFilter" 
-                    class="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <button id="refreshEventsBtn" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                  </button>
-                  <button id="exportEventsBtn" class="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Events Table -->
-            <div class="bg-card border border-border rounded-lg overflow-hidden">
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead class="bg-muted/50">
-                    <tr>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Event</th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Organizer</th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date & Time</th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Setup</th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Rooms</th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="eventsTableBody" class="divide-y divide-border">
-                    <!-- Events will be loaded here -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        <!-- Events List View -->
+        <div id="eventsListView" class="p-6">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="border-b border-border">
+                <tr class="text-left">
+                  <th class="px-6 py-4 font-medium text-foreground">Event</th>
+                  <th class="px-6 py-4 font-medium text-foreground">Organizer</th>
+                  <th class="px-6 py-4 font-medium text-foreground">Date & Time</th>
+                  <th class="px-6 py-4 font-medium text-foreground">Setup</th>
+                  <th class="px-6 py-4 font-medium text-foreground">Rooms</th>
+                  <th class="px-6 py-4 font-medium text-foreground">Status</th>
+                  <th class="px-6 py-4 font-medium text-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTableBody">
+                <tr>
+                  <td colspan="7" class="px-6 py-8 text-center text-muted-foreground">
+                    <div class="flex flex-col items-center gap-2">
+                      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                      <p>No events found</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          <!-- Calendar View -->
-          <div id="eventsCalendarView" class="hidden">
-            <div class="bg-card border border-border rounded-lg p-6">
-              <div id="calendar" class="bg-background rounded-lg border border-border p-4"></div>
-            </div>
-          </div>
+        <!-- Events Calendar View -->
+        <div id="eventsCalendarView" class="hidden p-6">
+          <div id="calendar"></div>
+        </div>
         </div>
       </div>
 
     </main>
 
+    <!-- Footer -->
+    <?php include 'includes/footer.php'; ?>
+
     <!-- Event Modal -->
-    <div id="eventModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-card border border-border rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between p-6 border-b border-border">
-          <div>
-            <h2 id="eventModalTitle" class="text-xl font-semibold text-foreground">New Event / Conference</h2>
-            <p class="text-sm text-muted-foreground">Create a new event or conference booking</p>
-          </div>
-          <button id="closeEventModal" class="text-muted-foreground hover:text-foreground transition-colors">
+    <div id="eventModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+      <div class="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 id="eventModalTitle" class="text-xl font-semibold text-foreground">New Event / Conference</h3>
+          <button onclick="hideEventModal()" class="text-muted-foreground hover:text-foreground transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
-
-        <!-- Modal Body -->
-        <form id="eventForm" class="p-6 space-y-6">
+        
+        <form id="eventForm" onsubmit="handleEventSubmit(event)">
           <input type="hidden" id="eventId" name="event_id">
           
-          <!-- Basic Information Section -->
-          <div class="space-y-4">
-            <div class="flex items-center gap-2 mb-3">
-              <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg class="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-              <h4 class="font-medium text-foreground">Basic Information</h4>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="eventTitle" class="block text-sm font-medium text-foreground mb-2">Event Title *</label>
-                <input type="text" id="eventTitle" name="title" required class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Enter event title">
-              </div>
-              <div>
-                <label for="eventOrganizer" class="block text-sm font-medium text-foreground mb-2">Organizer Name *</label>
-                <input type="text" id="eventOrganizer" name="organizer_name" required class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Enter organizer name">
-              </div>
-              <div>
-                <label for="eventContact" class="block text-sm font-medium text-foreground mb-2">Organizer Contact</label>
-                <input type="text" id="eventContact" name="organizer_contact" class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Enter contact information">
-              </div>
-              <div>
-                <label for="eventAttendees" class="block text-sm font-medium text-foreground mb-2">Expected Attendees</label>
-                <input type="number" id="eventAttendees" name="attendees_expected" class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Number of attendees">
-              </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="eventTitle" class="block text-sm font-medium text-foreground mb-2">Event Title *</label>
+              <input type="text" id="eventTitle" name="title" required class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
             </div>
             
             <div>
-              <label for="eventDescription" class="block text-sm font-medium text-foreground mb-2">Description</label>
-              <textarea id="eventDescription" name="description" rows="3" class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Enter event description"></textarea>
+              <label for="eventOrganizer" class="block text-sm font-medium text-foreground mb-2">Organizer Name *</label>
+              <input type="text" id="eventOrganizer" name="organizer_name" required class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
             </div>
           </div>
-
-          <!-- Date & Time Section -->
-          <div class="space-y-4">
-            <div class="flex items-center gap-2 mb-3">
-              <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                <svg class="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-              <h4 class="font-medium text-foreground">Date & Time</h4>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="eventStartDate" class="block text-sm font-medium text-foreground mb-2">Start Date & Time *</label>
-                <input type="datetime-local" id="eventStartDate" name="start_datetime" required class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-              </div>
-              <div>
-                <label for="eventEndDate" class="block text-sm font-medium text-foreground mb-2">End Date & Time *</label>
-                <input type="datetime-local" id="eventEndDate" name="end_datetime" required class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-              </div>
-            </div>
-          </div>
-
-          <!-- Setup & Rooms Section -->
-          <div class="space-y-4">
-            <div class="flex items-center gap-2 mb-3">
-              <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
-                <svg class="w-3 h-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-              <h4 class="font-medium text-foreground">Setup & Rooms</h4>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="eventSetupType" class="block text-sm font-medium text-foreground mb-2">Setup Type</label>
-                <select id="eventSetupType" name="setup_type" class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-                  <option value="Conference">Conference</option>
-                  <option value="Banquet">Banquet</option>
-                  <option value="Theater">Theater</option>
-                  <option value="Classroom">Classroom</option>
-                  <option value="U-Shape">U-Shape</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label for="eventPrice" class="block text-sm font-medium text-foreground mb-2">Price Estimate (₱)</label>
-                <input type="number" id="eventPrice" name="price_estimate" step="0.01" class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00">
-              </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="eventContact" class="block text-sm font-medium text-foreground mb-2">Contact Information</label>
+              <input type="text" id="eventContact" name="organizer_contact" class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
             </div>
             
             <div>
-              <label for="eventRoomBlocks" class="block text-sm font-medium text-foreground mb-2">Room Blocks</label>
-              <select id="eventRoomBlocks" name="room_blocks[]" multiple class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-                <!-- Rooms will be loaded here -->
-              </select>
-              <p class="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple rooms</p>
+              <label for="eventAttendees" class="block text-sm font-medium text-foreground mb-2">Expected Attendees</label>
+              <input type="number" id="eventAttendees" name="attendees_expected" class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
             </div>
           </div>
-
-          <!-- Status Section -->
-          <div class="space-y-4">
-            <div class="flex items-center gap-2 mb-3">
-              <div class="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-                <svg class="w-3 h-3 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-              <h4 class="font-medium text-foreground">Status</h4>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="eventStartDate" class="block text-sm font-medium text-foreground mb-2">Start Date & Time *</label>
+              <input type="datetime-local" id="eventStartDate" name="start_datetime" required class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
             </div>
             
             <div>
-              <label for="eventStatus" class="block text-sm font-medium text-foreground mb-2">Event Status</label>
-              <select id="eventStatus" name="status" class="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Cancelled">Cancelled</option>
+              <label for="eventEndDate" class="block text-sm font-medium text-foreground mb-2">End Date & Time *</label>
+              <input type="datetime-local" id="eventEndDate" name="end_datetime" required class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="eventSetupType" class="block text-sm font-medium text-foreground mb-2">Setup Type</label>
+              <select id="eventSetupType" name="setup_type" class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                <option value="Conference">Conference</option>
+                <option value="Wedding">Wedding</option>
+                <option value="Birthday">Birthday</option>
+                <option value="Corporate">Corporate</option>
+                <option value="Other">Other</option>
               </select>
             </div>
+            
+            <div>
+              <label for="eventPrice" class="block text-sm font-medium text-foreground mb-2">Price Estimate</label>
+              <input type="number" id="eventPrice" name="price_estimate" step="0.01" class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+            </div>
           </div>
-
-          <!-- Modal Actions -->
-          <div class="flex justify-end gap-3 pt-6 border-t border-border">
-            <button type="button" id="cancelEventBtn" class="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors">
+          
+          <div class="mb-4">
+            <label for="eventRoomBlocks" class="block text-sm font-medium text-foreground mb-2">Room Blocks</label>
+            <select id="eventRoomBlocks" name="room_blocks[]" multiple class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              <!-- Options will be populated by JavaScript -->
+            </select>
+            <p class="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple rooms</p>
+          </div>
+          
+          <div class="mb-6">
+            <label for="eventDescription" class="block text-sm font-medium text-foreground mb-2">Description</label>
+            <textarea id="eventDescription" name="description" rows="3" class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
+          </div>
+          
+          <div class="flex justify-end gap-3">
+            <button type="button" onclick="hideEventModal()" class="px-4 py-2 border border-border rounded-lg hover:bg-muted text-foreground transition-colors">
               Cancel
             </button>
-            <button type="submit" id="saveEventBtn" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+            <button type="submit" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
               Save Event
             </button>
           </div>
@@ -674,36 +576,27 @@
     </div>
 
     <!-- Event Detail Modal -->
-    <div id="eventDetailModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-card border border-border rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between p-6 border-b border-border">
-          <div>
-            <h2 id="eventDetailTitle" class="text-xl font-semibold text-foreground">Event Details</h2>
-            <p class="text-sm text-muted-foreground">View and manage event information</p>
-          </div>
-          <button id="closeEventDetailModal" class="text-muted-foreground hover:text-foreground transition-colors">
+    <div id="eventDetailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+      <div class="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-foreground">Event Details</h3>
+          <button onclick="hideEventDetailModal()" class="text-muted-foreground hover:text-foreground transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
-
-        <!-- Modal Body -->
-        <div id="eventDetailContent" class="p-6">
-          <!-- Event details will be loaded here -->
+        
+        <div id="eventDetailContent">
+          <!-- Content will be populated by JavaScript -->
         </div>
-
-        <!-- Modal Actions -->
-        <div class="flex justify-end gap-3 p-6 border-t border-border">
-          <button type="button" id="closeEventDetailBtn" class="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors">
+        
+        <div class="flex justify-end gap-3 mt-6">
+          <button onclick="hideEventDetailModal()" class="px-4 py-2 border border-border rounded-lg hover:bg-muted text-foreground transition-colors">
             Close
           </button>
-          <button type="button" id="editEventBtn" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+          <button onclick="editEvent(currentEvent.id)" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
             Edit Event
-          </button>
-          <button type="button" id="cancelEventDetailBtn" class="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors">
-            Cancel Event
           </button>
         </div>
       </div>
@@ -714,7 +607,7 @@
     
     <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
-    
+
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>window.lucide && window.lucide.createIcons();</script>
     
@@ -727,208 +620,133 @@
     <!-- Hotel Sync JS -->
     <script src="./public/js/hotel-sync.js"></script>
     
-    <script>
-      // Global variables
-      let currentEvents = [];
-      let currentRooms = [];
-      let calendar = null;
-      let currentView = 'list'; // 'list' or 'calendar'
-      let currentEvent = null;
 
-      // Initialize on page load
-      document.addEventListener('DOMContentLoaded', async function() {
-        console.log('Initializing Events & Conferences module...');
-        
-        // Initialize hotel sync
-        if (window.hotelSync) {
-          await window.hotelSync.init();
-        }
-        
-        // Load initial data
-        await loadRooms();
-        await loadEvents();
-        
-        // Setup event listeners
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+
+    <!-- Events JavaScript -->
+    <script>
+      // Events variables
+      let currentEvents = [];
+      let currentEvent = null;
+      let currentView = 'list';
+      let calendar = null;
+
+      // Load events on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        loadEvents();
         setupEventListeners();
         
-        console.log('Events & Conferences module initialized');
+        // Check for stored module selection from navigation
+        const storedModule = sessionStorage.getItem('selectedModule');
+        
+        if (storedModule !== null) {
+          // Show the selected module
+          setTimeout(() => {
+            showModule(storedModule);
+            // Clear the stored module
+            sessionStorage.removeItem('selectedModule');
+          }, 100);
+        } else {
+          // Default: show both modules if no specific selection
+          showModule('both');
+        }
+        
+        
       });
 
       // Setup event listeners
       function setupEventListeners() {
-        // Add Event button
-        document.getElementById('addEventBtn').addEventListener('click', showEventModal);
-        
-        // Close Event Modal
-        document.getElementById('closeEventModal').addEventListener('click', hideEventModal);
-        document.getElementById('cancelEventBtn').addEventListener('click', hideEventModal);
-        
-        // Event Form submission
-        document.getElementById('eventForm').addEventListener('submit', handleEventSubmit);
-        
-        // Toggle Calendar View
-        document.getElementById('toggleCalendarBtn').addEventListener('click', toggleView);
-        
-        // Refresh Events
-        document.getElementById('refreshEventsBtn').addEventListener('click', loadEvents);
-        
-        // Export Events
-        document.getElementById('exportEventsBtn').addEventListener('click', exportEvents);
-        
-        // Search and Filter
+        // Search and filter events
         document.getElementById('eventSearchInput').addEventListener('input', filterEvents);
         document.getElementById('eventStatusFilter').addEventListener('change', filterEvents);
         document.getElementById('eventDateFilter').addEventListener('change', filterEvents);
-        
-        // Event Detail Modal
-        document.getElementById('closeEventDetailModal').addEventListener('click', hideEventDetailModal);
-        document.getElementById('closeEventDetailBtn').addEventListener('click', hideEventDetailModal);
-        document.getElementById('editEventBtn').addEventListener('click', editEvent);
-        document.getElementById('cancelEventDetailBtn').addEventListener('click', cancelEvent);
-        
-        // Date change handlers for room loading
-        document.getElementById('eventStartDate').addEventListener('change', loadRooms);
-        document.getElementById('eventEndDate').addEventListener('change', loadRooms);
       }
 
       // Load rooms for room blocks dropdown
       async function loadRooms() {
         try {
-          console.log('Loading rooms...');
-          
-          // Try to get rooms from hotel sync first
-          if (window.hotelSync && window.hotelSync.getRooms) {
-            const rooms = window.hotelSync.getRooms();
-            if (rooms && rooms.length > 0) {
-              currentRooms = rooms;
-              updateRoomBlocksDropdown();
-              return;
-            }
-          }
-          
-          // Fallback to direct API call
-          const response = await fetch('event_actions.php?action=get_rooms', {
+          const response = await fetch('/api/rooms', {
             method: 'GET',
-            credentials: 'same-origin',
             headers: {
-              'X-Requested-With': 'XMLHttpRequest'
+              'Content-Type': 'application/json',
             }
           });
           
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const contentType = response.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Response is not JSON. Please refresh the page to reload session.');
-          }
-          
-          const data = await response.json();
-          
-          if (data.success && data.rooms) {
-            currentRooms = data.rooms;
-            updateRoomBlocksDropdown();
-          } else {
-            console.error('Failed to load rooms:', data.message || 'Unknown error');
-            showToast('Failed to load rooms', 'error');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data) {
+              updateRoomBlocksDropdown(data.data);
+            }
           }
         } catch (error) {
           console.error('Error loading rooms:', error);
-          showToast('Error loading rooms: ' + error.message, 'error');
         }
       }
 
       // Update room blocks dropdown
-      function updateRoomBlocksDropdown() {
-        const roomBlocksSelect = document.getElementById('eventRoomBlocks');
-        if (!roomBlocksSelect) return;
+      function updateRoomBlocksDropdown(rooms) {
+        const select = document.getElementById('eventRoomBlocks');
+        if (!select) return;
         
         // Clear existing options
-        roomBlocksSelect.innerHTML = '';
-        
-        // Get date filters
-        const startDate = document.getElementById('eventStartDate').value;
-        const endDate = document.getElementById('eventEndDate').value;
+        select.innerHTML = '';
         
         // Filter available rooms
-        const availableRooms = currentRooms.filter(room => {
-          // Basic availability check
-          if (room.status !== 'Vacant' && room.status !== 'Available' && room.status !== 'Cleaning') {
+        const availableRooms = rooms.filter(room => {
+          // Basic availability check - allow Vacant and Cleaning rooms
+          if (room.status !== 'Vacant' && room.status !== 'Cleaning') {
             return false;
           }
           
-          // If dates are selected, check for conflicts
-          if (startDate && endDate) {
-            // This is a simplified check - in a real implementation,
-            // you'd check against existing reservations and events
-            return true;
-          }
-          
           return true;
-        });
-        
-        // Sort rooms by room number
-        availableRooms.sort((a, b) => {
-          const aNum = parseInt(a.room_number) || 0;
-          const bNum = parseInt(b.room_number) || 0;
-          return aNum - bNum;
         });
         
         // Add room options
         availableRooms.forEach(room => {
           const option = document.createElement('option');
           option.value = room.id;
-          const roomType = room.room_type || 'Standard';
-          const roomPrice = room.rate ? `₱${parseFloat(room.rate).toFixed(2)}` : '₱0.00';
-          option.textContent = `Room ${room.room_number} - ${roomType} (${roomPrice})`;
-          option.dataset.rate = room.rate || 0; // Store rate for calculation
-          roomBlocksSelect.appendChild(option);
+          option.textContent = `${room.room_number} - ${room.room_type} (₱${room.rate})`;
+          option.dataset.rate = room.rate;
+          select.appendChild(option);
         });
-        
-        if (availableRooms.length === 0) {
-          const option = document.createElement('option');
-          option.value = '';
-          option.textContent = 'No available rooms';
-          option.disabled = true;
-          roomBlocksSelect.appendChild(option);
-        }
         
         // Add event listener for price calculation
-        roomBlocksSelect.addEventListener('change', calculateEventPrice);
+        select.addEventListener('change', calculateEventPrice);
       }
 
-      // Calculate event price based on selected room blocks
+      // Calculate event price based on selected rooms
       function calculateEventPrice() {
-        const roomBlocksSelect = document.getElementById('eventRoomBlocks');
-        const priceEstimateInput = document.getElementById('eventPrice');
+        const select = document.getElementById('eventRoomBlocks');
+        const priceInput = document.getElementById('eventPrice');
         
-        if (!roomBlocksSelect || !priceEstimateInput) return;
+        if (!select || !priceInput) return;
         
-        let totalPrice = 0;
-        const selectedOptions = Array.from(roomBlocksSelect.selectedOptions);
+        const selectedOptions = Array.from(select.selectedOptions);
+        const totalPrice = selectedOptions.reduce((sum, option) => {
+          return sum + (parseFloat(option.dataset.rate) || 0);
+        }, 0);
         
-        selectedOptions.forEach(option => {
-          const rate = parseFloat(option.dataset.rate) || 0;
-          totalPrice += rate;
-        });
-        
-        // Update the price estimate field
-        priceEstimateInput.value = totalPrice.toFixed(2);
-        
-        // Trigger change event to update any other dependent fields
-        priceEstimateInput.dispatchEvent(new Event('change'));
+        priceInput.value = totalPrice.toFixed(2);
       }
 
       // Load events
       async function loadEvents() {
         try {
-          console.log('Loading events...');
-          
-          // Try to get events from hotel sync first
-          if (window.hotelSync && window.hotelSync.getEvents) {
-            const events = window.hotelSync.getEvents();
-            if (events && events.length >= 0) {
+          // Try using hotel-sync.js first
+          if (window.hotelSync && window.hotelSync.fetchEvents) {
+            const events = await window.hotelSync.fetchEvents();
+            if (events) {
               currentEvents = events;
               displayEvents();
               updateEventStatistics();
@@ -939,30 +757,21 @@
           // Fallback to direct API call
           const response = await fetch('event_actions.php?action=get_all_events', {
             method: 'GET',
-            credentials: 'same-origin',
             headers: {
-              'X-Requested-With': 'XMLHttpRequest'
+              'Content-Type': 'application/json',
             }
           });
           
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const contentType = response.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Response is not JSON. Please refresh the page to reload session.');
-          }
-          
-          const data = await response.json();
-          
-          if (data.success && data.events) {
-            currentEvents = data.events;
-            displayEvents();
-            updateEventStatistics();
-          } else {
-            console.error('Failed to load events:', data.message || 'Unknown error');
-            showToast('Failed to load events', 'error');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              currentEvents = data.data;
+              displayEvents();
+              updateEventStatistics();
+            } else {
+              console.error('Failed to load events:', data.message || 'Unknown error');
+              showToast('Failed to load events', 'error');
+            }
           }
         } catch (error) {
           console.error('Error loading events:', error);
@@ -970,31 +779,7 @@
         }
       }
 
-      // Update event statistics
-      function updateEventStatistics() {
-        const totalEvents = currentEvents.length;
-        const upcomingEvents = currentEvents.filter(event => {
-          const eventDate = new Date(event.start_datetime);
-          const today = new Date();
-          return eventDate >= today && event.status !== 'Cancelled';
-        }).length;
-        const approvedEvents = currentEvents.filter(event => event.status === 'Approved').length;
-        const revenueEstimate = currentEvents.reduce((total, event) => {
-          return total + (parseFloat(event.price_estimate) || 0);
-        }, 0);
-        
-        // Update metric elements
-        const metricElement = document.getElementById('metricTotalEvents');
-        if (metricElement) {
-          metricElement.textContent = totalEvents;
-        }
-        
-        document.getElementById('metricUpcomingEvents').textContent = upcomingEvents;
-        document.getElementById('metricApprovedEvents').textContent = approvedEvents;
-        document.getElementById('metricRevenueEstimate').textContent = '₱' + revenueEstimate.toLocaleString();
-      }
-
-      // Display events in table
+      // Display events
       function displayEvents() {
         const tbody = document.getElementById('eventsTableBody');
         if (!tbody) return;
@@ -1007,10 +792,9 @@
               <td colspan="7" class="px-6 py-8 text-center text-muted-foreground">
                 <div class="flex flex-col items-center gap-2">
                   <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                   </svg>
                   <p>No events found</p>
-                  <p class="text-sm">Create your first event to get started</p>
                 </div>
               </td>
             </tr>
@@ -1022,6 +806,32 @@
           const row = createEventRow(event);
           tbody.appendChild(row);
         });
+      }
+
+      // Update event statistics
+      function updateEventStatistics() {
+        const totalEvents = currentEvents.length;
+        const upcomingEvents = currentEvents.filter(event => {
+          const eventDate = new Date(event.start_datetime);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return eventDate >= today && event.status !== 'Cancelled';
+        }).length;
+        const ongoingEvents = currentEvents.filter(event => event.status === 'Ongoing').length;
+        const revenueEstimate = currentEvents.reduce((total, event) => {
+          return total + (parseFloat(event.price_estimate) || 0);
+        }, 0);
+        
+        // Update main dashboard metrics
+        const metricElement = document.getElementById('metricTotalEvents');
+        if (metricElement) {
+          metricElement.textContent = totalEvents;
+        }
+        
+        const revenueElement = document.getElementById('metricRevenueEstimate');
+        if (revenueElement) {
+          revenueElement.textContent = '₱' + revenueEstimate.toLocaleString();
+        }
       }
 
       // Create event row
@@ -1115,8 +925,8 @@
         switch (status) {
           case 'Pending':
             return 'bg-yellow-100 text-yellow-800';
-          case 'Approved':
-            return 'bg-green-100 text-green-800';
+          case 'Ongoing':
+            return 'bg-blue-100 text-blue-800';
           case 'Cancelled':
             return 'bg-red-100 text-red-800';
           default:
@@ -1234,6 +1044,11 @@
         
         // Load rooms for room blocks
         loadRooms();
+        
+        // Calculate initial price (will be 0 until rooms are selected)
+        setTimeout(() => {
+          calculateEventPrice();
+        }, 100);
       }
 
       // Hide event modal
@@ -1423,16 +1238,15 @@
           
           // Populate form with event data
           document.getElementById('eventId').value = event.id;
-          document.getElementById('eventTitle').value = event.title;
-          document.getElementById('eventOrganizer').value = event.organizer_name;
+          document.getElementById('eventTitle').value = event.title || '';
+          document.getElementById('eventOrganizer').value = event.organizer_name || '';
           document.getElementById('eventContact').value = event.organizer_contact || '';
           document.getElementById('eventAttendees').value = event.attendees_expected || '';
           document.getElementById('eventDescription').value = event.description || '';
-          document.getElementById('eventStartDate').value = event.start_datetime.substring(0, 16);
-          document.getElementById('eventEndDate').value = event.end_datetime.substring(0, 16);
+          document.getElementById('eventStartDate').value = event.start_datetime ? event.start_datetime.substring(0, 16) : '';
+          document.getElementById('eventEndDate').value = event.end_datetime ? event.end_datetime.substring(0, 16) : '';
           document.getElementById('eventSetupType').value = event.setup_type || 'Conference';
           document.getElementById('eventPrice').value = event.price_estimate || '';
-          document.getElementById('eventStatus').value = event.status || 'Pending';
           
           // Load rooms and select current room blocks
           await loadRooms();
@@ -1599,12 +1413,74 @@
         switch (status) {
           case 'Pending':
             return '#f59e0b';
-          case 'Approved':
-            return '#10b981';
+          case 'Ongoing':
+            return '#3b82f6';
           case 'Cancelled':
             return '#ef4444';
           default:
             return '#6b7280';
+        }
+      }
+
+      // Filter events by status (called from header dropdown)
+      function filterEventsByStatus(status) {
+        // Set the status filter dropdown
+        const statusFilter = document.getElementById('eventStatusFilter');
+        if (statusFilter) {
+          statusFilter.value = status;
+        }
+        
+        // Trigger the filter
+        filterEvents();
+        
+        // Scroll to events section
+        const eventsSection = document.querySelector('h2:contains("Events & Conferences")');
+        if (eventsSection) {
+          eventsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+
+      // Show specific module on reservations page
+      function showModule(module) {
+        // Find sections by their specific IDs
+        const hotelSection = document.getElementById('hotel-reservations-section');
+        const eventsSection = document.getElementById('events-conferences-section');
+        
+        if (module === 'hotel') {
+          // Show ONLY hotel reservations, hide events completely
+          if (hotelSection) {
+            hotelSection.style.display = 'block';
+          }
+          if (eventsSection) {
+            eventsSection.style.display = 'none';
+          }
+        } else if (module === 'events') {
+          // Show ONLY events, hide hotel reservations completely
+          if (hotelSection) {
+            hotelSection.style.display = 'none';
+          }
+          if (eventsSection) {
+            eventsSection.style.display = 'block';
+          }
+        } else if (module === 'both') {
+          // Show both modules (default state)
+          if (hotelSection) {
+            hotelSection.style.display = 'block';
+          }
+          if (eventsSection) {
+            eventsSection.style.display = 'block';
+          }
+        }
+      }
+
+      // Scroll to specific section on reservations page
+      function scrollToSection(section) {
+        if (section === 'events') {
+          // Find the Events & Conferences section
+          const eventsHeader = document.querySelector('h2');
+          if (eventsHeader && eventsHeader.textContent.includes('Events & Conferences')) {
+            eventsHeader.scrollIntoView({ behavior: 'smooth' });
+          }
         }
       }
 
@@ -1623,5 +1499,6 @@
     </script>
     
     <?php include __DIR__ . '/reservation-modal.php'; ?>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
 </html>

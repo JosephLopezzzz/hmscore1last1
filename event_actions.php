@@ -15,57 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/auth.php';
 
-// Helper function to create or get event guest
-function createOrGetEventGuest($pdo, $event) {
-    try {
-        // Try to find existing event guest for this organizer
-        $stmt = $pdo->prepare("
-            SELECT id FROM guests 
-            WHERE first_name = ? AND last_name = ? 
-            AND email LIKE '%event%' 
-            LIMIT 1
-        ");
-        $stmt->execute([
-            'Event',
-            $event['organizer_name']
-        ]);
-        
-        $existingGuest = $stmt->fetch();
-        if ($existingGuest) {
-            return (int)$existingGuest['id'];
-        }
-        
-        // Create new event guest
-        $stmt = $pdo->prepare("
-            INSERT INTO guests (
-                first_name, last_name, email, phone, address, city, country, 
-                id_type, id_number, date_of_birth, nationality, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-        ");
-        
-        $eventEmail = 'event-' . strtolower(str_replace(' ', '-', $event['organizer_name'])) . '@hotel.com';
-        $eventPhone = $event['organizer_contact'] ?? 'N/A';
-        
-        $stmt->execute([
-            'Event',
-            $event['organizer_name'],
-            $eventEmail,
-            $eventPhone,
-            'Event Venue',
-            'Hotel',
-            'Philippines',
-            'Other',
-            'EVT-' . $event['id'],
-            '1990-01-01',
-            'Filipino'
-        ]);
-        
-        return (int)$pdo->lastInsertId();
-    } catch (Exception $e) {
-        error_log('createOrGetEventGuest error: ' . $e->getMessage());
-        return 0;
-    }
-}
+// Helper function is now in includes/db.php
 
 // Check authentication - be more lenient for AJAX calls
 initSession();
@@ -582,7 +532,7 @@ switch ($action) {
             $event_id = $pdo->lastInsertId();
             
             // Create event guest for this event
-            $eventGuestId = createOrGetEventGuest($pdo, [
+            $eventGuestId = createOrGetEventGuest([
                 'id' => $event_id,
                 'title' => $data['title'],
                 'organizer_name' => $data['organizer_name'],

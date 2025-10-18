@@ -17,11 +17,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>Rooms Overview - Inn Nexus Hotel Management System</title>
-    <meta name="title" content="Rooms Overview - Inn Nexus Hotel Management System" />
-    <meta name="description" content="Visual room management system for Inn Nexus. View room status, occupancy, and floor layouts with real-time updates and maintenance tracking." />
+    <title>Rooms Overview - Core 1 Hotel Management System</title>
+    <meta name="title" content="Rooms Overview - Core 1 Hotel Management System" />
+    <meta name="description" content="Visual room management system for Core 1. View room status, occupancy, and floor layouts with real-time updates and maintenance tracking." />
     <meta name="keywords" content="room management, hotel rooms, room status, occupancy tracking, floor layout, housekeeping, room maintenance" />
-    <meta name="author" content="Inn Nexus Team" />
+    <meta name="author" content="Core 1 Team" />
     <meta name="robots" content="noindex, nofollow" />
     
     <!-- Favicon -->
@@ -772,5 +772,11 @@
         init();
       }
     </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      window.lucide && window.lucide.createIcons();
+    </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
 </html>

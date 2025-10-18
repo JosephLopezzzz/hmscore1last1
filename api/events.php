@@ -58,18 +58,20 @@ function handleGetRequest($path) {
         $sql = "
             SELECT 
                 e.id,
-                e.event_name,
-                e.event_type,
-                e.start_date,
-                e.end_date,
+                e.title as event_name,
+                e.setup_type as event_type,
+                e.start_datetime as start_date,
+                e.end_datetime as end_date,
                 e.status,
-                e.expected_guests,
-                e.notes,
+                e.attendees_expected as expected_guests,
+                e.description as notes,
                 e.created_at,
                 e.updated_at,
-                COUNT(er.room_id) as rooms_count
+                e.organizer_name,
+                e.organizer_contact,
+                e.price_estimate,
+                e.room_blocks
             FROM events e
-            LEFT JOIN event_rooms er ON e.id = er.event_id
             WHERE 1=1
         ";
         
@@ -79,14 +81,14 @@ function handleGetRequest($path) {
             $params[] = $status;
         }
         
-        $sql .= " GROUP BY e.id ORDER BY e.start_date DESC";
+        $sql .= " ORDER BY e.start_datetime DESC";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $events = $stmt->fetchAll();
         
         echo json_encode([
-            'ok' => true,
+            'success' => true,
             'data' => $events
         ]);
     } else {
@@ -95,13 +97,13 @@ function handleGetRequest($path) {
         $stmt = $pdo->prepare("
             SELECT 
                 e.id,
-                e.event_name,
-                e.event_type,
-                e.start_date,
-                e.end_date,
+                e.title as event_name,
+                e.setup_type as event_type,
+                e.start_datetime as start_date,
+                e.end_datetime as end_date,
                 e.status,
-                e.expected_guests,
-                e.notes,
+                e.attendees_expected as expected_guests,
+                e.description as notes,
                 e.created_at,
                 e.updated_at
             FROM events e
@@ -144,13 +146,13 @@ function handlePostRequest($path) {
         $pdo->beginTransaction();
         
         $stmt = $pdo->prepare("
-            INSERT INTO events (event_name, event_type, start_date, end_date, status, expected_guests, notes)
+            INSERT INTO events (title, setup_type, start_datetime, end_datetime, status, attendees_expected, description)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
             $input['event_name'] ?? '',
-            $input['event_type'] ?? 'conference',
+            $input['event_type'] ?? 'Conference',
             $input['start_date'] ?? null,
             $input['end_date'] ?? null,
             $input['status'] ?? 'pending',
@@ -198,19 +200,19 @@ function handlePatchRequest($path) {
         $params = [];
         
         if (isset($input['event_name'])) {
-            $fields[] = "event_name = ?";
+            $fields[] = "title = ?";
             $params[] = $input['event_name'];
         }
         if (isset($input['event_type'])) {
-            $fields[] = "event_type = ?";
+            $fields[] = "setup_type = ?";
             $params[] = $input['event_type'];
         }
         if (isset($input['start_date'])) {
-            $fields[] = "start_date = ?";
+            $fields[] = "start_datetime = ?";
             $params[] = $input['start_date'];
         }
         if (isset($input['end_date'])) {
-            $fields[] = "end_date = ?";
+            $fields[] = "end_datetime = ?";
             $params[] = $input['end_date'];
         }
         if (isset($input['status'])) {
@@ -218,11 +220,11 @@ function handlePatchRequest($path) {
             $params[] = $input['status'];
         }
         if (isset($input['expected_guests'])) {
-            $fields[] = "expected_guests = ?";
+            $fields[] = "attendees_expected = ?";
             $params[] = $input['expected_guests'];
         }
         if (isset($input['notes'])) {
-            $fields[] = "notes = ?";
+            $fields[] = "description = ?";
             $params[] = $input['notes'];
         }
         

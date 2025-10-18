@@ -16,25 +16,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>Dashboard - Inn Nexus Hotel Management System</title>
-    <meta name="title" content="Inn Nexus - Hotel Management System Dashboard" />
-    <meta name="description" content="Professional hotel management system for reservations, billing, housekeeping, and guest services. Streamline your hospitality operations with Inn Nexus." />
+    <title>Dashboard - Core 1 Hotel Management System</title>
+    <meta name="title" content="Core 1 - Hotel Management System Dashboard" />
+    <meta name="description" content="Professional hotel management system for reservations, billing, housekeeping, and guest services. Streamline your hospitality operations with Core 1." />
     <meta name="keywords" content="hotel management, PMS, property management, reservations, billing, hospitality, hotel software, guest management" />
-    <meta name="author" content="Inn Nexus Team" />
+    <meta name="author" content="Core 1 Team" />
     <meta name="robots" content="index, follow" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="<?php echo 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>" />
-    <meta property="og:title" content="Inn Nexus - Hotel Management System" />
+    <meta property="og:title" content="Core 1 - Hotel Management System" />
     <meta property="og:description" content="Professional hotel management system for reservations, billing, housekeeping, and guest services." />
     <meta property="og:image" content="<?php echo 'https://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']); ?>/public/favicon.svg" />
-    <meta property="og:site_name" content="Inn Nexus" />
+    <meta property="og:site_name" content="Core 1" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="<?php echo 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>" />
-    <meta property="twitter:title" content="Inn Nexus - Hotel Management System" />
+    <meta property="twitter:title" content="Core 1 - Hotel Management System" />
     <meta property="twitter:description" content="Professional hotel management system for reservations, billing, housekeeping, and guest services." />
     <meta property="twitter:image" content="<?php echo 'https://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']); ?>/public/favicon.svg" />
     
@@ -78,6 +78,7 @@
     <script>
       window.lucide && window.lucide.createIcons();
     </script>
+    <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
   </html>
 

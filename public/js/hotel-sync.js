@@ -126,7 +126,7 @@ class HotelDataSync {
      */
     async fetchEvents(status = null) {
         try {
-            const url = status ? `${this.getApiBase()}/events.php?status=${status}` : `${this.getApiBase()}/events.php`;
+            const url = status ? `${this.getApiBase()}/events?status=${status}` : `${this.getApiBase()}/events`;
             const response = await fetch(url);
             const data = await response.json();
             this.events = data.data || [];
@@ -243,7 +243,7 @@ class HotelDataSync {
      */
     async createEvent(eventData) {
         try {
-            const response = await fetch(this.getApiBase() + '/events.php', {
+            const response = await fetch(this.getApiBase() + '/events', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -302,7 +302,7 @@ class HotelDataSync {
      */
     async updateEvent(eventId, eventData) {
         try {
-            const response = await fetch(`${this.getApiBase()}/events.php/${eventId}`, {
+            const response = await fetch(`${this.getApiBase()}/events/${eventId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -334,7 +334,7 @@ class HotelDataSync {
      */
     async confirmEvent(eventId) {
         try {
-            const response = await fetch(`${this.getApiBase()}/events.php/${eventId}/confirm`, {
+            const response = await fetch(`${this.getApiBase()}/events/${eventId}/confirm`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
