@@ -16,6 +16,7 @@
   --accent-foreground:0 0% 100%;
   --success:145 65% 45%;
   --success-foreground:0 0% 100%;
+  --success-border:145 65% 35%;
   --warning:35 90% 55%;
   --warning-foreground:0 0% 100%;
   --destructive:0 72% 51%;
@@ -57,6 +58,7 @@
   --accent-foreground:0 0% 100%;
   --success:145 65% 45%;
   --success-foreground:0 0% 100%;
+  --success-border:145 65% 35%;
   --warning:35 90% 55%;
   --warning-foreground:0 0% 100%;
   --destructive:0 72% 51%;
@@ -720,5 +722,33 @@ table::-webkit-scrollbar-thumb:hover,
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #2563eb;
+}
+
+/* Success message styling for both light and dark modes */
+.success-message {
+  background: hsl(var(--success));
+  color: hsl(var(--success-foreground));
+  border: 1px solid hsl(var(--success-border));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.success-message svg {
+  color: hsl(var(--success-foreground));
+}
+
+/* Light mode success message adjustments */
+.light-mode .success-message {
+  background: hsl(var(--success));
+  color: hsl(var(--success-foreground));
+  border: 1px solid hsl(var(--success-border));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Dark mode success message adjustments */
+.dark .success-message {
+  background: hsl(var(--success));
+  color: hsl(var(--success-foreground));
+  border: 1px solid hsl(var(--success-border));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
 }
 

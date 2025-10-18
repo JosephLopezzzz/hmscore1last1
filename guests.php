@@ -127,7 +127,7 @@
                     $guestName = htmlspecialchars(trim(($guest['first_name'] ?? '') . ' ' . ($guest['last_name'] ?? '')), ENT_QUOTES);
                   ?>
                   <button class="inline-flex items-center rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm"
-                    onclick="openReservationModalForGuest(<?php echo (int)($guest['id'] ?? 0); ?>, '<?php echo $guestName; ?>', <?php echo $guestJson; ?>)">
+                    onclick="openReservationModalForGuest(<?php echo (int)($guest['id'] ?? 0); ?>, '<?php echo $guestName; ?>', <?php echo $guestJson; ?>); return false;">
                     New Booking
                   </button>
                 </div>
@@ -261,157 +261,157 @@
               <!-- Membership Tiers -->
               <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <!-- Normal Tier -->
-                <div class="border rounded-lg p-4 bg-blue-50 border-blue-200">
+                <div class="border rounded-lg p-4 bg-card border-border">
                   <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-bold text-lg text-blue-800">Normal</h4>
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <h4 class="font-bold text-lg text-primary">Normal</h4>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       0+ stays
                     </span>
                   </div>
                   <div class="space-y-2 text-sm">
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-blue-600"></i>
-                      <span>Standard check-in process</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-primary"></i>
+                      <span class="text-card-foreground">Standard check-in process</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-blue-600"></i>
-                      <span>Access to all room types</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-primary"></i>
+                      <span class="text-card-foreground">Access to all room types</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-blue-600"></i>
-                      <span>Basic customer support</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-primary"></i>
+                      <span class="text-card-foreground">Basic customer support</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-blue-600"></i>
-                      <span>Standard cancellation policy</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-primary"></i>
+                      <span class="text-card-foreground">Standard cancellation policy</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- Silver Tier -->
-                <div class="border rounded-lg p-4 bg-gray-50 border-gray-200">
+                <div class="border rounded-lg p-4 bg-card border-border">
                   <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-bold text-lg text-gray-800">Silver</h4>
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <h4 class="font-bold text-lg text-muted-foreground">Silver</h4>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
                       20+ stays
                     </span>
                   </div>
                   <div class="space-y-2 text-sm">
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-gray-600"></i>
-                      <span>All Normal benefits</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-muted-foreground"></i>
+                      <span class="text-card-foreground">All Normal benefits</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-gray-600"></i>
-                      <span class="font-semibold text-green-600">20% discount</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-success"></i>
+                      <span class="font-semibold text-success">20% discount</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-gray-600"></i>
-                      <span>Priority booking</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-muted-foreground"></i>
+                      <span class="text-card-foreground">Priority booking</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-gray-600"></i>
-                      <span>Late checkout (subject to availability)</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-muted-foreground"></i>
+                      <span class="text-card-foreground">Late checkout (subject to availability)</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-gray-600"></i>
-                      <span>Complimentary welcome drink</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-muted-foreground"></i>
+                      <span class="text-card-foreground">Complimentary welcome drink</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- Gold Tier -->
-                <div class="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
+                <div class="border rounded-lg p-4 bg-card border-border">
                   <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-bold text-lg text-yellow-800">Gold</h4>
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <h4 class="font-bold text-lg text-warning">Gold</h4>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning">
                       50+ stays
                     </span>
                   </div>
                   <div class="space-y-2 text-sm">
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-yellow-600"></i>
-                      <span>All Silver benefits</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-warning"></i>
+                      <span class="text-card-foreground">All Silver benefits</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-yellow-600"></i>
-                      <span class="font-semibold text-green-600">30% discount</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-success"></i>
+                      <span class="font-semibold text-success">30% discount</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-yellow-600"></i>
-                      <span>Room upgrades (subject to availability)</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-warning"></i>
+                      <span class="text-card-foreground">Room upgrades (subject to availability)</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-yellow-600"></i>
-                      <span>Express check-in/out</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-warning"></i>
+                      <span class="text-card-foreground">Express check-in/out</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-yellow-600"></i>
-                      <span>Complimentary breakfast</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-warning"></i>
+                      <span class="text-card-foreground">Complimentary breakfast</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-yellow-600"></i>
-                      <span>Free WiFi premium</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-warning"></i>
+                      <span class="text-card-foreground">Free WiFi premium</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- Platinum Tier -->
-                <div class="border rounded-lg p-4 bg-purple-50 border-purple-200">
+                <div class="border rounded-lg p-4 bg-card border-border">
                   <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-bold text-lg text-purple-800">Platinum</h4>
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <h4 class="font-bold text-lg text-accent">Platinum</h4>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent">
                       100+ stays
                     </span>
                   </div>
                   <div class="space-y-2 text-sm">
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-purple-600"></i>
-                      <span>All Gold benefits</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-accent"></i>
+                      <span class="text-card-foreground">All Gold benefits</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-purple-600"></i>
-                      <span class="font-semibold text-green-600">40% discount</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-success"></i>
+                      <span class="font-semibold text-success">40% discount</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-purple-600"></i>
-                      <span>Guaranteed room upgrades</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-accent"></i>
+                      <span class="text-card-foreground">Guaranteed room upgrades</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-purple-600"></i>
-                      <span>Personal concierge service</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-accent"></i>
+                      <span class="text-card-foreground">Personal concierge service</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-purple-600"></i>
-                      <span>Complimentary spa services</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-accent"></i>
+                      <span class="text-card-foreground">Complimentary spa services</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-purple-600"></i>
-                      <span>Airport transfer service</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-accent"></i>
+                      <span class="text-card-foreground">Airport transfer service</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <i data-lucide="check-circle" class="h-4 w-4 text-purple-600"></i>
-                      <span>Exclusive VIP lounge access</span>
+                      <i data-lucide="check-circle" class="h-4 w-4 text-accent"></i>
+                      <span class="text-card-foreground">Exclusive VIP lounge access</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- How to Earn -->
-              <div class="border-t pt-6">
-                <h3 class="text-lg font-semibold mb-4">How to Earn Rewards</h3>
+              <div class="border-t border-border pt-6">
+                <h3 class="text-lg font-semibold mb-4 text-card-foreground">How to Earn Rewards</h3>
                 <div class="grid gap-4 md:grid-cols-2">
                   <div class="flex items-start gap-3">
                     <i data-lucide="calendar" class="h-5 w-5 text-primary mt-0.5"></i>
                     <div>
-                      <h4 class="font-medium">Book Direct Stays</h4>
+                      <h4 class="font-medium text-card-foreground">Book Direct Stays</h4>
                       <p class="text-sm text-muted-foreground">Each paid transaction counts towards your membership tier</p>
                     </div>
                   </div>
                   <div class="flex items-start gap-3">
                     <i data-lucide="star" class="h-5 w-5 text-primary mt-0.5"></i>
                     <div>
-                      <h4 class="font-medium">Maintain Activity</h4>
+                      <h4 class="font-medium text-card-foreground">Maintain Activity</h4>
                       <p class="text-sm text-muted-foreground">Keep your membership active with regular stays</p>
                     </div>
                   </div>
@@ -421,7 +421,7 @@
           </div>
 
           <!-- Modal Footer -->
-          <div class="border-t p-4 flex-shrink-0">
+          <div class="border-t border-border p-4 flex-shrink-0">
             <div class="flex justify-end">
               <button id="closeRewardsModalFooterBtn" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
                 Got it!
@@ -454,9 +454,16 @@
         body.innerHTML = '<div class="text-sm text-muted-foreground">Loading...</div>';
         metrics.innerHTML = '';
         if (window.lucide && window.lucide.createIcons) { window.lucide.createIcons(); }
+        
         fetch(`<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/api/guests/` + guestId)
-          .then(r => r.json())
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
           .then(data => {
+            console.log('Guest data received:', data); // Debug log
             const g = data.data || {};
             const m = data.metrics || { timesCheckedIn: 0, totalPaid: 0 };
             body.innerHTML = `
@@ -494,6 +501,24 @@
             `;
             document.getElementById('saveGuestBtn').onclick = () => saveGuest(guestId);
             if (window.lucide && window.lucide.createIcons) { window.lucide.createIcons(); }
+          })
+          .catch(error => {
+            console.error('Error fetching guest data:', error);
+            body.innerHTML = `
+              <div class="text-center p-4">
+                <div class="text-red-500 mb-2">
+                  <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-card-foreground mb-2">Error Loading Guest Profile</h3>
+                <p class="text-sm text-muted-foreground mb-4">Unable to load guest information. Please try again.</p>
+                <button onclick="openGuestProfileModal(${guestId})" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                  Try Again
+                </button>
+              </div>
+            `;
+            metrics.innerHTML = '';
           });
       }
 
@@ -512,6 +537,12 @@
           'SILVER': 'bg-gray-100 text-gray-800',
           'NORMAL': 'bg-blue-100 text-blue-800'
         }[tier] || 'bg-blue-100 text-blue-800';
+      }
+      
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
       }
       function closeGuestProfileModal(){
         document.getElementById('guestProfileModal').classList.add('hidden');
@@ -532,11 +563,28 @@
           nationality: document.getElementById('nationality').value,
           notes: document.getElementById('notes').value,
         };
+        
         fetch(`<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/api/guests/` + guestId, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        }).then(r => r.json()).then(() => closeGuestProfileModal());
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Guest updated successfully:', data);
+          closeGuestProfileModal();
+          // Optionally reload the page to show updated data
+          location.reload();
+        })
+        .catch(error => {
+          console.error('Error updating guest:', error);
+          alert('Error updating guest: ' + error.message);
+        });
       }
     </script>
     <!-- Guest Profile Modal -->
@@ -699,7 +747,20 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
       window.lucide && window.lucide.createIcons();
+      
+      // Ensure openReservationModalForGuest function is available
+      if (typeof window.openReservationModalForGuest === 'undefined') {
+        console.warn('openReservationModalForGuest function not found. Make sure reservation-modal.php is included.');
+        window.openReservationModalForGuest = function(guestId, guestName, guestData) {
+          console.error('Reservation modal function not available. Please refresh the page.');
+          alert('Reservation modal is not available. Please refresh the page and try again.');
+        };
+      }
     </script>
+    
+    <!-- Include Reservation Modal -->
+    <?php include __DIR__ . '/reservation-modal.php'; ?>
+    
     <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>
 </html>

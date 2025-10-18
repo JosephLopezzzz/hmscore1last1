@@ -104,10 +104,11 @@ function showSuccessMessage(message) {
     const existingMessages = document.querySelectorAll('.success-message');
     existingMessages.forEach(msg => msg.remove());
     
-    // Create success message element
+    // Create success message element with theme-aware styling
     const successDiv = document.createElement('div');
-    successDiv.className = 'success-message fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transform transition-all duration-300 ease-in-out';
+    successDiv.className = 'success-message fixed top-4 right-4 z-50 px-6 py-3 rounded-lg flex items-center gap-2 transform transition-all duration-300 ease-in-out';
     successDiv.style.transform = 'translateX(100%)';
+    
     successDiv.innerHTML = `
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
