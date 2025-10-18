@@ -836,7 +836,7 @@ function fetchAllEvents(): array {
   try {
     $query = "
       SELECT
-        e.id, e.reservation_id, e.title, e.description, e.organizer_name, e.organizer_contact,
+        e.id, e.title, e.description, e.organizer_name, e.organizer_contact,
         e.start_datetime, e.end_datetime, e.attendees_expected, e.setup_type, e.status,
         e.created_by, e.created_at, e.updated_at, e.room_blocks, e.price_estimate
       FROM events e
@@ -850,7 +850,6 @@ function fetchAllEvents(): array {
     return array_map(function($event) {
       return [
         'id' => $event['id'],
-        'reservation_id' => $event['reservation_id'],
         'title' => $event['title'],
         'description' => $event['description'],
         'organizer_name' => $event['organizer_name'],

@@ -98,6 +98,40 @@ $departures = fetchDepartures();
 </div>
 
 <script>
+// Show success message function
+function showSuccessMessage(message) {
+    // Remove any existing success messages
+    const existingMessages = document.querySelectorAll('.success-message');
+    existingMessages.forEach(msg => msg.remove());
+    
+    // Create success message element
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transform transition-all duration-300 ease-in-out';
+    successDiv.style.transform = 'translateX(100%)';
+    successDiv.innerHTML = `
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span class="font-medium">${message}</span>
+    `;
+    
+    // Add to page
+    document.body.appendChild(successDiv);
+    
+    // Animate in
+    setTimeout(() => {
+        successDiv.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Remove after 3 seconds with animation
+    setTimeout(() => {
+        successDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            successDiv.remove();
+        }, 300);
+    }, 3000);
+}
+
 function checkInGuest(reservationId) {
     if (confirm('Are you sure you want to check in this guest?')) {
         // Create XMLHttpRequest
@@ -113,8 +147,12 @@ function checkInGuest(reservationId) {
                     try {
                         const response = JSON.parse(xhr.responseText);
                         if (response.success) {
+                            // Show success message
+                            showSuccessMessage('Checked in successfully!');
                             // Update the UI to show checked in status
-                            location.reload();
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
                         } else {
                             alert('Error checking in guest: ' + response.message);
                         }
@@ -146,8 +184,12 @@ function checkOutGuest(reservationId) {
                     try {
                         const response = JSON.parse(xhr.responseText);
                         if (response.success) {
+                            // Show success message
+                            showSuccessMessage('Checked out successfully!');
                             // Update the UI to show checked out status
-                            location.reload();
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
                         } else {
                             alert('Error checking out guest: ' + response.message);
                         }
