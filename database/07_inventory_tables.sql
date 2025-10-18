@@ -215,6 +215,7 @@ CREATE TABLE IF NOT EXISTS inventory_purchase_order_items (
 -- INSERT DEFAULT INVENTORY CATEGORIES
 -- ================================================================
 
+-- Insert categories without parent references first
 INSERT INTO inventory_categories (name, description, is_active) VALUES
 ('Food & Beverages', 'Food items, beverages, and related products', 1),
 ('Cleaning Supplies', 'Cleaning products and maintenance supplies', 1),

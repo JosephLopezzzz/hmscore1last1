@@ -622,6 +622,36 @@ if ($pdo = getPdo()) {
                                         <span>Expected: <?php echo date('M j, Y', strtotime($po['expected_delivery_date'])); ?></span>
                                     <?php endif; ?>
                                 </div>
+                                <div class="flex items-center justify-between mt-2">
+                                    <div class="flex gap-2">
+                                        <?php if ($po['status'] === 'draft'): ?>
+                                            <button onclick="updatePOStatus(<?php echo $po['id']; ?>, 'sent')" class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                                                Send PO
+                                            </button>
+                                        <?php elseif ($po['status'] === 'sent'): ?>
+                                            <button onclick="updatePOStatus(<?php echo $po['id']; ?>, 'confirmed')" class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
+                                                Mark Confirmed
+                                            </button>
+                                        <?php elseif ($po['status'] === 'confirmed'): ?>
+                                            <button onclick="updatePOStatus(<?php echo $po['id']; ?>, 'delivered')" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
+                                                Mark Delivered
+                                            </button>
+                                        <?php endif; ?>
+                                        <?php if ($po['status'] !== 'cancelled' && $po['status'] !== 'delivered'): ?>
+                                            <button onclick="updatePOStatus(<?php echo $po['id']; ?>, 'cancelled')" class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
+                                                Cancel
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <button onclick="editPurchaseOrder(<?php echo $po['id']; ?>)" class="p-1 text-blue-600 hover:bg-blue-100 rounded">
+                                            <i data-lucide="edit" class="h-4 w-4"></i>
+                                        </button>
+                                        <button onclick="deletePurchaseOrder(<?php echo $po['id']; ?>)" class="p-1 text-red-600 hover:bg-red-100 rounded">
+                                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -1345,24 +1375,41 @@ if ($pdo = getPdo()) {
                 });
         }
 
-        function deletePurchaseOrder(id) {
-            if (confirm('Are you sure you want to delete this purchase order? This action cannot be undone.')) {
-                fetch(`inventory-actions.php?action=delete_purchase_order&id=${id}`, {
-                    method: 'POST'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error deleting purchase order: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting purchase order');
-                });
+        function updatePOStatus(poId, newStatus) {
+            const statusMessages = {
+                'sent': 'Are you sure you want to send this purchase order?',
+                'confirmed': 'Are you sure you want to mark this purchase order as confirmed?',
+                'delivered': 'Are you sure you want to mark this purchase order as delivered?',
+                'cancelled': 'Are you sure you want to cancel this purchase order?'
+            };
+            
+            if (!confirm(statusMessages[newStatus] || 'Are you sure?')) {
+                return;
             }
+            
+            fetch('inventory-actions.php?action=update_po_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    po_id: poId,
+                    status: newStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error updating status: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating purchase order status');
+            });
         }
 
         function closePurchaseOrderModal() {
@@ -1531,46 +1578,6 @@ if ($pdo = getPdo()) {
                         } else {
                             document.getElementById('expiry-date-field').classList.add('hidden');
                         }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error loading item data');
-                });
-        }
-
-        function editItem(id) {
-            // Fetch item data via AJAX
-            fetch(`inventory-actions.php?action=get_item&id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const item = data.item;
-                        document.getElementById('item-modal-title').textContent = 'Edit Item';
-                        document.getElementById('item-form').action = 'inventory-actions.php?action=edit_item';
-                        document.getElementById('item-id').value = item.id;
-                        document.getElementById('item-name').value = item.name;
-                        document.getElementById('item-sku').value = item.sku || '';
-                        document.getElementById('item-barcode').value = item.barcode || '';
-                        document.getElementById('item-category').value = item.category_id;
-                        document.getElementById('item-supplier').value = item.supplier_id || '';
-                        document.getElementById('item-unit').value = item.unit_of_measure;
-                        document.getElementById('item-cost').value = item.unit_cost;
-                        document.getElementById('item-price').value = item.selling_price || '';
-                        document.getElementById('item-min-stock').value = item.minimum_stock_level;
-                        document.getElementById('item-max-stock').value = item.maximum_stock_level || '';
-                        document.getElementById('item-reorder').value = item.reorder_point;
-                        document.getElementById('item-location').value = item.location || '';
-                        document.getElementById('item-description').value = item.description || '';
-                        document.getElementById('item-perishable').checked = item.is_perishable == 1;
-                        document.getElementById('item-expiry').value = item.expiry_date || '';
-                        document.getElementById('item-active').checked = item.is_active == 1;
-
-                        if (item.is_perishable == 1) {
-                            document.getElementById('expiry-date-field').classList.remove('hidden');
-                        } else {
-                            document.getElementById('expiry-date-field').classList.add('hidden');
-                        }
 
                         document.getElementById('item-modal').classList.remove('hidden');
                     } else {
@@ -1585,6 +1592,57 @@ if ($pdo = getPdo()) {
 
         function closeItemModal() {
             document.getElementById('item-modal').classList.add('hidden');
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.add('hidden');
+        }
+
+        function closeSupplierModal() {
+            document.getElementById('supplier-modal').classList.add('hidden');
+        }
+
+        function adjustStock(itemId, itemName, currentStock) {
+            const adjustment = prompt(`Adjust stock for ${itemName}\nCurrent stock: ${currentStock}\nEnter positive number to add, negative to subtract:`);
+            
+            if (adjustment === null) return;
+            
+            const quantity = parseInt(adjustment);
+            if (isNaN(quantity)) {
+                alert('Please enter a valid number');
+                return;
+            }
+            
+            const adjustmentType = quantity >= 0 ? 'add' : 'subtract';
+            const absQuantity = Math.abs(quantity);
+            
+            const notes = prompt('Enter notes for this adjustment (optional):') || '';
+            
+            fetch('inventory-actions.php?action=adjust_stock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    item_id: itemId,
+                    adjustment_type: adjustmentType,
+                    quantity: absQuantity,
+                    notes: notes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Stock adjusted successfully!');
+                    location.reload();
+                } else {
+                    alert('Error adjusting stock: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adjusting stock');
+            });
         }
 
         function deleteItem(id) {
@@ -1785,16 +1843,165 @@ if ($pdo = getPdo()) {
             });
         });
 
-        // Close modal when clicking outside
-        document.getElementById('adjustment-modal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideAdjustmentModal();
+        // Handle perishable checkbox change
+        document.getElementById('item-perishable')?.addEventListener('change', function() {
+            const expiryField = document.getElementById('expiry-date-field');
+            if (this.checked) {
+                expiryField.classList.remove('hidden');
+            } else {
+                expiryField.classList.add('hidden');
             }
         });
 
-        document.getElementById('add-supplier-modal')?.addEventListener('click', function(e) {
+        // Handle form submissions
+        document.getElementById('item-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const action = this.action;
+            
+            fetch(action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving item');
+            });
+        });
+
+        document.getElementById('category-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const action = this.action;
+            
+            fetch(action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving category');
+            });
+        });
+
+        document.getElementById('supplier-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const action = this.action;
+            
+            fetch(action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving supplier');
+            });
+        });
+
+        document.getElementById('purchase-order-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect items data
+            const items = [];
+            const itemElements = document.querySelectorAll('.po-item');
+            
+            itemElements.forEach((itemElement, index) => {
+                const itemId = itemElement.querySelector('.po-item-select').value;
+                const quantity = itemElement.querySelector('.po-item-quantity').value;
+                const unitCost = itemElement.querySelector('.po-item-cost').value;
+                
+                if (itemId && quantity && unitCost) {
+                    items.push({
+                        item_id: itemId,
+                        quantity: parseInt(quantity),
+                        unit_cost: parseFloat(unitCost)
+                    });
+                }
+            });
+            
+            if (items.length === 0) {
+                alert('Please add at least one item to the purchase order');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            formData.append('items', JSON.stringify(items));
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving purchase order');
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('item-modal')?.addEventListener('click', function(e) {
             if (e.target === this) {
-                hideAddSupplierModal();
+                closeItemModal();
+            }
+        });
+
+        document.getElementById('category-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCategoryModal();
+            }
+        });
+
+        document.getElementById('supplier-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSupplierModal();
+            }
+        });
+
+        document.getElementById('purchase-order-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePurchaseOrderModal();
+            }
+        });
+
+        document.getElementById('delete-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
             }
         });
     </script>
