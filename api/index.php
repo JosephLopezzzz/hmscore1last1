@@ -27,6 +27,16 @@ switch (true) {
   case $path === '/api/health':
     sendJson(['status' => 'ok', 'time' => date('c')]);
 
+  case $path === '/api/debug':
+    sendJson([
+      'request_uri' => $_SERVER['REQUEST_URI'] ?? 'not set',
+      'parsed_path' => $path,
+      'method' => $_SERVER['REQUEST_METHOD'] ?? 'not set',
+      'server_name' => $_SERVER['SERVER_NAME'] ?? 'not set',
+      'http_host' => $_SERVER['HTTP_HOST'] ?? 'not set',
+      'script_name' => $_SERVER['SCRIPT_NAME'] ?? 'not set'
+    ]);
+
   // Manual sync trigger for schedulers/ops
   case $path === '/api/sync' && $_SERVER['REQUEST_METHOD'] === 'GET':
     // Auth: allow if admin session OR token matches SYNC_TOKEN

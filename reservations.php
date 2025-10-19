@@ -156,7 +156,7 @@
               <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
               </svg>
-            </div>
+        </div>
             <p class="text-sm text-muted-foreground">Total Events</p>
           </div>
           <p class="text-2xl font-bold" id="metricTotalEvents">0</p>
@@ -551,11 +551,62 @@
           </div>
           
           <div class="mb-4">
-            <label for="eventRoomBlocks" class="block text-sm font-medium text-foreground mb-2">Room Blocks</label>
-            <select id="eventRoomBlocks" name="room_blocks[]" multiple class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-              <!-- Options will be populated by JavaScript -->
-            </select>
-            <p class="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple rooms</p>
+            <label class="block text-sm font-medium text-foreground mb-2">Room Blocks</label>
+            <div class="border border-border rounded-lg p-4 bg-muted/20">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-medium text-card-foreground">Select Rooms for Event</h4>
+                <div class="flex gap-2 text-xs">
+                  <span class="inline-flex items-center gap-1">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                    Available
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                    Cleaning
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                    Occupied
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Room Selection Tabs -->
+              <div class="flex space-x-1 mb-4 bg-muted p-1 rounded-lg">
+                <button id="roomViewTab" class="flex-1 py-2 px-3 text-sm font-medium rounded-md bg-primary text-primary-foreground transition-colors">
+                  Visual Selection
+                </button>
+                <button id="roomListTab" class="flex-1 py-2 px-3 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground transition-colors">
+                  List View
+                </button>
+              </div>
+              
+              <!-- Visual Room Grid -->
+              <div id="roomVisualGrid" class="space-y-4">
+                <div class="text-center py-8">
+                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p class="text-sm text-muted-foreground">Loading rooms...</p>
+                </div>
+              </div>
+              
+              <!-- List View (Hidden by default) -->
+              <div id="roomListView" class="hidden">
+                <select id="eventRoomBlocks" name="room_blocks[]" multiple class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <!-- Options will be populated by JavaScript -->
+                </select>
+                <p class="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple rooms</p>
+              </div>
+              
+              <!-- Selected Rooms Summary -->
+              <div id="selectedRoomsSummary" class="mt-4 p-3 bg-primary/10 rounded-lg hidden">
+                <h5 class="text-sm font-medium text-primary mb-2">Selected Rooms:</h5>
+                <div id="selectedRoomsList" class="flex flex-wrap gap-2"></div>
+                <div class="mt-2 text-sm">
+                  <span class="text-muted-foreground">Total Price: </span>
+                  <span id="totalPrice" class="font-semibold text-primary">₱0.00</span>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div class="mb-6">
@@ -675,27 +726,288 @@
 
       // Load rooms for room blocks dropdown
       async function loadRooms() {
+        console.log('Loading rooms...'); // Debug log
+        
         try {
-          const response = await fetch('/api/rooms', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
+          // Try multiple endpoints to see which one works
+          const endpoints = [
+            'api/rooms.php',
+            './api/rooms.php',
+            '/api/rooms',
+            'http://localhost/hmscore1last1/api/rooms.php',
+            'http://localhost/hmscore1last1/api/rooms'
+          ];
           
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data) {
-              updateRoomBlocksDropdown(data.data);
+          let response = null;
+          let workingEndpoint = null;
+          
+          for (const endpoint of endpoints) {
+            try {
+              console.log(`Trying endpoint: ${endpoint}`);
+              response = await fetch(endpoint, {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                }
+              });
+              
+              console.log(`Endpoint ${endpoint} response status:`, response.status);
+              
+              if (response.ok) {
+                workingEndpoint = endpoint;
+                break;
+              }
+            } catch (err) {
+              console.log(`Endpoint ${endpoint} failed:`, err.message);
             }
+          }
+          
+          if (!response || !response.ok) {
+            console.error('All endpoints failed');
+            showRoomLoadingError(`Failed to load rooms: All API endpoints failed`);
+            return;
+          }
+          
+          console.log(`Using working endpoint: ${workingEndpoint}`);
+          const data = await response.json();
+          console.log('Rooms API response data:', data); // Debug log
+          
+          if (data.data) {
+            console.log('Updating room blocks dropdown with', data.data.length, 'rooms'); // Debug log
+            updateRoomBlocksDropdown(data.data);
+          } else {
+            console.error('Invalid rooms data format:', data);
+            showRoomLoadingError('Invalid data format received from server');
           }
         } catch (error) {
           console.error('Error loading rooms:', error);
+          showRoomLoadingError(`Error loading rooms: ${error.message}`);
+        }
+      }
+
+      // Show room loading error
+      function showRoomLoadingError(message) {
+        const gridContainer = document.getElementById('roomVisualGrid');
+        if (gridContainer) {
+          gridContainer.innerHTML = `
+            <div class="text-center py-8">
+              <div class="text-red-500 mb-4">
+                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </div>
+              <p class="text-sm text-muted-foreground mb-4">${message}</p>
+              <button onclick="loadRooms()" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                Try Again
+              </button>
+            </div>
+          `;
         }
       }
 
       // Update room blocks dropdown
       function updateRoomBlocksDropdown(rooms) {
+        // Update both visual grid and list view
+        updateRoomVisualGrid(rooms);
+        updateRoomListView(rooms);
+      }
+
+      // Update visual room grid
+      function updateRoomVisualGrid(rooms) {
+        console.log('updateRoomVisualGrid called with', rooms.length, 'rooms'); // Debug log
+        
+        const gridContainer = document.getElementById('roomVisualGrid');
+        if (!gridContainer) {
+          console.error('roomVisualGrid element not found');
+          return;
+        }
+
+        // Group rooms by floor
+        const roomsByFloor = {};
+        rooms.forEach(room => {
+          const floor = room.floor_number || 1;
+          if (!roomsByFloor[floor]) {
+            roomsByFloor[floor] = [];
+          }
+          roomsByFloor[floor].push(room);
+        });
+
+        // Sort floors
+        const sortedFloors = Object.keys(roomsByFloor).sort((a, b) => parseInt(a) - parseInt(b));
+
+        gridContainer.innerHTML = '';
+
+        if (sortedFloors.length === 0) {
+          gridContainer.innerHTML = `
+            <div class="text-center py-8">
+              <p class="text-sm text-muted-foreground">No rooms found</p>
+            </div>
+          `;
+          return;
+        }
+
+        sortedFloors.forEach(floorNum => {
+          const floorRooms = roomsByFloor[floorNum];
+          
+          // Create floor section
+          const floorSection = document.createElement('div');
+          floorSection.className = 'mb-6';
+          
+          // Floor header
+          const floorHeader = document.createElement('div');
+          floorHeader.className = 'flex items-center justify-between mb-3';
+          floorHeader.innerHTML = `
+            <h5 class="text-sm font-semibold text-card-foreground">Floor ${floorNum}</h5>
+            <span class="text-xs text-muted-foreground">${floorRooms.length} rooms</span>
+          `;
+          
+          // Room grid
+          const roomGrid = document.createElement('div');
+          roomGrid.className = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2';
+          
+          floorRooms.forEach(room => {
+            const roomCard = createVisualRoomCard(room);
+            roomGrid.appendChild(roomCard);
+          });
+          
+          floorSection.appendChild(floorHeader);
+          floorSection.appendChild(roomGrid);
+          gridContainer.appendChild(floorSection);
+        });
+        
+        console.log('Room visual grid updated successfully'); // Debug log
+      }
+
+      // Create visual room card
+      function createVisualRoomCard(room) {
+        const card = document.createElement('div');
+        
+        // Determine status and styling
+        let statusClass = '';
+        let isSelectable = false;
+        
+        switch (room.status) {
+          case 'Vacant':
+            statusClass = 'bg-green-500 hover:bg-green-600 text-white';
+            isSelectable = true;
+            break;
+          case 'Cleaning':
+            statusClass = 'bg-orange-500 hover:bg-orange-600 text-white';
+            isSelectable = true;
+            break;
+          case 'Occupied':
+            statusClass = 'bg-red-500 text-white cursor-not-allowed opacity-60';
+            isSelectable = false;
+            break;
+          case 'Reserved':
+            statusClass = 'bg-purple-500 text-white cursor-not-allowed opacity-60';
+            isSelectable = false;
+            break;
+          case 'Event Reserved':
+            statusClass = 'bg-purple-600 text-white cursor-not-allowed opacity-60';
+            isSelectable = false;
+            break;
+          case 'Event Ongoing':
+            statusClass = 'bg-pink-500 text-white cursor-not-allowed opacity-60';
+            isSelectable = false;
+            break;
+          default:
+            statusClass = 'bg-gray-500 text-white cursor-not-allowed opacity-60';
+            isSelectable = false;
+        }
+        
+        card.className = `room-card p-2 rounded-lg text-center text-xs font-medium transition-all cursor-pointer ${statusClass} ${isSelectable ? 'hover:scale-105 hover:shadow-md' : ''}`;
+        card.setAttribute('data-room-id', room.id);
+        card.setAttribute('data-room-number', room.room_number);
+        card.setAttribute('data-room-rate', room.rate);
+        card.setAttribute('data-room-type', room.room_type || 'Standard');
+        card.setAttribute('data-selectable', isSelectable);
+        
+        card.innerHTML = `
+          <div class="font-bold text-sm">${room.room_number}</div>
+          <div class="text-xs opacity-90">${room.room_type || 'Standard'}</div>
+          <div class="text-xs opacity-75">₱${parseFloat(room.rate).toLocaleString()}</div>
+        `;
+        
+        if (isSelectable) {
+          card.addEventListener('click', function() {
+            toggleRoomSelection(this);
+          });
+        }
+        
+        return card;
+      }
+
+      // Toggle room selection
+      function toggleRoomSelection(roomCard) {
+        const isSelected = roomCard.classList.contains('ring-2', 'ring-primary', 'ring-offset-2');
+        
+        if (isSelected) {
+          // Deselect room
+          roomCard.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+          roomCard.style.transform = '';
+        } else {
+          // Select room
+          roomCard.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+          roomCard.style.transform = 'scale(1.05)';
+        }
+        
+        updateSelectedRoomsSummary();
+        calculateEventPrice();
+      }
+
+      // Update selected rooms summary
+      function updateSelectedRoomsSummary() {
+        const selectedCards = document.querySelectorAll('.room-card.ring-2.ring-primary');
+        const summaryDiv = document.getElementById('selectedRoomsSummary');
+        const roomsListDiv = document.getElementById('selectedRoomsList');
+        const totalPriceSpan = document.getElementById('totalPrice');
+        
+        if (selectedCards.length === 0) {
+          summaryDiv.classList.add('hidden');
+          return;
+        }
+        
+        summaryDiv.classList.remove('hidden');
+        
+        let totalPrice = 0;
+        roomsListDiv.innerHTML = '';
+        
+        selectedCards.forEach(card => {
+          const roomNumber = card.getAttribute('data-room-number');
+          const roomRate = parseFloat(card.getAttribute('data-room-rate'));
+          const roomType = card.getAttribute('data-room-type');
+          
+          totalPrice += roomRate;
+          
+          const roomTag = document.createElement('span');
+          roomTag.className = 'inline-flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-md text-xs';
+          roomTag.innerHTML = `
+            ${roomNumber} (${roomType})
+            <button onclick="removeRoomSelection('${roomNumber}')" class="ml-1 hover:text-red-300">
+              ×
+            </button>
+          `;
+          roomsListDiv.appendChild(roomTag);
+        });
+        
+        totalPriceSpan.textContent = `₱${totalPrice.toLocaleString()}`;
+      }
+
+      // Remove room selection
+      function removeRoomSelection(roomNumber) {
+        const roomCard = document.querySelector(`[data-room-number="${roomNumber}"]`);
+        if (roomCard) {
+          toggleRoomSelection(roomCard);
+        }
+      }
+
+      // Make functions globally available
+      window.removeRoomSelection = removeRoomSelection;
+      window.loadRooms = loadRooms;
+
+      // Update room list view
+      function updateRoomListView(rooms) {
         const select = document.getElementById('eventRoomBlocks');
         if (!select) return;
         
@@ -704,38 +1016,51 @@
         
         // Filter available rooms
         const availableRooms = rooms.filter(room => {
-          // Basic availability check - allow Vacant and Cleaning rooms
-          if (room.status !== 'Vacant' && room.status !== 'Cleaning') {
-            return false;
-          }
-          
-          return true;
+          return room.status === 'Vacant' || room.status === 'Cleaning';
         });
         
         // Add room options
         availableRooms.forEach(room => {
           const option = document.createElement('option');
           option.value = room.id;
-          option.textContent = `${room.room_number} - ${room.room_type} (₱${room.rate})`;
+          option.textContent = `${room.room_number} - ${room.room_type || 'Standard'} (₱${parseFloat(room.rate).toLocaleString()})`;
           option.dataset.rate = room.rate;
           select.appendChild(option);
         });
         
+        // Remove existing event listeners to prevent duplicates
+        const newSelect = select.cloneNode(true);
+        select.parentNode.replaceChild(newSelect, select);
+        
         // Add event listener for price calculation
-        select.addEventListener('change', calculateEventPrice);
+        newSelect.addEventListener('change', calculateEventPrice);
       }
 
       // Calculate event price based on selected rooms
       function calculateEventPrice() {
-        const select = document.getElementById('eventRoomBlocks');
         const priceInput = document.getElementById('eventPrice');
+        if (!priceInput) return;
         
-        if (!select || !priceInput) return;
+        let totalPrice = 0;
         
-        const selectedOptions = Array.from(select.selectedOptions);
-        const totalPrice = selectedOptions.reduce((sum, option) => {
-          return sum + (parseFloat(option.dataset.rate) || 0);
-        }, 0);
+        // Check if we're in visual mode
+        const selectedCards = document.querySelectorAll('.room-card.ring-2.ring-primary');
+        if (selectedCards.length > 0) {
+          // Calculate from visual selection
+          selectedCards.forEach(card => {
+            const rate = parseFloat(card.getAttribute('data-room-rate')) || 0;
+            totalPrice += rate;
+          });
+        } else {
+          // Calculate from list view
+          const select = document.getElementById('eventRoomBlocks');
+          if (select) {
+            const selectedOptions = Array.from(select.selectedOptions);
+            totalPrice = selectedOptions.reduce((sum, option) => {
+              return sum + (parseFloat(option.dataset.rate) || 0);
+            }, 0);
+          }
+        }
         
         priceInput.value = totalPrice.toFixed(2);
       }
@@ -1042,13 +1367,57 @@
         document.getElementById('eventForm').reset();
         document.getElementById('eventId').value = '';
         
-        // Load rooms for room blocks
-        loadRooms();
+        // Setup room selection tabs
+        setupRoomSelectionTabs();
+        
+        // Load rooms for room blocks after modal is shown
+        setTimeout(() => {
+          loadRooms();
+        }, 100);
+        
+        // Add timeout to prevent infinite loading
+        setTimeout(() => {
+          const gridContainer = document.getElementById('roomVisualGrid');
+          if (gridContainer && gridContainer.innerHTML.includes('Loading rooms...')) {
+            console.warn('Room loading timeout - showing error');
+            showRoomLoadingError('Room loading timed out. Please try again.');
+          }
+        }, 10000); // 10 second timeout
         
         // Calculate initial price (will be 0 until rooms are selected)
         setTimeout(() => {
           calculateEventPrice();
-        }, 100);
+        }, 200);
+      }
+
+      // Setup room selection tabs
+      function setupRoomSelectionTabs() {
+        const visualTab = document.getElementById('roomViewTab');
+        const listTab = document.getElementById('roomListTab');
+        const visualGrid = document.getElementById('roomVisualGrid');
+        const listView = document.getElementById('roomListView');
+
+        if (visualTab && listTab && visualGrid && listView) {
+          // Visual tab click
+          visualTab.addEventListener('click', function() {
+            visualTab.classList.add('bg-primary', 'text-primary-foreground');
+            visualTab.classList.remove('text-muted-foreground');
+            listTab.classList.remove('bg-primary', 'text-primary-foreground');
+            listTab.classList.add('text-muted-foreground');
+            visualGrid.classList.remove('hidden');
+            listView.classList.add('hidden');
+          });
+
+          // List tab click
+          listTab.addEventListener('click', function() {
+            listTab.classList.add('bg-primary', 'text-primary-foreground');
+            listTab.classList.remove('text-muted-foreground');
+            visualTab.classList.remove('bg-primary', 'text-primary-foreground');
+            visualTab.classList.add('text-muted-foreground');
+            listView.classList.remove('hidden');
+            visualGrid.classList.add('hidden');
+          });
+        }
       }
 
       // Hide event modal
