@@ -240,7 +240,7 @@
     <!-- Rewards Modal -->
     <div id="rewardsModal" class="hidden fixed inset-0 bg-black/60 z-50">
       <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-card text-card-foreground rounded-lg shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden border">
+        <div class="bg-card text-card-foreground rounded-lg shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col border">
           <!-- Modal Header -->
           <div class="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
             <h2 class="text-lg font-semibold text-card-foreground">Membership Rewards Program</h2>
@@ -250,7 +250,7 @@
           </div>
 
           <!-- Modal Body -->
-          <div class="flex-1 overflow-y-auto p-6">
+          <div class="flex-1 overflow-y-auto p-6 min-h-0">
             <div class="space-y-6">
               <!-- Program Overview -->
               <div class="text-center mb-8">
@@ -760,6 +760,40 @@
     
     <!-- Include Reservation Modal -->
     <?php include __DIR__ . '/reservation-modal.php'; ?>
+    
+    <style>
+      /* Custom scrollbar for rewards modal */
+      #rewardsModal .overflow-y-auto::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      #rewardsModal .overflow-y-auto::-webkit-scrollbar-track {
+        background: hsl(var(--muted));
+        border-radius: 4px;
+      }
+      
+      #rewardsModal .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: hsl(var(--primary));
+        border-radius: 4px;
+        border: 1px solid hsl(var(--muted));
+      }
+      
+      #rewardsModal .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--primary) / 0.8);
+      }
+      
+      /* Ensure modal content is scrollable */
+      #rewardsModal .flex-1 {
+        min-height: 0;
+        overflow-y: auto;
+      }
+      
+      /* Firefox scrollbar styling */
+      #rewardsModal .overflow-y-auto {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--primary)) hsl(var(--muted));
+      }
+    </style>
     
     <?php include __DIR__ . '/includes/footer.php'; ?>
   </body>

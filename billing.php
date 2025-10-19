@@ -100,9 +100,7 @@
 
       $statusColors = [
         'Paid' => 'bg-success/10 text-success border border-success/20',
-        'Pending' => 'bg-warning/10 text      $totalOutstanding = (float)$rawOutstanding;
-      error_log("After float conversion: " . gettype($totalOutstanding) . ", value: {$totalOutstanding}");
-rning/10 text-warning border border-warning/20',
+        'Pending' => 'bg-orange-100 text-orange-800 border border-orange-200',
       ];
 
       $totalRevenue = 0;

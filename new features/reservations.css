@@ -106,7 +106,7 @@ tr:nth-child(even) {
 }
 
 .badge.confirmed { background: #28a745; }
-.badge.pending { background: #ffc107; }
+.badge.pending { background: #ea580c; }
 .badge.cancelled { background: #dc3545; }
 
 .action-btn {

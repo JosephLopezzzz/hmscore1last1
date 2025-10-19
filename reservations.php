@@ -924,7 +924,7 @@
       function getStatusClass(status) {
         switch (status) {
           case 'Pending':
-            return 'bg-yellow-100 text-yellow-800';
+            return 'bg-orange-100 text-orange-800';
           case 'Ongoing':
             return 'bg-blue-100 text-blue-800';
           case 'Cancelled':
@@ -1412,7 +1412,7 @@
       function getEventColor(status) {
         switch (status) {
           case 'Pending':
-            return '#f59e0b';
+            return '#ea580c';
           case 'Ongoing':
             return '#3b82f6';
           case 'Cancelled':
