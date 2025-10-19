@@ -88,7 +88,7 @@ function handleGetRequest($path) {
         $events = $stmt->fetchAll();
         
         echo json_encode([
-            'success' => true,
+            'ok' => true,
             'data' => $events
         ]);
     } else {

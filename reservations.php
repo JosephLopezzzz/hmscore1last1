@@ -421,6 +421,28 @@
           </div>
           
           <div class="flex items-center gap-2">
+            <!-- Debug buttons - hidden but available for testing -->
+            <button onclick="testJavaScript()" class="hidden px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Test JS
+            </button>
+            
+            <button onclick="testAPICall()" class="hidden px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              Test API
+            </button>
+            
+            <button onclick="loadEvents()" class="hidden px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Test Load
+            </button>
+            
             <button onclick="exportEvents()" class="px-4 py-2 border border-border rounded-lg hover:bg-muted text-foreground transition-colors flex items-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -532,23 +554,19 @@
             </div>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label for="eventSetupType" class="block text-sm font-medium text-foreground mb-2">Setup Type</label>
-              <select id="eventSetupType" name="setup_type" class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-                <option value="Conference">Conference</option>
-                <option value="Wedding">Wedding</option>
-                <option value="Birthday">Birthday</option>
-                <option value="Corporate">Corporate</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            
-            <div>
-              <label for="eventPrice" class="block text-sm font-medium text-foreground mb-2">Price Estimate</label>
-              <input type="number" id="eventPrice" name="price_estimate" step="0.01" class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-            </div>
+          <div class="mb-4">
+            <label for="eventSetupType" class="block text-sm font-medium text-foreground mb-2">Setup Type</label>
+            <select id="eventSetupType" name="setup_type" class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+              <option value="Conference">Conference</option>
+              <option value="Wedding">Wedding</option>
+              <option value="Birthday">Birthday</option>
+              <option value="Corporate">Corporate</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
+          
+          <!-- Hidden price input for form submission -->
+          <input type="hidden" id="eventPrice" name="price_estimate" value="0">
           
           <div class="mb-4">
             <label class="block text-sm font-medium text-foreground mb-2">Room Blocks</label>
@@ -703,6 +721,7 @@
 
       // Load events on page load
       document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 DOM Content Loaded - Starting event loading...');
         loadEvents();
         setupEventListeners();
         
@@ -1237,9 +1256,6 @@
 
       // Calculate event price based on selected rooms
       function calculateEventPrice() {
-        const priceInput = document.getElementById('eventPrice');
-        if (!priceInput) return;
-        
         let totalPrice = 0;
         
         // Check if we're in visual mode
@@ -1261,16 +1277,67 @@
           }
         }
         
-        priceInput.value = totalPrice.toFixed(2);
+        // Update the total price display
+        const totalPriceElement = document.getElementById('totalPrice');
+        if (totalPriceElement) {
+          totalPriceElement.textContent = `₱${totalPrice.toFixed(2)}`;
+        }
+        
+        // Update the hidden price input for form submission
+        const priceInput = document.getElementById('eventPrice');
+        if (priceInput) {
+          priceInput.value = totalPrice.toFixed(2);
+        }
+      }
+
+      // Test JavaScript execution
+      function testJavaScript() {
+        console.log('🧪 JavaScript is working!');
+        alert('JavaScript is working! Check console for details.');
+        showToast('JavaScript test successful!', 'success');
+      }
+
+      // Test API call directly
+      async function testAPICall() {
+        console.log('🧪 Testing API call directly...');
+        try {
+          // Force cache bypass
+          const cacheBuster = '?test=' + Date.now() + '&r=' + Math.random();
+          const response = await fetch('/hmscore1last1/api/events' + cacheBuster, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          console.log('🧪 API Response status:', response.status);
+          console.log('🧪 API Response URL:', response.url);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('🧪 API Response data:', data);
+            showToast('API test successful! Found ' + data.data.length + ' events', 'success');
+          } else {
+            console.error('🧪 API Response error:', response.status, response.statusText);
+            showToast('API test failed: ' + response.status, 'error');
+          }
+        } catch (error) {
+          console.error('🧪 API Call error:', error);
+          showToast('API test error: ' + error.message, 'error');
+        }
       }
 
       // Load events
       async function loadEvents() {
+        console.log('🔄 Loading events...');
+        console.log('🔄 Current events array:', currentEvents);
         try {
-          // Try using hotel-sync.js first
-          if (window.hotelSync && window.hotelSync.fetchEvents) {
+          // Try using hotel-sync.js first (temporarily disabled for debugging)
+          if (false && window.hotelSync && window.hotelSync.fetchEvents) {
+            console.log('📡 Using hotel-sync.js to fetch events');
             const events = await window.hotelSync.fetchEvents();
             if (events) {
+              console.log('✅ Events loaded via hotel-sync:', events.length);
               currentEvents = events;
               displayEvents();
               updateEventStatistics();
@@ -1279,23 +1346,68 @@
           }
           
           // Fallback to direct API call
-          const response = await fetch('event_actions.php?action=get_all_events', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
+          console.log('📡 Using direct API call to fetch events');
+          const apiUrl = '/hmscore1last1/api/events?t=' + Date.now() + '&r=' + Math.random();
+          console.log('📡 Fetching URL:', apiUrl);
+          console.log('📡 Full URL would be:', window.location.origin + apiUrl);
+          console.log('📡 Current page URL:', window.location.href);
+          
+          let response;
+          try {
+            response = await fetch(apiUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+          } catch (error) {
+            console.error('❌ Fetch failed with relative URL:', error);
+            console.log('🔄 Trying full URL...');
+            const fullUrl = window.location.origin + apiUrl;
+            response = await fetch(fullUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+          }
+          
+          console.log('📡 Response object:', response);
+          console.log('📡 Response URL:', response.url);
+          console.log('📡 Response type:', response.type);
+          console.log('📡 Response status:', response.status);
+          console.log('📡 Response statusText:', response.statusText);
+          
+          console.log('📡 API response status:', response.status);
           
           if (response.ok) {
             const data = await response.json();
-            if (data.success) {
+            console.log('📡 API response data:', data);
+            console.log('📡 Data.ok:', data.ok);
+            console.log('📡 Data.data:', data.data);
+            console.log('📡 Data.data length:', data.data ? data.data.length : 'undefined');
+            
+            if (data.ok && data.data) {
+              console.log('✅ Events loaded via API:', data.data.length);
               currentEvents = data.data;
               displayEvents();
               updateEventStatistics();
             } else {
-              console.error('Failed to load events:', data.message || 'Unknown error');
-              showToast('Failed to load events', 'error');
+              console.error('❌ API response format issue:', {
+                hasOk: 'ok' in data,
+                okValue: data.ok,
+                hasData: 'data' in data,
+                dataValue: data.data,
+                dataType: typeof data.data
+              });
+              showToast('Failed to load events - API format issue', 'error');
             }
+          } else {
+            console.error('❌ API request failed with status:', response.status);
+            const responseText = await response.text();
+            console.error('❌ Response text:', responseText);
+            console.error('❌ Full response:', response);
+            showToast(`Failed to load events - HTTP ${response.status}: ${responseText}`, 'error');
           }
         } catch (error) {
           console.error('Error loading events:', error);
@@ -1305,12 +1417,18 @@
 
       // Display events
       function displayEvents() {
+        console.log('🎨 Displaying events:', currentEvents.length);
+        console.log('🎨 Events data:', currentEvents);
         const tbody = document.getElementById('eventsTableBody');
-        if (!tbody) return;
+        if (!tbody) {
+          console.error('❌ eventsTableBody element not found!');
+          return;
+        }
         
         tbody.innerHTML = '';
         
         if (currentEvents.length === 0) {
+          console.log('⚠️ No events to display');
           tbody.innerHTML = `
             <tr>
               <td colspan="7" class="px-6 py-8 text-center text-muted-foreground">
@@ -1370,8 +1488,8 @@
         
         // Handle room numbers
         let rooms = 'None';
-        if (event.room_numbers && Array.isArray(event.room_numbers) && event.room_numbers.length > 0) {
-          rooms = event.room_numbers.join(', ');
+        if (event.room_blocks && Array.isArray(event.room_blocks) && event.room_blocks.length > 0) {
+          rooms = event.room_blocks.join(', ');
         }
         
         // Status badge
@@ -1544,16 +1662,15 @@
 
       // Generate CSV content
       function generateEventsCSV(events) {
-        const headers = ['Title', 'Organizer', 'Start Date', 'End Date', 'Setup Type', 'Rooms', 'Status', 'Price Estimate'];
+        const headers = ['Title', 'Organizer', 'Start Date', 'End Date', 'Setup Type', 'Rooms', 'Status'];
         const rows = events.map(event => [
           event.title,
           event.organizer_name,
           event.start_datetime,
           event.end_datetime,
           event.setup_type || 'Not specified',
-          event.room_numbers ? event.room_numbers.join(', ') : 'None',
-          event.status,
-          event.price_estimate || '0'
+          event.room_blocks ? event.room_blocks.join(', ') : 'None',
+          event.status
         ]);
         
         return [headers, ...rows].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
@@ -1640,8 +1757,26 @@
         const formData = new FormData(e.target);
         const eventData = Object.fromEntries(formData.entries());
         
-        // Convert room_blocks to array
-        eventData.room_blocks = Array.from(document.getElementById('eventRoomBlocks').selectedOptions).map(option => option.value);
+        // Get room selections from both visual and list views
+        let selectedRooms = [];
+        
+        // Check if we're in visual mode (selected cards)
+        const selectedCards = document.querySelectorAll('.room-card.ring-2.ring-primary');
+        if (selectedCards.length > 0) {
+          // Get rooms from visual selection
+          selectedRooms = Array.from(selectedCards).map(card => card.getAttribute('data-room-id'));
+        } else {
+          // Get rooms from list view
+          const roomBlocksSelect = document.getElementById('eventRoomBlocks');
+          if (roomBlocksSelect) {
+            selectedRooms = Array.from(roomBlocksSelect.selectedOptions).map(option => option.value);
+          }
+        }
+        
+        eventData.room_blocks = selectedRooms;
+        
+        console.log('Selected rooms:', selectedRooms);
+        console.log('Event data being sent:', eventData);
         
         // Validate required fields
         if (!eventData.title || !eventData.organizer_name || !eventData.start_datetime || !eventData.end_datetime) {
@@ -1688,37 +1823,30 @@
 
       // Create event directly (fallback)
       async function createEventDirect(eventData) {
-        const response = await fetch('event_actions.php', {
+        const response = await fetch('/api/events', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
-          body: new URLSearchParams({
-            action: 'add_event',
-            ...eventData
-          })
+          body: JSON.stringify(eventData)
         });
         
         const data = await response.json();
-        return data.success;
+        return data.ok;
       }
 
       // Update event directly (fallback)
       async function updateEventDirect(eventId, eventData) {
-        const response = await fetch('event_actions.php', {
-          method: 'POST',
+        const response = await fetch(`/api/events/${eventId}`, {
+          method: 'PATCH',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
-          body: new URLSearchParams({
-            action: 'update_event',
-            event_id: eventId,
-            ...eventData
-          })
+          body: JSON.stringify(eventData)
         });
         
         const data = await response.json();
-        return data.success;
+        return data.ok;
       }
 
       // View event details
@@ -1749,8 +1877,8 @@
         
         // Handle room numbers
         let rooms = 'None';
-        if (event.room_numbers && Array.isArray(event.room_numbers) && event.room_numbers.length > 0) {
-          rooms = event.room_numbers.join(', ');
+        if (event.room_blocks && Array.isArray(event.room_blocks) && event.room_blocks.length > 0) {
+          rooms = event.room_blocks.join(', ');
         }
         
         content.innerHTML = `
@@ -1790,6 +1918,7 @@
               <div>
                 <h3 class="font-semibold text-foreground mb-2">Pricing</h3>
                 <p class="text-2xl font-bold text-primary">₱${(event.price_estimate || 0).toLocaleString()}</p>
+                <p class="text-sm text-muted-foreground">Calculated from selected rooms</p>
               </div>
             </div>
           </div>
@@ -1823,16 +1952,16 @@
           document.getElementById('eventStartDate').value = event.start_datetime ? event.start_datetime.substring(0, 16) : '';
           document.getElementById('eventEndDate').value = event.end_datetime ? event.end_datetime.substring(0, 16) : '';
           document.getElementById('eventSetupType').value = event.setup_type || 'Conference';
-          document.getElementById('eventPrice').value = event.price_estimate || '';
+          // Price will be calculated automatically from selected rooms
           
           // Load rooms and select current room blocks
           await loadRooms();
           
           // Select current room blocks
-          if (event.room_numbers && Array.isArray(event.room_numbers)) {
+          if (event.room_blocks && Array.isArray(event.room_blocks)) {
             const roomBlocksSelect = document.getElementById('eventRoomBlocks');
             Array.from(roomBlocksSelect.options).forEach(option => {
-              option.selected = event.room_numbers.includes(option.value);
+              option.selected = event.room_blocks.includes(option.value);
             });
             
             // Recalculate price based on selected rooms
@@ -1960,7 +2089,7 @@
             extendedProps: {
               organizer: event.organizer_name,
               setup: event.setup_type,
-              rooms: event.room_numbers ? event.room_numbers.join(', ') : 'None',
+              rooms: event.room_blocks ? event.room_blocks.join(', ') : 'None',
               status: event.status
             }
           })),

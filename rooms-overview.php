@@ -331,6 +331,9 @@
             actualStatus = 'Event Reserved';
           } else if (r.status === 'Event Ongoing') {
             actualStatus = 'Event Ongoing';
+          } else if (r.maintenance_notes && r.maintenance_notes.includes('Event Reserved')) {
+            // Handle case where event info is stored in maintenance_notes
+            actualStatus = 'Event Reserved';
           }
           
           const statusOk = filters.status === 'all' || (actualStatus === filters.status || (actualStatus || '').toString().toLowerCase() === filters.status.toLowerCase());
@@ -430,6 +433,9 @@
           actualStatus = 'Event Reserved';
         } else if (room.status === 'Event Ongoing') {
           actualStatus = 'Event Ongoing';
+        } else if (room.maintenance_notes && room.maintenance_notes.includes('Event Reserved')) {
+          // Handle case where event info is stored in maintenance_notes
+          actualStatus = 'Event Reserved';
         }
         
         
@@ -564,6 +570,9 @@
           actualStatus = 'Event Reserved';
         } else if (room.status === 'Event Ongoing') {
           actualStatus = 'Event Ongoing';
+        } else if (room.maintenance_notes && room.maintenance_notes.includes('Event Reserved')) {
+          // Handle case where event info is stored in maintenance_notes
+          actualStatus = 'Event Reserved';
         }
         
         document.getElementById("modalRoomNumber").textContent = `Room ${room.room_number}`;
@@ -726,22 +735,31 @@
           updateBtn.textContent = 'Updating...';
           updateBtn.disabled = true;
 
-          const success = await hotelSync.updateRoom(
-            currentRoomModal.id,
-            statusToUpdate,
-            guestNameToUpdate,
-            notesToUpdate
-          );
+          try {
+            const success = await hotelSync.updateRoom(
+              currentRoomModal.id,
+              statusToUpdate,
+              guestNameToUpdate,
+              notesToUpdate
+            );
 
-          if (success) {
-            // Force immediate refresh of room data
-            console.log('Status update successful, refreshing data...');
-            await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for DB to commit
-            await hotelSync.init(); // Force reload from API
-            console.log('Data refreshed, rooms:', hotelSync.getRooms());
-            closeModal();
-          } else {
-            console.error('Status update failed');
+            if (success) {
+              // Force immediate refresh of room data
+              console.log('Status update successful, refreshing data...');
+              await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for DB to commit
+              await hotelSync.init(); // Force reload from API
+              console.log('Data refreshed, rooms:', hotelSync.getRooms());
+              closeModal();
+            } else {
+              console.error('Status update failed');
+              alert('Failed to update room status. Please try again.');
+              // Restore button
+              updateBtn.textContent = originalText;
+              updateBtn.disabled = false;
+            }
+          } catch (error) {
+            console.error('Error updating room status:', error);
+            alert('An error occurred while updating room status. Please try again.');
             // Restore button
             updateBtn.textContent = originalText;
             updateBtn.disabled = false;

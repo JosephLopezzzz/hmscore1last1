@@ -22,6 +22,14 @@ function sendJson($data, int $code = 200): void {
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '';
 $path = preg_replace('#^/.*/api#', '/api', $path); // normalize if mounted under subdir
 
+// Debug logging for frontend calls
+if (strpos($_SERVER['REQUEST_URI'], '/api/events') !== false) {
+  error_log('API Debug - REQUEST_URI: ' . $_SERVER['REQUEST_URI']);
+  error_log('API Debug - Parsed path: ' . $path);
+  error_log('API Debug - Method: ' . $_SERVER['REQUEST_METHOD']);
+  error_log('API Debug - Script name: ' . $_SERVER['SCRIPT_NAME']);
+}
+
 // Routes
 switch (true) {
   case $path === '/api/health':
@@ -466,7 +474,7 @@ switch (true) {
     if ($path === '/api/events' && $_SERVER['REQUEST_METHOD'] === 'GET') {
       $status = $_GET['status'] ?? null; $from = $_GET['from'] ?? ($_GET['start'] ?? null); $to = $_GET['to'] ?? ($_GET['end'] ?? null);
       $rows = fetchEvents($status, $from, $to);
-      sendJson(['data' => $rows]);
+      sendJson(['ok' => true, 'data' => $rows]);
     }
     // GET /api/events/:id
     if (preg_match('#^/api/events/(\d+)$#', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'GET') {

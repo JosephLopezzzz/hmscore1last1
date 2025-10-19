@@ -203,9 +203,9 @@
         // Render tasks
         function renderTasks() {
           // Merge all tasks by workflow status only
-          // Some legacy tasks may have status 'maintenance' – treat them as pending
+          // Filter out completed tasks and group by actual status
           const groupedTasks = {
-            pending: tasks.filter(t => t.status === 'pending' || t.status === 'maintenance'),
+            pending: tasks.filter(t => t.status === 'pending'),
             'in-progress': tasks.filter(t => t.status === 'in-progress'),
             completed: tasks.filter(t => t.status === 'completed')
           };
@@ -312,15 +312,27 @@
           }
 
           console.log('Starting task:', taskId, task);
-          const success = await hotelSync.updateTask(taskId, 'in-progress');
           
-          if (success) {
-            console.log('Task started successfully');
-            // Force immediate refresh
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await hotelSync.init();
-          } else {
-            console.error('Failed to start task');
+          try {
+            const success = await hotelSync.updateTask(taskId, 'in-progress');
+            
+            if (success) {
+              console.log('Task started successfully');
+              // Force immediate refresh
+              await new Promise(resolve => setTimeout(resolve, 500));
+              await hotelSync.init();
+            } else {
+              console.error('Failed to start task');
+              alert('Failed to start task. Please try again.');
+              // Re-enable button on failure
+              if (button) {
+                button.disabled = false;
+                button.textContent = 'Start Task';
+              }
+            }
+          } catch (error) {
+            console.error('Error starting task:', error);
+            alert('An error occurred while starting the task. Please try again.');
             // Re-enable button on failure
             if (button) {
               button.disabled = false;
@@ -345,15 +357,27 @@
           }
 
           console.log('Completing task:', taskId, task);
-          const success = await hotelSync.updateTask(taskId, 'completed');
           
-          if (success) {
-            console.log('Task completed successfully');
-            // Force immediate refresh
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await hotelSync.init();
-          } else {
-            console.error('Failed to complete task');
+          try {
+            const success = await hotelSync.updateTask(taskId, 'completed');
+            
+            if (success) {
+              console.log('Task completed successfully');
+              // Force immediate refresh
+              await new Promise(resolve => setTimeout(resolve, 500));
+              await hotelSync.init();
+            } else {
+              console.error('Failed to complete task');
+              alert('Failed to complete task. Please try again.');
+              // Re-enable button on failure
+              if (button) {
+                button.disabled = false;
+                button.textContent = 'Mark Complete';
+              }
+            }
+          } catch (error) {
+            console.error('Error completing task:', error);
+            alert('An error occurred while completing the task. Please try again.');
             // Re-enable button on failure
             if (button) {
               button.disabled = false;
