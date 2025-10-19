@@ -60,7 +60,7 @@
                     <h3 class="text-lg font-bold"><?php echo htmlspecialchars($guest['first_name'] . ' ' . $guest['last_name']); ?></h3>
                     <?php
                       // Calculate guest tier based on paid transactions
-                      $guestTier = 'NORMAL';
+                      $guestTier = 'STANDARD';
                       $guestDiscount = 0;
                       if (isset($guest['paid_transactions_count'])) {
                         $paidCount = (int)$guest['paid_transactions_count'];
@@ -261,9 +261,9 @@
               <!-- Membership Tiers -->
               <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <!-- Normal Tier -->
-                <div class="border rounded-lg p-4 bg-card border-border">
+                <div class="border rounded-lg p-4 bg-card border-border shadow-sm hover:shadow-md transition-shadow">
                   <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-bold text-lg text-primary">Normal</h4>
+                    <h4 class="font-bold text-lg text-primary">Standard</h4>
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       0+ stays
                     </span>
@@ -289,7 +289,7 @@
                 </div>
 
                 <!-- Silver Tier -->
-                <div class="border rounded-lg p-4 bg-card border-border">
+                <div class="border rounded-lg p-4 bg-card border-border shadow-sm hover:shadow-md transition-shadow">
                   <div class="flex items-center justify-between mb-3">
                     <h4 class="font-bold text-lg text-muted-foreground">Silver</h4>
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
@@ -299,7 +299,7 @@
                   <div class="space-y-2 text-sm">
                     <div class="flex items-center gap-2">
                       <i data-lucide="check-circle" class="h-4 w-4 text-muted-foreground"></i>
-                      <span class="text-card-foreground">All Normal benefits</span>
+                      <span class="text-card-foreground">All Standard benefits</span>
                     </div>
                     <div class="flex items-center gap-2">
                       <i data-lucide="check-circle" class="h-4 w-4 text-success"></i>
@@ -321,7 +321,7 @@
                 </div>
 
                 <!-- Gold Tier -->
-                <div class="border rounded-lg p-4 bg-card border-border">
+                <div class="border rounded-lg p-4 bg-card border-border shadow-sm hover:shadow-md transition-shadow">
                   <div class="flex items-center justify-between mb-3">
                     <h4 class="font-bold text-lg text-warning">Gold</h4>
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning">
@@ -357,7 +357,7 @@
                 </div>
 
                 <!-- Platinum Tier -->
-                <div class="border rounded-lg p-4 bg-card border-border">
+                <div class="border rounded-lg p-4 bg-card border-border shadow-sm hover:shadow-md transition-shadow">
                   <div class="flex items-center justify-between mb-3">
                     <h4 class="font-bold text-lg text-accent">Platinum</h4>
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent">
@@ -489,13 +489,12 @@
               </div>
             `;
             metrics.innerHTML = `
-              <div class="flex items-center justify-between"><span>Times Checked In</span><span class="font-semibold">${m.timesCheckedIn||0}</span></div>
+              <div class="flex items-center justify-between"><span>Times Checked In</span><span class="font-semibold">${m.paidTransactionsCount||0}</span></div>
               <div class="flex items-center justify-between"><span>Total Paid</span><span class="font-semibold">₱${Number(m.totalPaid||0).toFixed(2)}</span></div>
-              <div class="flex items-center justify-between"><span>Paid Transactions</span><span class="font-semibold">${m.paidTransactionsCount||0}</span></div>
               <div class="flex items-center justify-between">
                 <span>Tier</span>
-                <span class="font-semibold inline-flex items-center px-2 py-1 rounded-full text-xs ${getTierBadgeClass(m.tier||'NORMAL')}">
-                  ${m.tier||'NORMAL'} ${m.discountPercentage > 0 ? `(${m.discountPercentage}%)` : ''}
+                <span class="font-semibold inline-flex items-center px-2 py-1 rounded-full text-xs ${getTierBadgeClass(m.tier||'STANDARD')}">
+                  ${m.tier||'STANDARD'} ${m.discountPercentage > 0 ? `(${m.discountPercentage}%)` : ''}
                 </span>
               </div>
             `;
@@ -535,7 +534,7 @@
           'PLATINUM': 'bg-purple-100 text-purple-800',
           'GOLD': 'bg-yellow-100 text-yellow-800',
           'SILVER': 'bg-gray-100 text-gray-800',
-          'NORMAL': 'bg-blue-100 text-blue-800'
+          'STANDARD': 'bg-blue-100 text-blue-800'
         }[tier] || 'bg-blue-100 text-blue-800';
       }
       
@@ -792,6 +791,33 @@
       #rewardsModal .overflow-y-auto {
         scrollbar-width: thin;
         scrollbar-color: hsl(var(--primary)) hsl(var(--muted));
+      }
+      
+      /* Enhanced card styling for light mode */
+      #rewardsModal .border.rounded-lg {
+        background: hsl(var(--card)) !important;
+        border: 1px solid hsl(var(--border)) !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+        transition: all 0.2s ease-in-out !important;
+      }
+      
+      #rewardsModal .border.rounded-lg:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      /* Light mode specific enhancements */
+      @media (prefers-color-scheme: light) {
+        #rewardsModal .border.rounded-lg {
+          background: #ffffff !important;
+          border: 1px solid #e5e7eb !important;
+          box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        
+        #rewardsModal .border.rounded-lg:hover {
+          box-shadow: 0 8px 15px 0 rgba(0, 0, 0, 0.1), 0 4px 6px 0 rgba(0, 0, 0, 0.05) !important;
+          border-color: #d1d5db !important;
+        }
       }
     </style>
     

@@ -143,7 +143,7 @@ switch (true) {
       $paidCountStmt->execute([':id' => $guestId]);
       $paidCount = (int)$paidCountStmt->fetch()['paid_count'];
 
-      $tier = 'NORMAL';
+      $tier = 'STANDARD';
       $discountPercentage = 0;
       if ($paidCount >= 100) {
         $tier = 'PLATINUM';
@@ -403,7 +403,7 @@ switch (true) {
 
       // Calculate tier based on paid transaction count
       $paidCount = (int)$paidData['paid_count'];
-      $tier = 'NORMAL';
+      $tier = 'STANDARD';
       if ($paidCount >= 100) {
         $tier = 'PLATINUM';
       } elseif ($paidCount >= 50) {

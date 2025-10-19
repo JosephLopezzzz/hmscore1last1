@@ -93,7 +93,7 @@ try {
         $tier = 'SILVER';
     } else {
         $discountPercentage = 0.0; // No discount for NORMAL (0-19 transactions)
-        $tier = 'NORMAL';
+        $tier = 'STANDARD';
     }
 
     // Calculate discount amount and discounted balance

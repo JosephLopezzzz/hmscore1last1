@@ -524,7 +524,7 @@
           'PLATINUM': 'bg-purple-100 text-purple-800',
           'GOLD': 'bg-yellow-100 text-yellow-800',
           'SILVER': 'bg-gray-100 text-gray-800',
-          'NORMAL': 'bg-blue-100 text-blue-800'
+          'STANDARD': 'bg-blue-100 text-blue-800'
         }[tier] || 'bg-blue-100 text-blue-800';
       }
 

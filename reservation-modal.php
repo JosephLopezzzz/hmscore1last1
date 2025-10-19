@@ -43,10 +43,10 @@ require_once __DIR__ . '/includes/security.php';
                   <h3 class="text-xl font-semibold text-card-foreground">Guest Information</h3>
                 </div>
 
-                <!-- Search Section -->
+              <!-- Search Section -->
                 <div class="mb-6">
                   <label class="block text-sm font-semibold text-card-foreground mb-2">Search Existing Guests</label>
-                  <div class="relative">
+                <div class="relative">
                     <input type="text" id="guestSearch" placeholder="Search guests by name, email, or phone..." class="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
                     <div id="guestSearchResults" class="search-results absolute z-10 w-full mt-2 rounded-lg max-h-60 overflow-y-auto hidden bg-card border border-border shadow-lg">
                       <div id="guestsLoading" class="p-4 text-sm text-muted-foreground flex items-center gap-2">
@@ -54,9 +54,9 @@ require_once __DIR__ . '/includes/security.php';
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
                         Loading guests...
-                      </div>
+                  </div>
                       <div id="noGuestsFound" class="p-4 text-sm text-muted-foreground hidden">No guests found</div>
-                    </div>
+                </div>
                   </div>
                   <div id="selectedGuestInfo" class="mt-3 p-4 bg-primary/10 border border-primary/20 rounded-lg hidden">
                     <div class="flex items-center gap-2">
@@ -65,84 +65,84 @@ require_once __DIR__ . '/includes/security.php';
                       </svg>
                       <p class="text-sm text-primary font-medium">Selected: <span id="selectedGuestName" class="font-semibold"></span></p>
                     </div>
-                    <input type="hidden" id="guest_id" name="guest_id">
-                  </div>
+                  <input type="hidden" id="guest_id" name="guest_id">
+                </div>
                   <div id="guestsFetchStatus" class="mt-2 text-xs text-muted-foreground flex items-center gap-1">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     Guests: <span id="guestsStatus" class="font-medium">Not loaded</span>
                   </div>
-                </div>
+              </div>
 
-                <!-- New Guest Form -->
-                <div id="newGuestSection">
+              <!-- New Guest Form -->
+              <div id="newGuestSection">
                   <div class="mb-4">
                     <div class="flex items-center gap-2 mb-3">
                       <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
                         <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                      </div>
+                </div>
                       <label class="text-sm font-semibold text-card-foreground">Or Create New Guest</label>
                     </div>
                   </div>
                   <div class="grid grid-cols-1 gap-4">
                     <div class="grid grid-cols-2 gap-4">
-                      <div>
+                    <div>
                         <label class="block text-sm font-medium text-card-foreground mb-2">First Name *</label>
                         <input type="text" id="first_name" name="first_name" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">Last Name *</label>
-                        <input type="text" id="last_name" name="last_name" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">Email *</label>
-                        <input type="email" id="email" name="email" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">Phone</label>
-                        <input type="tel" id="phone" name="phone" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">Address</label>
-                        <input type="text" id="address" name="address" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">City</label>
-                        <input type="text" id="city" name="city" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">Country</label>
-                        <input type="text" id="country" name="country" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">Nationality</label>
-                        <input type="text" id="nationality" name="nationality" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">ID Type</label>
-                        <select id="id_type" name="id_type" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
-                          <option value="National ID">National ID</option>
-                          <option value="Passport">Passport</option>
-                          <option value="Driver License">Driver License</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-card-foreground mb-2">ID Number *</label>
-                        <input type="text" id="id_number" name="id_number" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
-                      </div>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Last Name *</label>
+                        <input type="text" id="last_name" name="last_name" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                    </div>
+                  </div>
+                    <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Email *</label>
+                        <input type="email" id="email" name="email" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Phone</label>
+                        <input type="tel" id="phone" name="phone" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                    </div>
+                  </div>
+                    <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Address</label>
+                        <input type="text" id="address" name="address" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">City</label>
+                        <input type="text" id="city" name="city" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                    </div>
+                  </div>
+                    <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Country</label>
+                        <input type="text" id="country" name="country" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">Nationality</label>
+                        <input type="text" id="nationality" name="nationality" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                    </div>
+                  </div>
+                    <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">ID Type</label>
+                        <select id="id_type" name="id_type" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors">
+                        <option value="National ID">National ID</option>
+                        <option value="Passport">Passport</option>
+                        <option value="Driver License">Driver License</option>
+                      </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-card-foreground mb-2">ID Number *</label>
+                        <input type="text" id="id_number" name="id_number" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                    </div>
+                  </div>
+                  <div>
                       <label class="block text-sm font-medium text-card-foreground mb-2">Date of Birth *</label>
                       <input type="date" id="date_of_birth" name="date_of_birth" class="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
                       <div id="dateOfBirthError" class="mt-2 text-sm text-destructive hidden"></div>
@@ -164,22 +164,40 @@ require_once __DIR__ . '/includes/security.php';
                   </div>
                   <h3 class="text-xl font-semibold text-card-foreground">Room Selection</h3>
                 </div>
-                <div class="grid grid-cols-1 gap-4">
-                  <div>
-                    <label class="block text-sm font-semibold text-card-foreground mb-2">Select Room</label>
-                    <select id="room_id" name="room_id" class="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
+                <!-- Room Selection Tabs -->
+                <div class="flex space-x-1 mb-4 bg-muted p-1 rounded-lg">
+                  <button id="hotelRoomViewTab" class="flex-1 py-2 px-3 text-sm font-medium rounded-md bg-primary text-primary-foreground transition-colors">
+                    Visual Selection
+                  </button>
+                  <button id="hotelRoomListTab" class="flex-1 py-2 px-3 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground transition-colors">
+                    List View
+                  </button>
+                </div>
+                
+                <!-- Visual Room Grid -->
+                <div id="hotelRoomVisualGrid" class="space-y-4">
+                  <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p class="text-sm text-muted-foreground">Loading rooms...</p>
+                  </div>
+                </div>
+                
+                <!-- List View (Hidden by default) -->
+                <div id="hotelRoomListView" class="hidden">
+                  <select id="room_id" name="room_id" class="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required>
                       <option value="">Loading rooms...</option>
                     </select>
                   </div>
-                  <div>
-                    <label class="block text-sm font-semibold text-card-foreground mb-2">Room Preview</label>
-                    <div id="selectedRoomInfo" class="p-4 bg-muted/50 rounded-lg min-h-[60px] flex items-center text-sm border border-border">
-                      <div class="flex items-center gap-2 text-muted-foreground">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span>Select a room to see details</span>
-                      </div>
+                
+                <!-- Room Preview -->
+                <div class="mt-4">
+                  <label class="block text-sm font-semibold text-card-foreground mb-2">Room Preview</label>
+                  <div id="selectedRoomInfo" class="p-4 bg-muted/50 rounded-lg min-h-[60px] flex items-center text-sm border border-border">
+                    <div class="flex items-center gap-2 text-muted-foreground">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <span>Select a room to see details</span>
                     </div>
                   </div>
                 </div>
@@ -190,9 +208,6 @@ require_once __DIR__ . '/includes/security.php';
                   Rooms: <span id="roomsStatus" class="font-medium">Not loaded</span>
                   <button id="retryRoomsBtn" onclick="loadRooms()" class="ml-2 px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors hidden">
                     Retry
-                  </button>
-                  <button id="debugRoomsBtn" onclick="debugRooms()" class="ml-2 px-2 py-1 text-xs bg-yellow-500/10 text-yellow-600 rounded hover:bg-yellow-500/20 transition-colors">
-                    Debug
                   </button>
                 </div>
               </div>
@@ -208,7 +223,7 @@ require_once __DIR__ . '/includes/security.php';
                   <h3 class="text-xl font-semibold text-card-foreground">Reservation Dates</h3>
                 </div>
                 <div class="grid grid-cols-1 gap-4">
-                  <div>
+              <div>
                     <label class="block text-sm font-semibold text-card-foreground mb-2">Check-in Date & Time *</label>
                     <input type="datetime-local" id="check_in_date" name="check_in_date" class="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-colors" required min="">
                   </div>
@@ -531,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     results.forEach(guest => {
       const div = document.createElement('div');
-      div.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0';
+      div.className = 'p-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0 transition-colors';
       
       // Properly format guest name from first_name and last_name
       const guestName = guest.first_name && guest.last_name 
@@ -539,8 +554,8 @@ document.addEventListener('DOMContentLoaded', function() {
         : (guest.name || 'Unknown');
         
       div.innerHTML = `
-        <div class="font-medium">${guestName}</div>
-        <div class="text-sm text-gray-500">${guest.email || ''} ${guest.phone || ''}</div>
+        <div class="font-medium text-card-foreground">${guestName}</div>
+        <div class="text-sm text-muted-foreground">${guest.email || ''} ${guest.phone || ''}</div>
       `;
       div.addEventListener('click', () => selectGuest(guest));
       guestSearchResults.appendChild(div);
@@ -619,6 +634,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Updating room select with', rooms.length, 'rooms'); // Debug log
         console.log('Calling populateRoomSelect...'); // Debug log
         populateRoomSelect(rooms);
+        console.log('Calling updateHotelRoomVisualGrid...'); // Debug log
+        updateHotelRoomVisualGrid(rooms);
         console.log('populateRoomSelect completed'); // Debug log
         roomsStatus.textContent = `Loaded (${rooms.length} rooms)`;
         hideRetryButton();
@@ -694,6 +711,196 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Update hotel room visual grid
+  function updateHotelRoomVisualGrid(rooms) {
+    console.log('🏨 updateHotelRoomVisualGrid called with', rooms.length, 'rooms');
+    
+    const gridContainer = document.getElementById('hotelRoomVisualGrid');
+    if (!gridContainer) {
+      console.error('💥 hotelRoomVisualGrid element not found!');
+      return;
+    }
+    
+    console.log('✅ hotelRoomVisualGrid element found:', gridContainer);
+
+    // Group rooms by floor
+    const roomsByFloor = {};
+    rooms.forEach(room => {
+      const floor = room.floor_number || 1;
+      if (!roomsByFloor[floor]) {
+        roomsByFloor[floor] = [];
+      }
+      roomsByFloor[floor].push(room);
+    });
+
+    console.log('🏢 Rooms grouped by floor:', roomsByFloor);
+
+    // Sort floors
+    const sortedFloors = Object.keys(roomsByFloor).sort((a, b) => parseInt(a) - parseInt(b));
+    console.log('📋 Sorted floors:', sortedFloors);
+
+    gridContainer.innerHTML = '';
+
+    if (sortedFloors.length === 0) {
+      console.log('⚠️ No floors found, showing empty message');
+      gridContainer.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-sm text-muted-foreground">No rooms found</p>
+        </div>
+      `;
+      return;
+    }
+
+    sortedFloors.forEach(floorNum => {
+      const floorRooms = roomsByFloor[floorNum];
+      console.log(`🏢 Processing floor ${floorNum} with ${floorRooms.length} rooms`);
+      
+      // Create floor section
+      const floorSection = document.createElement('div');
+      floorSection.className = 'mb-6';
+      
+      // Floor header
+      const floorHeader = document.createElement('div');
+      floorHeader.className = 'flex items-center justify-between mb-3';
+      floorHeader.innerHTML = `
+        <h5 class="text-sm font-semibold text-card-foreground">Floor ${floorNum}</h5>
+        <span class="text-xs text-muted-foreground">${floorRooms.length} rooms</span>
+      `;
+      
+      // Room grid
+      const roomGrid = document.createElement('div');
+      roomGrid.className = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2';
+      
+      floorRooms.forEach(room => {
+        console.log(`🏨 Creating room card for ${room.room_number} (${room.status})`);
+        const roomCard = createHotelVisualRoomCard(room);
+        roomGrid.appendChild(roomCard);
+      });
+      
+      floorSection.appendChild(floorHeader);
+      floorSection.appendChild(roomGrid);
+      gridContainer.appendChild(floorSection);
+    });
+    
+    console.log('✅ Hotel room visual grid updated successfully');
+  }
+
+  // Create visual room card for hotel reservation
+  function createHotelVisualRoomCard(room) {
+    const card = document.createElement('div');
+    card.className = 'relative cursor-pointer transition-all duration-200 hover:scale-105';
+    
+    // Determine room status and styling
+    let statusClass = '';
+    let statusColor = '';
+    let isSelectable = false;
+    
+    switch (room.status) {
+      case 'Vacant':
+        statusClass = 'bg-green-500 hover:bg-green-600';
+        statusColor = 'text-white';
+        isSelectable = true;
+        break;
+      case 'Cleaning':
+        statusClass = 'bg-orange-500 hover:bg-orange-600';
+        statusColor = 'text-white';
+        isSelectable = true;
+        break;
+      case 'Occupied':
+        statusClass = 'bg-red-500';
+        statusColor = 'text-white';
+        isSelectable = false;
+        break;
+      case 'Reserved':
+        statusClass = 'bg-purple-500';
+        statusColor = 'text-white';
+        isSelectable = false;
+        break;
+      case 'Event Reserved':
+        statusClass = 'bg-purple-500';
+        statusColor = 'text-white';
+        isSelectable = false;
+        break;
+      case 'Event Ongoing':
+        statusClass = 'bg-pink-500';
+        statusColor = 'text-white';
+        isSelectable = false;
+        break;
+      case 'Maintenance':
+        statusClass = 'bg-gray-500';
+        statusColor = 'text-white';
+        isSelectable = false;
+        break;
+      default:
+        statusClass = 'bg-gray-400';
+        statusColor = 'text-white';
+        isSelectable = false;
+    }
+    
+    card.innerHTML = `
+      <div class="w-full h-20 ${statusClass} rounded-lg flex flex-col items-center justify-center p-2 ${!isSelectable ? 'opacity-60 cursor-not-allowed' : ''}" 
+           data-room-id="${room.id}" 
+           data-room-number="${room.room_number}"
+           data-room-type="${room.room_type}"
+           data-room-rate="${room.rate}"
+           data-room-floor="${room.floor_number}"
+           data-room-status="${room.status}">
+        <div class="text-sm font-bold ${statusColor}">${room.room_number}</div>
+        <div class="text-xs ${statusColor} opacity-90">${room.room_type || 'Standard'}</div>
+        <div class="text-xs ${statusColor} opacity-75">₱${parseFloat(room.rate || 0).toLocaleString()}</div>
+      </div>
+    `;
+    
+    // Add click handler for selectable rooms
+    if (isSelectable) {
+      card.addEventListener('click', function() {
+        selectHotelRoom(room);
+      });
+    }
+    
+    return card;
+  }
+
+  // Select hotel room
+  function selectHotelRoom(room) {
+    console.log('🏨 Hotel room selected:', room);
+    
+    // Update the hidden select element
+    if (roomSelect) {
+      roomSelect.value = room.id;
+    }
+    
+    // Update room preview
+    if (selectedRoomInfo) {
+      selectedRoomInfo.innerHTML = `
+        <div>
+          <div class="font-medium">${room.room_number} - ${room.room_type}</div>
+          <div class="text-sm text-gray-500">Rate: ₱${room.rate || 0} | Floor: ${room.floor_number}</div>
+          ${room.amenities ? `<div class="text-sm text-gray-500 mt-1">Amenities: ${room.amenities}</div>` : ''}
+        </div>
+      `;
+    }
+    
+    // Update visual selection
+    updateHotelRoomSelection(room.id);
+  }
+
+  // Update hotel room selection visual
+  function updateHotelRoomSelection(selectedRoomId) {
+    const roomCards = document.querySelectorAll('#hotelRoomVisualGrid [data-room-id]');
+    
+    roomCards.forEach(card => {
+      const roomId = card.getAttribute('data-room-id');
+      const isSelected = roomId == selectedRoomId;
+      
+      if (isSelected) {
+        card.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+      } else {
+        card.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+      }
+    });
+  }
+
   // Debug function
   function debugRooms() {
     console.log('=== HOTEL RESERVATION DEBUG ===');
@@ -721,6 +928,39 @@ document.addEventListener('DOMContentLoaded', function() {
   window.loadRooms = loadRooms;
   window.debugRooms = debugRooms;
 
+  // Setup hotel room selection tabs
+  function setupHotelRoomSelectionTabs() {
+    const visualTab = document.getElementById('hotelRoomViewTab');
+    const listTab = document.getElementById('hotelRoomListTab');
+    const visualGrid = document.getElementById('hotelRoomVisualGrid');
+    const listView = document.getElementById('hotelRoomListView');
+
+    if (visualTab && listTab && visualGrid && listView) {
+      // Visual tab click
+      visualTab.addEventListener('click', function() {
+        visualTab.classList.add('bg-primary', 'text-primary-foreground');
+        visualTab.classList.remove('text-muted-foreground');
+        listTab.classList.remove('bg-primary', 'text-primary-foreground');
+        listTab.classList.add('text-muted-foreground');
+        visualGrid.classList.remove('hidden');
+        listView.classList.add('hidden');
+      });
+
+      // List tab click
+      listTab.addEventListener('click', function() {
+        listTab.classList.add('bg-primary', 'text-primary-foreground');
+        listTab.classList.remove('text-muted-foreground');
+        visualTab.classList.remove('bg-primary', 'text-primary-foreground');
+        visualTab.classList.add('text-muted-foreground');
+        listView.classList.remove('hidden');
+        visualGrid.classList.add('hidden');
+      });
+    }
+  }
+
+  // Initialize hotel room selection tabs
+  setupHotelRoomSelectionTabs();
+
   // Room selection change handler
   if (roomSelect) {
     roomSelect.addEventListener('change', function() {
@@ -735,6 +975,9 @@ document.addEventListener('DOMContentLoaded', function() {
             ${room.amenities ? `<div class="text-sm text-gray-500 mt-1">Amenities: ${room.amenities}</div>` : ''}
           </div>
         `;
+        
+        // Update visual selection if visual tab is active
+        updateHotelRoomSelection(selectedRoomId);
       } else {
         selectedRoomInfo.innerHTML = '<span class="text-sm text-gray-500">Select a room to see details</span>';
       }
@@ -933,6 +1176,72 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+
+<style>
+/* Dark mode improvements for guest search */
+#guestSearch {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+#guestSearch:focus {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2) !important;
+}
+
+#guestSearch::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Search results dropdown dark mode */
+#guestSearchResults {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+#guestSearchResults .p-3 {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+#guestSearchResults .p-3:hover {
+  background-color: hsl(var(--muted)) !important;
+}
+
+#guestSearchResults .font-medium {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+#guestSearchResults .text-sm {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Ensure proper contrast in dark mode */
+@media (prefers-color-scheme: dark) {
+  #guestSearch {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+  
+  #guestSearchResults {
+    background-color: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+  
+  #guestSearchResults .p-3 {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+  
+  #guestSearchResults .p-3:hover {
+    background-color: hsl(var(--muted)) !important;
+  }
+}
+</style>
 
 <style>
 /* Global Scrollbar Styling for Modal - Consistent Blue Theme */
