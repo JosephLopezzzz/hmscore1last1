@@ -188,6 +188,12 @@ require_once __DIR__ . '/includes/security.php';
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                   Rooms: <span id="roomsStatus" class="font-medium">Not loaded</span>
+                  <button id="retryRoomsBtn" onclick="loadRooms()" class="ml-2 px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors hidden">
+                    Retry
+                  </button>
+                  <button id="debugRoomsBtn" onclick="debugRooms()" class="ml-2 px-2 py-1 text-xs bg-yellow-500/10 text-yellow-600 rounded hover:bg-yellow-500/20 transition-colors">
+                    Debug
+                  </button>
                 </div>
               </div>
 
@@ -558,27 +564,99 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Load rooms from API
   async function loadRooms() {
+    console.log('Loading rooms for hotel reservation...'); // Debug log
+    
     try {
       roomsStatus.textContent = 'Loading...';
-      const response = await fetch('http://localhost/hmscore1last1/api/rooms');
+      
+      // Try multiple endpoints to see which one works
+      const endpoints = [
+        'api/rooms.php',
+        './api/rooms.php',
+        '/api/rooms',
+        'http://localhost/hmscore1last1/api/rooms.php',
+        'http://localhost/hmscore1last1/api/rooms'
+      ];
+      
+      let response = null;
+      let workingEndpoint = null;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Trying endpoint: ${endpoint}`);
+          response = await fetch(endpoint, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          console.log(`Endpoint ${endpoint} response status:`, response.status);
+          
+          if (response.ok) {
+            workingEndpoint = endpoint;
+            break;
+          }
+        } catch (err) {
+          console.log(`Endpoint ${endpoint} failed:`, err.message);
+        }
+      }
+      
+      if (!response || !response.ok) {
+        console.error('All endpoints failed');
+        roomsStatus.textContent = 'Error: All API endpoints failed';
+        rooms = [];
+        showRetryButton();
+        return;
+      }
+      
+      console.log(`Using working endpoint: ${workingEndpoint}`);
       const data = await response.json();
+      console.log('Rooms API response data:', data); // Debug log
 
       if (data.data && Array.isArray(data.data)) {
         rooms = data.data;
+        console.log('Updating room select with', rooms.length, 'rooms'); // Debug log
+        console.log('Calling populateRoomSelect...'); // Debug log
         populateRoomSelect(rooms);
+        console.log('populateRoomSelect completed'); // Debug log
         roomsStatus.textContent = `Loaded (${rooms.length} rooms)`;
+        hideRetryButton();
       } else {
+        console.error('Invalid rooms data format:', data);
         rooms = [];
-        roomsStatus.textContent = 'Error loading rooms';
+        roomsStatus.textContent = 'Error: Invalid data format';
+        showRetryButton();
       }
     } catch (error) {
       console.error('Error loading rooms:', error);
       rooms = [];
-      roomsStatus.textContent = 'Error loading rooms';
+      roomsStatus.textContent = `Error: ${error.message}`;
+      showRetryButton();
     }
   }
 
+  // Show/hide retry button
+  function showRetryButton() {
+    const retryBtn = document.getElementById('retryRoomsBtn');
+    if (retryBtn) retryBtn.classList.remove('hidden');
+  }
+
+  function hideRetryButton() {
+    const retryBtn = document.getElementById('retryRoomsBtn');
+    if (retryBtn) retryBtn.classList.add('hidden');
+  }
+
   function populateRoomSelect(rooms) {
+    console.log('populateRoomSelect called with', rooms.length, 'rooms'); // Debug log
+    console.log('Room statuses:', rooms.map(r => r.status)); // Debug log
+    
+    if (!roomSelect) {
+      console.error('roomSelect element not found!');
+      return;
+    }
+    
+    console.log('roomSelect element found:', roomSelect); // Debug log
     roomSelect.innerHTML = '<option value="">Select a room...</option>';
 
     // Filter only VACANT rooms and sort by room number
@@ -590,6 +668,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return aNum - bNum;
       });
 
+    console.log('Found', vacantRooms.length, 'vacant rooms'); // Debug log
+    console.log('Vacant rooms:', vacantRooms); // Debug log
+
     vacantRooms.forEach(room => {
       const option = document.createElement('option');
       option.value = room.id;
@@ -598,9 +679,47 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (vacantRooms.length === 0) {
-      roomSelect.innerHTML = '<option value="">No vacant rooms available</option>';
+      console.log('No vacant rooms found - showing all rooms for debugging'); // Debug log
+      // Show all rooms for debugging
+      rooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.id;
+        option.textContent = `${room.room_number} - ${room.room_type} (${room.status}) (₱${room.rate || 0})`;
+        roomSelect.appendChild(option);
+      });
+      
+      if (rooms.length === 0) {
+        roomSelect.innerHTML = '<option value="">No rooms available</option>';
+      }
     }
   }
+
+  // Debug function
+  function debugRooms() {
+    console.log('=== HOTEL RESERVATION DEBUG ===');
+    console.log('roomSelect element:', roomSelect);
+    console.log('rooms array:', rooms);
+    console.log('rooms.length:', rooms ? rooms.length : 'undefined');
+    console.log('roomSelect.innerHTML:', roomSelect ? roomSelect.innerHTML : 'roomSelect not found');
+    console.log('roomSelect.options.length:', roomSelect ? roomSelect.options.length : 'roomSelect not found');
+    
+    if (rooms && rooms.length > 0) {
+      console.log('Room statuses:', rooms.map(r => r.status));
+      const vacantRooms = rooms.filter(room => room.status === 'Vacant' || room.status === 'VACANT');
+      console.log('Vacant rooms:', vacantRooms.length);
+      console.log('Vacant rooms details:', vacantRooms);
+    }
+    
+    // Try to manually populate
+    if (rooms && rooms.length > 0) {
+      console.log('Manually populating room select...');
+      populateRoomSelect(rooms);
+    }
+  }
+
+  // Make functions globally available for debugging
+  window.loadRooms = loadRooms;
+  window.debugRooms = debugRooms;
 
   // Room selection change handler
   if (roomSelect) {
